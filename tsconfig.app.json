@@ -6,6 +6,7 @@
     "lib": ["ES2020", "DOM", "DOM.Iterable"],
     "module": "ESNext",
     "skipLibCheck": true,
+    "baseUrl": ".",
 
     /* Bundler mode */
     "moduleResolution": "bundler",
@@ -20,7 +21,15 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
-    "noUncheckedSideEffectImports": true
+    "noUncheckedSideEffectImports": true,
+    "paths": {
+      "@/*": ["src/*"],
+      "@ui/*": ["src/shared/ui/*"],
+      "@hooks/*": ["src/shared/hooks/*"],
+      "@lib/*": ["src/shared/lib/*"],
+      "@features/*": ["src/features/*"],
+      "@page/*": ["src/page/*"],
+    },
   },
   "include": ["src"]
 }
