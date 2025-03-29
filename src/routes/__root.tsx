@@ -1,10 +1,17 @@
+import { RootRoute, Outlet } from "@tanstack/react-router";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "../lib/tanstack-query";
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+function RootLayout() {
   return (
     <QueryClientProvider client={queryClient}>
-      {children}
-    </QueryClientProvider> 
+      <Outlet />
+    </QueryClientProvider>
   );
 }
+
+export const Route = new RootRoute({
+  component: RootLayout,
+});
+
+export default RootLayout;
