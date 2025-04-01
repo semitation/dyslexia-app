@@ -11,14 +11,15 @@
 // Import Routes
 
 import { Route as rootRoute } from './routes/__root';
-import { Route as DashboardteacherImport } from './routes/dashboardteacher';
+import { Route as TeacherRouteImport } from './routes/teacher/route';
 import { Route as IndexImport } from './routes/index';
+import { Route as TeacherDashboardImport } from './routes/teacher/dashboard';
 
 // Create/Update Routes
 
-const DashboardteacherRoute = DashboardteacherImport.update({
-  id: '/dashboardteacher',
-  path: '/dashboardteacher',
+const TeacherRouteRoute = TeacherRouteImport.update({
+  id: '/teacher',
+  path: '/teacher',
   getParentRoute: () => rootRoute,
 } as any);
 
@@ -26,6 +27,12 @@ const IndexRoute = IndexImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRoute,
+} as any);
+
+const TeacherDashboardRoute = TeacherDashboardImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => TeacherRouteRoute,
 } as any);
 
 // Populate the FileRoutesByPath interface
@@ -39,51 +46,73 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexImport;
       parentRoute: typeof rootRoute;
     };
-    '/dashboardteacher': {
-      id: '/dashboardteacher';
-      path: '/dashboardteacher';
-      fullPath: '/dashboardteacher';
-      preLoaderRoute: typeof DashboardteacherImport;
+    '/teacher': {
+      id: '/teacher';
+      path: '/teacher';
+      fullPath: '/teacher';
+      preLoaderRoute: typeof TeacherRouteImport;
       parentRoute: typeof rootRoute;
+    };
+    '/teacher/dashboard': {
+      id: '/teacher/dashboard';
+      path: '/dashboard';
+      fullPath: '/teacher/dashboard';
+      preLoaderRoute: typeof TeacherDashboardImport;
+      parentRoute: typeof TeacherRouteImport;
     };
   }
 }
 
 // Create and export the route tree
 
+interface TeacherRouteRouteChildren {
+  TeacherDashboardRoute: typeof TeacherDashboardRoute;
+}
+
+const TeacherRouteRouteChildren: TeacherRouteRouteChildren = {
+  TeacherDashboardRoute: TeacherDashboardRoute,
+};
+
+const TeacherRouteRouteWithChildren = TeacherRouteRoute._addFileChildren(
+  TeacherRouteRouteChildren,
+);
+
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute;
-  '/dashboardteacher': typeof DashboardteacherRoute;
+  '/teacher': typeof TeacherRouteRouteWithChildren;
+  '/teacher/dashboard': typeof TeacherDashboardRoute;
 }
 
 export interface FileRoutesByTo {
   '/': typeof IndexRoute;
-  '/dashboardteacher': typeof DashboardteacherRoute;
+  '/teacher': typeof TeacherRouteRouteWithChildren;
+  '/teacher/dashboard': typeof TeacherDashboardRoute;
 }
 
 export interface FileRoutesById {
   __root__: typeof rootRoute;
   '/': typeof IndexRoute;
-  '/dashboardteacher': typeof DashboardteacherRoute;
+  '/teacher': typeof TeacherRouteRouteWithChildren;
+  '/teacher/dashboard': typeof TeacherDashboardRoute;
 }
 
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath;
-  fullPaths: '/' | '/dashboardteacher';
+  fullPaths: '/' | '/teacher' | '/teacher/dashboard';
   fileRoutesByTo: FileRoutesByTo;
-  to: '/' | '/dashboardteacher';
-  id: '__root__' | '/' | '/dashboardteacher';
+  to: '/' | '/teacher' | '/teacher/dashboard';
+  id: '__root__' | '/' | '/teacher' | '/teacher/dashboard';
   fileRoutesById: FileRoutesById;
 }
 
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute;
-  DashboardteacherRoute: typeof DashboardteacherRoute;
+  TeacherRouteRoute: typeof TeacherRouteRouteWithChildren;
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  DashboardteacherRoute: DashboardteacherRoute,
+  TeacherRouteRoute: TeacherRouteRouteWithChildren,
 };
 
 export const routeTree = rootRoute
@@ -97,14 +126,21 @@ export const routeTree = rootRoute
       "filePath": "__root.tsx",
       "children": [
         "/",
-        "/dashboardteacher"
+        "/teacher"
       ]
     },
     "/": {
       "filePath": "index.tsx"
     },
-    "/dashboardteacher": {
-      "filePath": "dashboardteacher.tsx"
+    "/teacher": {
+      "filePath": "teacher/route.tsx",
+      "children": [
+        "/teacher/dashboard"
+      ]
+    },
+    "/teacher/dashboard": {
+      "filePath": "teacher/dashboard.tsx",
+      "parent": "/teacher"
     }
   }
 }
