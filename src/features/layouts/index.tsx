@@ -1,1 +1,2 @@
-export { default as BaseLayout } from './base-layout';
+export { default as BaseLayout } from "./base-layout";
+export { TeacherLayout } from "./teacher-layout";
