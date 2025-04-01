@@ -11,9 +11,16 @@
 // Import Routes
 
 import { Route as rootRoute } from './routes/__root';
+import { Route as DashboardteacherImport } from './routes/dashboardteacher';
 import { Route as IndexImport } from './routes/index';
 
 // Create/Update Routes
+
+const DashboardteacherRoute = DashboardteacherImport.update({
+  id: '/dashboardteacher',
+  path: '/dashboardteacher',
+  getParentRoute: () => rootRoute,
+} as any);
 
 const IndexRoute = IndexImport.update({
   id: '/',
@@ -32,6 +39,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexImport;
       parentRoute: typeof rootRoute;
     };
+    '/dashboardteacher': {
+      id: '/dashboardteacher';
+      path: '/dashboardteacher';
+      fullPath: '/dashboardteacher';
+      preLoaderRoute: typeof DashboardteacherImport;
+      parentRoute: typeof rootRoute;
+    };
   }
 }
 
@@ -39,32 +53,37 @@ declare module '@tanstack/react-router' {
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute;
+  '/dashboardteacher': typeof DashboardteacherRoute;
 }
 
 export interface FileRoutesByTo {
   '/': typeof IndexRoute;
+  '/dashboardteacher': typeof DashboardteacherRoute;
 }
 
 export interface FileRoutesById {
   __root__: typeof rootRoute;
   '/': typeof IndexRoute;
+  '/dashboardteacher': typeof DashboardteacherRoute;
 }
 
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath;
-  fullPaths: '/';
+  fullPaths: '/' | '/dashboardteacher';
   fileRoutesByTo: FileRoutesByTo;
-  to: '/';
-  id: '__root__' | '/';
+  to: '/' | '/dashboardteacher';
+  id: '__root__' | '/' | '/dashboardteacher';
   fileRoutesById: FileRoutesById;
 }
 
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute;
+  DashboardteacherRoute: typeof DashboardteacherRoute;
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  DashboardteacherRoute: DashboardteacherRoute,
 };
 
 export const routeTree = rootRoute
@@ -77,11 +96,15 @@ export const routeTree = rootRoute
     "__root__": {
       "filePath": "__root.tsx",
       "children": [
-        "/"
+        "/",
+        "/dashboardteacher"
       ]
     },
     "/": {
       "filePath": "index.tsx"
+    },
+    "/dashboardteacher": {
+      "filePath": "dashboardteacher.tsx"
     }
   }
 }
