@@ -19,7 +19,7 @@ export function Sidebar() {
   };
 
   return (
-    <aside className="flex w-64 flex-col justify-between border-r bg-white py-6">
+    <aside className="flex w-80 flex-col justify-between border-r bg-white py-8">
       <div>
         <div className="flex items-center px-6 py-4">
           <div className="mr-2 h-6 w-6 rounded bg-dyslexia-blue" />
@@ -28,7 +28,7 @@ export function Sidebar() {
           </Typography>
         </div>
 
-        <nav className="mt-6 flex flex-col space-y-1 px-6">
+        <nav className="mt-8 flex flex-col space-y-2 px-8">
           <Button
             variant="ghost"
             className={getNavButtonClass(isActive("/teacher/dashboard"))}
