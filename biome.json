@@ -30,8 +30,21 @@
       "dist",
       "public",
       "**/node_modules/**",
-      "bin"
+      "bin",
+      "vite.config.ts",
+      "route-tree.gen.ts"
     ]
+  },
+  "javascript": {
+    "formatter": {
+      "quoteStyle": "single",
+      "enabled": true,
+      "indentStyle": "tab",
+      "indentWidth": 2,
+      "lineWidth": 80,
+      "lineEnding": "lf",
+      "jsxQuoteStyle": "double"
+    }
   },
   "files": {
     "include": [
@@ -48,7 +61,7 @@
       "./tsconfig.json",
       "./vite.config.ts"
     ],
-    "ignore": ["node_modules", "**/node_modules/**", "dist", "bin"],
+    "ignore": ["node_modules", "**/node_modules/**", "dist", "bin", "vite.config.ts", "route-tree.gen.ts"],
     "ignoreUnknown": true
   }
 }
