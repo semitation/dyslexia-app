@@ -1,13 +1,14 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { StudentPage } from "@/page/teacher";
+import { StudentPage } from '@/page/teacher';
+import { createFileRoute } from '@tanstack/react-router';
 
-export const Route = createFileRoute("/teacher/student")({
-  component: RouteComponent,
+export const Route = createFileRoute('/teacher/student')({
+	component: RouteComponent,
 });
 
-
 function RouteComponent() {
-  return <div>은기 작업 영역
-    <StudentPage />
-  </div>;
+	return (
+		<div>
+			<StudentPage />
+		</div>
+	);
 }
