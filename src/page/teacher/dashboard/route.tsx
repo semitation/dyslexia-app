@@ -110,7 +110,7 @@ const columns: ColumnDef<ContentItem>[] = [
   },
 ];
 
-export function TeacherDashboardPage() {
+export default function TeacherDashboardPage() {
   return (
       <div className="space-y-6">
         <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
