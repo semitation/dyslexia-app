@@ -46,6 +46,7 @@ export function Sidebar() {
 					<Button
 						variant="ghost"
 						className={getNavButtonClass(isActive('/teacher/content'))}
+						onClick={() => router.navigate({ to: '/teacher/content' })}
 					>
 						컨텐츠 관리
 					</Button>

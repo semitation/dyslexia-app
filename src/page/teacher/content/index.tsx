@@ -1,4 +1,3 @@
-import { TeacherLayout } from "@/features/layouts";
 import { Card } from "@/shared/ui/card";
 import { Button } from "@/shared/ui/button";
 import { Typography } from "@/shared/ui/typography";
@@ -100,7 +99,6 @@ const columns: ColumnDef<ContentItem>[] = [
 
 export default function ContentManagePage() {
   return (
-    <TeacherLayout>
       <div className="space-y-6">
         <Card className="p-6">
           <Typography variant="h2" size="xl" weight="bold" className="mb-2">
@@ -120,6 +118,5 @@ export default function ContentManagePage() {
           <DataTable columns={columns} data={contentData} pageSize={5} />
         </Card>
       </div>
-    </TeacherLayout>
   );
 }
