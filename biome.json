@@ -14,7 +14,11 @@
       "bin"
     ],
     "rules": {
-      "recommended": true
+      "recommended": true,
+      "complexity":{
+        "noStaticOnlyClass": "off"
+      }
+        
     }
   },
   "formatter": {

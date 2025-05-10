@@ -1,7 +1,11 @@
-import { Button } from '@/shared/ui'
-import { useNavigate } from '@tanstack/react-router'
+import { Button } from '@/shared/ui/button'
+import { createFileRoute, useNavigate } from '@tanstack/react-router'
 
-const SignUpPage = () => {
+export const Route = createFileRoute('/signup/')({
+  component: SignUpPage,
+})
+
+function SignUpPage() {
   const navigate = useNavigate()
 
   return (
@@ -23,6 +27,4 @@ const SignUpPage = () => {
       </div>
     </div>
   )
-}
-
-export default SignUpPage
+} 
