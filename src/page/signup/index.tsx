@@ -1,23 +1,28 @@
-import { Button, Typography } from "@/shared/ui";
+import { Button } from '@/shared/ui'
+import { useNavigate } from '@tanstack/react-router'
 
-export default function SignupPage() {
-    return (
-        <div className="flex items-center justify-center h-screen w-full">
-            <section className="flex flex-col flex-1 items-center">
-                <nav className="max-w-[468px]">
-                    <Typography variant="h2" weight="bold" size="2xl" color="secondary">
-                        카카오로 5초만에 회원가입할 수 있어요!
-                    </Typography>
-										<div className="flex w-full justify-center py-6">
-											<img src="/kakao.svg" alt="kakao icon" className="w-[96px]" />
-										</div>
-									<div className="flex flex-col space-y-4 mt-4">
-										<Button variant="default" size="xl" className="text-lg">교사로 회원가입</Button>
-										<Button variant="secondary" size="xl" className="text-lg">학생으로 회원가입</Button>
-									</div>
-                </nav>
+const SignUpPage = () => {
+  const navigate = useNavigate()
 
-            </section>
-        </div>
-    );
+  return (
+    <div className="container mx-auto max-w-md py-8">
+      <h1 className="text-2xl font-bold text-center mb-8">회원가입</h1>
+      <div className="space-y-4">
+        <Button
+          className="w-full"
+          onClick={() => navigate({ to: '/signup/teacher' })}
+        >
+          교사로 회원가입
+        </Button>
+        <Button
+          className="w-full"
+          onClick={() => navigate({ to: '/signup/student' })}
+        >
+          학생으로 회원가입
+        </Button>
+      </div>
+    </div>
+  )
 }
+
+export default SignUpPage
