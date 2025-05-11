@@ -1,4 +1,6 @@
-import { cn } from '../lib/utils';
+import * as React from "react"
+import * as ProgressPrimitive from "@radix-ui/react-progress"
+import { cn } from "@/lib/utils"
 
 interface ProgressBarProps {
 	progress: number;
@@ -10,43 +12,25 @@ interface ProgressBarProps {
 	progressColor?: string;
 }
 
-export function ProgressBar({
-	progress,
-	maxWidth = '100%',
-	height = '0.75rem',
-	className,
-	showPercentage = false,
-	bgColor = 'bg-gray-200',
-	progressColor = 'bg-dyslexia-blue',
-}: ProgressBarProps) {
-	const normalizedProgress = Math.min(Math.max(0, progress), 100);
-
-	return (
-		<div className={cn('flex flex-col gap-1', className)}>
-			<div
-				className={cn('w-full rounded-full overflow-hidden', bgColor)}
-				style={{ maxWidth, height }}
-			>
-				<div
-					className={cn(
-						'h-full rounded-full transition-all duration-300 ease-in-out',
-						progressColor,
-					)}
-					style={{ width: `${normalizedProgress}%` }}
-					role="cell"
-					aria-valuenow={normalizedProgress}
-					aria-valuemin={0}
-					aria-valuemax={100}
-				/>
-			</div>
-			{showPercentage && (
-				<span className="text-sm text-gray-600 text-right">
-					{normalizedProgress.toFixed(0)}%
-				</span>
-			)}
-		</div>
-	);
-}
+export const ProgressBar = React.forwardRef<
+	React.ElementRef<typeof ProgressPrimitive.Root>,
+	ProgressBarProps
+>(({ className, progress, ...props }, ref) => (
+	<ProgressPrimitive.Root
+		ref={ref}
+		className={cn(
+			"relative h-2 w-full overflow-hidden rounded-full bg-gray-200",
+			className
+		)}
+		{...props}
+	>
+		<ProgressPrimitive.Indicator
+			className="h-full w-full flex-1 bg-blue-500 transition-all"
+			style={{ transform: `translateX(-${100 - progress}%)` }}
+		/>
+	</ProgressPrimitive.Root>
+))
+ProgressBar.displayName = "ProgressBar"
 
 export function LabeledProgressBar({
 	label,
