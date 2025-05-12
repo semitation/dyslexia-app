@@ -1,8 +1,10 @@
 import type { PageTipResponse } from '../model/types';
-import { textToSpeech } from '../lib/text-to-speech';
+import { fetchSpeechAudio } from '../api/speech-api';
 import { Typography } from '@/shared/ui';
 import { Volume2, Info } from 'lucide-react';
+import { toast } from 'sonner';
 import type React from 'react';
+import { useState, useRef } from 'react';
 
 interface PageTipsProps {
 	tips: PageTipResponse[];
@@ -10,10 +12,39 @@ interface PageTipsProps {
 }
 
 export const PageTips: React.FC<PageTipsProps> = ({ tips, fontSize }) => {
+	const [loadingId, setLoadingId] = useState<string | null>(null);
+	const audioRef = useRef<HTMLAudioElement | null>(null);
+
 	if (!tips || tips.length === 0) return null;
 
-	const handleSpeak = (text: string) => {
-		textToSpeech.speak(text);
+	const handleSpeak = async (id: string, text: string) => {
+		if (loadingId) return;
+		if (audioRef.current) {
+			audioRef.current.pause();
+			audioRef.current = null;
+		}
+		setLoadingId(id);
+		const toastId = toast.loading('오디오를 불러오는 중...');
+		try {
+			const blob = await fetchSpeechAudio({ text, voice: 'echo' });
+			toast.dismiss(toastId);
+			const url = URL.createObjectURL(blob);
+			const audio = new Audio(url);
+			audioRef.current = audio;
+			audio.onended = () => {
+				setLoadingId(null);
+				URL.revokeObjectURL(url);
+			};
+			audio.onerror = () => {
+				setLoadingId(null);
+				URL.revokeObjectURL(url);
+			};
+			audio.play();
+		} catch (e) {
+			toast.dismiss(toastId);
+			setLoadingId(null);
+			toast.error('오디오를 불러오지 못했습니다');
+		}
 	};
 
 	return (
@@ -33,10 +64,9 @@ export const PageTips: React.FC<PageTipsProps> = ({ tips, fontSize }) => {
 							</Typography>
 							<button
 								type="button"
-								onClick={() =>
-									handleSpeak(tip.readAloudText || tip.simplifiedExplanation)
-								}
+								onClick={() => handleSpeak(tip.id.toString(), tip.readAloudText || tip.simplifiedExplanation)}
 								className="text-blue-600 hover:text-blue-800"
+								disabled={loadingId === tip.id.toString()}
 							>
 								<Volume2 className="w-4 h-4" />
 							</button>

@@ -4,9 +4,9 @@ import { useQuery } from "@tanstack/react-query"
 import { Typography, Button, Select, Card, CardContent } from "@/shared/ui"
 import { ChevronLeft, ChevronRight, ZoomIn, ZoomOut, Maximize, Loader2, Info } from "lucide-react"
 import { viewerApi } from "@/features/viewer/api/viewer-api"
-import { parseBlocks } from "@/features/viewer/lib/parse-blocks"
 import { PageTips } from "@/features/viewer/ui/page-tips"
 import { PageImages } from "@/features/viewer/ui/page-images"
+import { ProcessedContent } from "@/features/viewer/ui/processed-content"
 
 export const Route = createFileRoute('/teacher/viewer/$documentId')({
   component: DocumentViewerPage,
@@ -43,7 +43,6 @@ function DocumentViewerPage() {
     enabled: !!currentPageContent?.id
   })
 
-  const totalPages = 1
   const documentTitle = currentPageContent?.sectionTitle || '문서 제목'
   const blocks = currentPageContent?.processedContent || []
 
@@ -60,7 +59,7 @@ function DocumentViewerPage() {
   }
 
   const handlePageChange = (newPage: number) => {
-    if (newPage >= 1 && newPage <= totalPages) {
+    if (newPage > 0) {
       setCurrentPage(newPage)
     }
   }
@@ -90,13 +89,13 @@ function DocumentViewerPage() {
                 <ChevronLeft className="w-4 h-4" />
               </Button>
               <Typography variant="p" className="mx-2">
-                {currentPage} / {totalPages}
+                {currentPage}
               </Typography>
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => handlePageChange(currentPage + 1)}
-                disabled={currentPage >= totalPages}
+                disabled={pageContents.length === 0}
               >
                 <ChevronRight className="w-4 h-4" />
               </Button>
@@ -158,11 +157,12 @@ function DocumentViewerPage() {
             <>
               {blocks.length > 0 && (
                 <div className="mb-8">
-                  {parseBlocks(blocks, {
-                    fontSize,
-                    fontFamily,
-                    lineSpacing,
-                  })}
+                  <ProcessedContent
+                    blocks={blocks}
+                    fontSize={fontSize}
+                    fontFamily={fontFamily}
+                    lineSpacing={lineSpacing}
+                  />
                 </div>
               )}
               <PageImages images={pageImages} />
@@ -187,7 +187,7 @@ function DocumentViewerPage() {
         <Button
           variant="outline"
           onClick={() => handlePageChange(currentPage + 1)}
-          disabled={currentPage >= totalPages}
+          disabled={pageContents.length === 0}
         >
           다음 페이지
           <ChevronRight className="w-4 h-4 ml-2" />
