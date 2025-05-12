@@ -179,11 +179,11 @@ function DocumentsPage() {
   
   useEffect(() => {
     const processing = new Set<number>()
-    documents.forEach(doc => {
+    for (const doc of documents) {
       if (doc.processStatus === 'PENDING' || doc.processStatus === 'PROCESSING') {
         processing.add(doc.id)
       }
-    })
+    }
     setProcessingDocuments(processing)
   }, [documents])
 
@@ -385,9 +385,12 @@ function DocumentsPage() {
       header: '작업',
       cell: info => {
         const doc = info.getValue()
+        const canView =
+          doc.processStatus === 'COMPLETED' ||
+          (doc.processStatus === 'PROCESSING' && doc.pageCount && doc.pageCount > 0)
         return (
           <div className="flex gap-2">
-            <Show when={doc.processStatus === 'COMPLETED'}>
+            <Show when={!!canView}>
               <Button 
                 variant="default" 
                 size="sm" 
