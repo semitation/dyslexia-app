@@ -1,12 +1,19 @@
 import { Button } from '@/shared/ui/button';
 import { Typography } from '@/shared/ui/typography';
 import { useLocation, useRouter } from '@tanstack/react-router';
+import { useAuth } from '@/shared/hooks/use-auth';
 
 export function Sidebar() {
+	const { my, logout } = useAuth();
 	const router = useRouter();
 	const location = useLocation({
 		select: (location) => location.pathname,
 	});
+
+	const onClickLogout = () => {
+		logout();
+		router.navigate({ to: '/' });
+	};
 
 	const isActive = (path: string): boolean => location.includes(path);
 
@@ -53,6 +60,7 @@ export function Sidebar() {
 					<Button
 						variant="ghost"
 						className={getNavButtonClass(isActive('/teacher/upload'))}
+						onClick={() => router.navigate({ to: '/teacher/documents' })}
 					>
 						자료 업로드
 					</Button>
@@ -64,7 +72,7 @@ export function Sidebar() {
 					<div className="h-10 w-10 rounded-full bg-gray-200" />
 					<div>
 						<Typography variant="p" weight="semibold" className="text-gray-900">
-							김태희 선생님
+							{my?.name} 선생님
 						</Typography>
 						<Typography variant="p" size="sm" className="text-gray-500">
 							서울 초등학교
@@ -74,6 +82,7 @@ export function Sidebar() {
 				<Button
 					variant="outline"
 					className="mt-4 w-full justify-center text-gray-600 hover:bg-gray-50"
+					onClick={onClickLogout}
 				>
 					로그아웃
 				</Button>

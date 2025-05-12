@@ -1,7 +1,9 @@
 import { Typography } from "@/shared/ui/typography";
 import { Button } from "@/shared/ui/button";
+import { useAuth } from "@/shared/hooks/use-auth";
 
 export function TopHeader() {
+    const { my } = useAuth();
     return (
         <header className="flex flex-col border-b bg-white px-4 py-3 md:flex-row md:items-center md:justify-between md:py-2">
             <div>
@@ -23,7 +25,7 @@ export function TopHeader() {
                 <div className="flex items-center space-x-1">
                     <div className="h-6 w-6 rounded-full bg-gray-200" />
                     <Typography variant="p" size="sm" className="text-gray-700">
-                        김태희
+                        {my?.name}
                     </Typography>
                     <div className="h-4 w-4 bg-current text-gray-500" />
                 </div>
