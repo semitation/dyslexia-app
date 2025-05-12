@@ -1,3 +1,52 @@
+export type Block =
+  | {
+      id: string
+      type: 'TEXT'
+      text: string
+    }
+  | {
+      id: string
+      type: 'HEADING1' | 'HEADING2' | 'HEADING3'
+      text: string
+    }
+  | {
+      id: string
+      type: 'LIST' | 'DOTTED'
+      items: string[]
+    }
+  | {
+      id: string
+      type: 'IMAGE'
+      url: string
+      alt: string
+      width?: number
+      height?: number
+    }
+  | {
+      id: string
+      type: 'TABLE'
+      headers: string[]
+      rows: string[][]
+    }
+  | {
+      id: string
+      type: 'PAGE_TIP'
+      tipId: string
+    }
+  | {
+      id: string
+      type: 'PAGE_IMAGE'
+      imageId: string
+    }
+
+export interface PageBlockApiResponse {
+  pageId: string
+  title: string
+  blocks: Block[]
+  createdAt: string
+  updatedAt: string
+}
+
 export interface Document {
   id: number
   title: string
@@ -6,53 +55,12 @@ export interface Document {
   subjectPath?: string
 }
 
-export type ProcessedContentBlock =
-  | {
-      id?: string
-      type: 'heading'
-      level?: 1 | 2 | 3
-      text?: string
-      content?: string
-    }
-  | {
-      id?: string
-      type: 'paragraph'
-      text?: string
-      content?: string
-    }
-  | {
-      id?: string
-      type: 'image'
-      url?: string
-      src?: string
-      alt?: string
-      caption?: string
-    }
-  | {
-      id?: string
-      type: 'list'
-      ordered?: boolean
-      items: string[]
-    }
-  | {
-      id?: string
-      type: 'table'
-      headers?: string[]
-      rows?: string[][]
-    }
-  | {
-      id?: string
-      type: string
-      text?: string
-      content?: string
-    }
-
 export interface PageContentResponse {
   id: number
   documentId: number
   pageNumber: number
   originalContent: string
-  processedContent: { blocks: ProcessedContentBlock[] }
+  processedContent: Block[]
   processingStatus: 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'FAILED'
   sectionTitle: string
   readingLevel: number
