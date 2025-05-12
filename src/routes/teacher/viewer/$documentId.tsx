@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query"
 import { Typography, Button, Select, Card, CardContent } from "@/shared/ui"
 import { ChevronLeft, ChevronRight, ZoomIn, ZoomOut, Maximize, Loader2, Info } from "lucide-react"
 import { viewerApi } from "@/features/viewer/api/viewer-api"
-import { ProcessedContent } from "@/features/viewer/ui/processed-content"
+import { parseBlocks } from "@/features/viewer/lib/parse-blocks"
 import { PageTips } from "@/features/viewer/ui/page-tips"
 import { PageImages } from "@/features/viewer/ui/page-images"
 
@@ -22,12 +22,6 @@ function DocumentViewerPage() {
   const [lineSpacing, setLineSpacing] = useState(1.5)
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [showTips, setShowTips] = useState(true)
-
-  const { data: document, isLoading: isLoadingDocument } = useQuery({
-    queryKey: ["document", docId],
-    queryFn: () => viewerApi.getDocument(docId),
-    enabled: !!docId
-  })
 
   const { data: pageContents = [], isLoading: isLoadingPageContent } = useQuery({
     queryKey: ["document", docId, "page-content", currentPage],
@@ -49,6 +43,10 @@ function DocumentViewerPage() {
     enabled: !!currentPageContent?.id
   })
 
+  const totalPages = 1
+  const documentTitle = currentPageContent?.sectionTitle || '문서 제목'
+  const blocks = currentPageContent?.processedContent || []
+
   const toggleFullscreen = () => {
     if (!window.document.fullscreenElement) {
       window.document.documentElement.requestFullscreen().then(() => {
@@ -62,7 +60,7 @@ function DocumentViewerPage() {
   }
 
   const handlePageChange = (newPage: number) => {
-    if (document && newPage >= 1 && newPage <= document.totalPages) {
+    if (newPage >= 1 && newPage <= totalPages) {
       setCurrentPage(newPage)
     }
   }
@@ -74,22 +72,13 @@ function DocumentViewerPage() {
     })
   }
 
-  if (isLoadingDocument) {
-    return (
-      <div className="flex justify-center items-center h-screen">
-        <Loader2 className="w-8 h-8 animate-spin" />
-        <Typography variant="p" className="ml-2">문서 정보를 불러오는 중...</Typography>
-      </div>
-    )
-  }
-
   return (
     <div className="container mx-auto py-4 px-4">
       <div className="bg-white shadow-md rounded-lg p-4 mb-6 sticky top-0 z-10">
         <div className="flex flex-col md:flex-row justify-between items-center gap-4">
           <div className="flex items-center gap-2">
             <Typography variant="h4" className="mr-4">
-              {document?.title || '문서 제목'}
+              {documentTitle}
             </Typography>
             <div className="flex items-center gap-1">
               <Button
@@ -101,13 +90,13 @@ function DocumentViewerPage() {
                 <ChevronLeft className="w-4 h-4" />
               </Button>
               <Typography variant="p" className="mx-2">
-                {currentPage} / {document?.totalPages || 1}
+                {currentPage} / {totalPages}
               </Typography>
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => handlePageChange(currentPage + 1)}
-                disabled={!document || currentPage >= document.totalPages}
+                disabled={currentPage >= totalPages}
               >
                 <ChevronRight className="w-4 h-4" />
               </Button>
@@ -167,22 +156,14 @@ function DocumentViewerPage() {
             </div>
           ) : currentPageContent ? (
             <>
-              {currentPageContent.sectionTitle && (
-                <div className="mb-6">
-                  <Typography variant="h3" className="font-bold text-blue-900">{currentPageContent.sectionTitle}</Typography>
-                  <div className="flex gap-4 mt-2 text-sm text-gray-500">
-                    <span>난이도: {currentPageContent.readingLevel}/10</span>
-                    <span>단어 수: {currentPageContent.wordCount}</span>
-                  </div>
+              {blocks.length > 0 && (
+                <div className="mb-8">
+                  {parseBlocks(blocks, {
+                    fontSize,
+                    fontFamily,
+                    lineSpacing,
+                  })}
                 </div>
-              )}
-              {currentPageContent?.processedContent?.blocks && (
-                <ProcessedContent
-                  blocks={currentPageContent.processedContent.blocks}
-                  fontSize={fontSize}
-                  fontFamily={fontFamily}
-                  lineSpacing={lineSpacing}
-                />
               )}
               <PageImages images={pageImages} />
               {showTips && <PageTips tips={pageTips} fontSize={fontSize} />}
@@ -206,7 +187,7 @@ function DocumentViewerPage() {
         <Button
           variant="outline"
           onClick={() => handlePageChange(currentPage + 1)}
-          disabled={!document || currentPage >= document.totalPages}
+          disabled={currentPage >= totalPages}
         >
           다음 페이지
           <ChevronRight className="w-4 h-4 ml-2" />
