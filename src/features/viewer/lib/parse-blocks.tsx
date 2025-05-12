@@ -1,31 +1,58 @@
 import type { ReactNode } from 'react';
 import type { Block } from '../model/types';
 
+interface ParseBlocksOptions {
+	fontSize?: number;
+	fontFamily?: string;
+	lineSpacing?: number;
+	onBlockClick?: (block: Block) => void;
+	activeBlockId?: string | null;
+}
+
 export function parseBlocks(
 	blocks: Block[],
-	options?: {
-		fontSize?: number;
-		fontFamily?: string;
-		lineSpacing?: number;
-		onSpeak?: (text: string) => void;
-	},
+	options?: ParseBlocksOptions,
 ): ReactNode[] {
 	if (!blocks) return [];
 	const {
 		fontSize = 16,
 		fontFamily = 'Noto Sans KR',
 		lineSpacing = 1.5,
-		onSpeak,
+		onBlockClick,
+		activeBlockId,
 	} = options || {};
 
 	return blocks.map((block, i) => {
+		console.log('map block', block);
 		const key = block.id ? String(block.id) : `${i}`;
+		const isActive = activeBlockId === block.id;
+		const baseStyle = {
+			fontFamily,
+			fontSize,
+			lineHeight: lineSpacing,
+			background: isActive ? '#fffbe6' : undefined,
+			transition: 'background 0.2s',
+			cursor: onBlockClick ? 'pointer' : undefined,
+		};
+
+		// switch문 진입 로그
+		console.log('switch 진입', block);
+
+		if (block.type === 'TEXT') {
+			console.log(block);
+		}
+		
 		switch (block.type) {
 			case 'TEXT':
+				console.log('parseBlocks TEXT', { block, onBlockClick });
 				return (
 					<p
 						key={key}
-						style={{ fontFamily, fontSize, lineHeight: lineSpacing }}
+						style={baseStyle}
+						onClick={onBlockClick ? () => { console.log('onClick fired', block); onBlockClick(block); } : () => {}}
+						onKeyDown={onBlockClick ? (e) => { if (e.key === 'Enter' || e.key === ' ') onBlockClick(block) } : undefined}
+						tabIndex={onBlockClick ? 0 : undefined}
+						className="cursor-pointer"
 					>
 						{block.text}
 					</p>
@@ -34,12 +61,11 @@ export function parseBlocks(
 				return (
 					<h2
 						key={key}
-						style={{
-							fontFamily,
-							fontSize: fontSize + 8,
-							lineHeight: lineSpacing,
-						}}
+						style={{ ...baseStyle, fontSize: fontSize + 8 }}
 						className="font-bold mb-2"
+						onClick={onBlockClick ? () => onBlockClick(block) : undefined}
+						onKeyDown={onBlockClick ? (e) => { if (e.key === 'Enter' || e.key === ' ') onBlockClick(block) } : undefined}
+						tabIndex={onBlockClick ? 0 : undefined}
 					>
 						{block.text}
 					</h2>
@@ -48,12 +74,11 @@ export function parseBlocks(
 				return (
 					<h3
 						key={key}
-						style={{
-							fontFamily,
-							fontSize: fontSize + 4,
-							lineHeight: lineSpacing,
-						}}
+						style={{ ...baseStyle, fontSize: fontSize + 4 }}
 						className="font-bold mb-2"
+						onClick={onBlockClick ? () => onBlockClick(block) : undefined}
+						onKeyDown={onBlockClick ? (e) => { if (e.key === 'Enter' || e.key === ' ') onBlockClick(block) } : undefined}
+						tabIndex={onBlockClick ? 0 : undefined}
 					>
 						{block.text}
 					</h3>
@@ -62,12 +87,11 @@ export function parseBlocks(
 				return (
 					<h4
 						key={key}
-						style={{
-							fontFamily,
-							fontSize: fontSize + 2,
-							lineHeight: lineSpacing,
-						}}
+						style={{ ...baseStyle, fontSize: fontSize + 2 }}
 						className="font-bold mb-2"
+						onClick={onBlockClick ? () => onBlockClick(block) : undefined}
+						onKeyDown={onBlockClick ? (e) => { if (e.key === 'Enter' || e.key === ' ') onBlockClick(block) } : undefined}
+						tabIndex={onBlockClick ? 0 : undefined}
 					>
 						{block.text}
 					</h4>
@@ -78,25 +102,18 @@ export function parseBlocks(
 					<ul
 						key={key}
 						className="list-disc pl-8 mb-4"
-						style={{ fontFamily, fontSize, lineHeight: lineSpacing }}
+						style={baseStyle}
 					>
 						{block.items.map((item, idx) => (
 							<li
 								key={block.id ? `${block.id}-item-${idx}` : `${i}-item-${idx}`}
 								className="mb-1 group relative"
+								onClick={onBlockClick ? () => onBlockClick(block) : undefined}
+								onKeyDown={onBlockClick ? (e) => { if (e.key === 'Enter' || e.key === ' ') onBlockClick(block) } : undefined}
+								tabIndex={onBlockClick ? 0 : undefined}
+								style={isActive ? { background: '#fffbe6' } : undefined}
 							>
 								{item}
-								{onSpeak && (
-									<button
-										type="button"
-										onClick={() => onSpeak(item)}
-										className="ml-2 opacity-0 group-hover:opacity-100 transition-opacity inline-flex items-center"
-									>
-										<span role="img" aria-label="speak">
-											🔊
-										</span>
-									</button>
-								)}
 							</li>
 						))}
 					</ul>
@@ -117,17 +134,13 @@ export function parseBlocks(
 					<div key={key} className="overflow-x-auto mb-4">
 						<table
 							className="min-w-full border text-sm"
-							style={{ fontFamily, fontSize, lineHeight: lineSpacing }}
+							style={baseStyle}
 						>
 							<thead>
 								<tr>
 									{block.headers.map((header, idx) => (
 										<th
-											key={
-												block.id
-													? `${block.id}-header-${idx}`
-													: `${i}-header-${idx}`
-											}
+											key={block.id ? `${block.id}-header-${idx}` : `${i}-header-${idx}`}
 											className="border px-2 py-1 bg-gray-100"
 										>
 											{header}
@@ -138,19 +151,11 @@ export function parseBlocks(
 							<tbody>
 								{block.rows.map((row, rowIdx) => (
 									<tr
-										key={
-											block.id
-												? `${block.id}-row-${rowIdx}`
-												: `${i}-row-${rowIdx}`
-										}
+										key={block.id ? `${block.id}-row-${rowIdx}` : `${i}-row-${rowIdx}`}
 									>
 										{row.map((cell, cellIdx) => (
 											<td
-												key={
-													block.id
-														? `${block.id}-cell-${rowIdx}-${cellIdx}`
-														: `${i}-cell-${rowIdx}-${cellIdx}`
-												}
+												key={block.id ? `${block.id}-cell-${rowIdx}-${cellIdx}` : `${i}-cell-${rowIdx}-${cellIdx}`}
 												className="border px-2 py-1"
 											>
 												{cell}
@@ -164,6 +169,7 @@ export function parseBlocks(
 				);
 			// PAGE_TIP, PAGE_IMAGE는 뷰어에서 별도 처리
 			default:
+				console.log('switch default', block.type, block);
 				return null;
 		}
 	});
