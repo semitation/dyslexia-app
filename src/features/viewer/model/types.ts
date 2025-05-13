@@ -3,6 +3,7 @@ export type Block =
       id: string
       type: 'TEXT'
       text: string
+      blank?: boolean
     }
   | {
       id: string

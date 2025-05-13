@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import type { Block } from '../model/types';
+import { cn } from '@/lib/utils';
 
 interface ParseBlocksOptions {
 	fontSize?: number;
@@ -23,7 +24,6 @@ export function parseBlocks(
 	} = options || {};
 
 	return blocks.map((block, i) => {
-		console.log('map block', block);
 		const key = block.id ? String(block.id) : `${i}`;
 		const isActive = activeBlockId === block.id;
 		const baseStyle = {
@@ -35,16 +35,8 @@ export function parseBlocks(
 			cursor: onBlockClick ? 'pointer' : undefined,
 		};
 
-		// switch문 진입 로그
-		console.log('switch 진입', block);
-
-		if (block.type === 'TEXT') {
-			console.log(block);
-		}
-		
 		switch (block.type) {
 			case 'TEXT':
-				console.log('parseBlocks TEXT', { block, onBlockClick });
 				return (
 					<p
 						key={key}
@@ -52,7 +44,10 @@ export function parseBlocks(
 						onClick={onBlockClick ? () => { console.log('onClick fired', block); onBlockClick(block); } : () => {}}
 						onKeyDown={onBlockClick ? (e) => { if (e.key === 'Enter' || e.key === ' ') onBlockClick(block) } : undefined}
 						tabIndex={onBlockClick ? 0 : undefined}
-						className="cursor-pointer"
+						className={cn(
+							'cursor-pointer',
+							block.blank && 'mb-4',
+						)}
 					>
 						{block.text}
 					</p>
