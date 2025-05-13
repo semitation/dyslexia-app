@@ -130,6 +130,7 @@ function DocumentViewerPage() {
               <option value="OpenDyslexic">OpenDyslexic</option>
               <option value="Lexend">Lexend</option>
               <option value="Arial">Arial</option>
+              <option value="PeachMarket" style={{ fontFamily: 'PeachMarket' }}>PeachMarket</option>
             </Select>
             <Button 
               variant={showTips ? "default" : "outline"}
