@@ -16,6 +16,7 @@ import { Route as TeacherRouteImport } from './routes/teacher/route';
 import { Route as IndexImport } from './routes/index';
 import { Route as SignupIndexImport } from './routes/signup/index';
 import { Route as AuthIndexImport } from './routes/auth/index';
+import { Route as TeacherUploadImport } from './routes/teacher/upload';
 import { Route as TeacherStudentImport } from './routes/teacher/student';
 import { Route as TeacherDocumentsImport } from './routes/teacher/documents';
 import { Route as TeacherDashboardImport } from './routes/teacher/dashboard';
@@ -54,6 +55,12 @@ const AuthIndexRoute = AuthIndexImport.update({
   id: '/auth/',
   path: '/auth/',
   getParentRoute: () => rootRoute,
+} as any);
+
+const TeacherUploadRoute = TeacherUploadImport.update({
+  id: '/upload',
+  path: '/upload',
+  getParentRoute: () => TeacherRouteRoute,
 } as any);
 
 const TeacherStudentRoute = TeacherStudentImport.update({
@@ -165,6 +172,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TeacherStudentImport;
       parentRoute: typeof TeacherRouteImport;
     };
+    '/teacher/upload': {
+      id: '/teacher/upload';
+      path: '/upload';
+      fullPath: '/teacher/upload';
+      preLoaderRoute: typeof TeacherUploadImport;
+      parentRoute: typeof TeacherRouteImport;
+    };
     '/auth/': {
       id: '/auth/';
       path: '/auth';
@@ -196,6 +210,7 @@ interface TeacherRouteRouteChildren {
   TeacherDashboardRoute: typeof TeacherDashboardRoute;
   TeacherDocumentsRoute: typeof TeacherDocumentsRoute;
   TeacherStudentRoute: typeof TeacherStudentRoute;
+  TeacherUploadRoute: typeof TeacherUploadRoute;
   TeacherViewerDocumentIdRoute: typeof TeacherViewerDocumentIdRoute;
 }
 
@@ -204,6 +219,7 @@ const TeacherRouteRouteChildren: TeacherRouteRouteChildren = {
   TeacherDashboardRoute: TeacherDashboardRoute,
   TeacherDocumentsRoute: TeacherDocumentsRoute,
   TeacherStudentRoute: TeacherStudentRoute,
+  TeacherUploadRoute: TeacherUploadRoute,
   TeacherViewerDocumentIdRoute: TeacherViewerDocumentIdRoute,
 };
 
@@ -221,6 +237,7 @@ export interface FileRoutesByFullPath {
   '/teacher/dashboard': typeof TeacherDashboardRoute;
   '/teacher/documents': typeof TeacherDocumentsRoute;
   '/teacher/student': typeof TeacherStudentRoute;
+  '/teacher/upload': typeof TeacherUploadRoute;
   '/auth': typeof AuthIndexRoute;
   '/signup': typeof SignupIndexRoute;
   '/teacher/viewer/$documentId': typeof TeacherViewerDocumentIdRoute;
@@ -236,6 +253,7 @@ export interface FileRoutesByTo {
   '/teacher/dashboard': typeof TeacherDashboardRoute;
   '/teacher/documents': typeof TeacherDocumentsRoute;
   '/teacher/student': typeof TeacherStudentRoute;
+  '/teacher/upload': typeof TeacherUploadRoute;
   '/auth': typeof AuthIndexRoute;
   '/signup': typeof SignupIndexRoute;
   '/teacher/viewer/$documentId': typeof TeacherViewerDocumentIdRoute;
@@ -252,6 +270,7 @@ export interface FileRoutesById {
   '/teacher/dashboard': typeof TeacherDashboardRoute;
   '/teacher/documents': typeof TeacherDocumentsRoute;
   '/teacher/student': typeof TeacherStudentRoute;
+  '/teacher/upload': typeof TeacherUploadRoute;
   '/auth/': typeof AuthIndexRoute;
   '/signup/': typeof SignupIndexRoute;
   '/teacher/viewer/$documentId': typeof TeacherViewerDocumentIdRoute;
@@ -269,6 +288,7 @@ export interface FileRouteTypes {
     | '/teacher/dashboard'
     | '/teacher/documents'
     | '/teacher/student'
+    | '/teacher/upload'
     | '/auth'
     | '/signup'
     | '/teacher/viewer/$documentId';
@@ -283,6 +303,7 @@ export interface FileRouteTypes {
     | '/teacher/dashboard'
     | '/teacher/documents'
     | '/teacher/student'
+    | '/teacher/upload'
     | '/auth'
     | '/signup'
     | '/teacher/viewer/$documentId';
@@ -297,6 +318,7 @@ export interface FileRouteTypes {
     | '/teacher/dashboard'
     | '/teacher/documents'
     | '/teacher/student'
+    | '/teacher/upload'
     | '/auth/'
     | '/signup/'
     | '/teacher/viewer/$documentId';
@@ -352,6 +374,7 @@ export const routeTree = rootRoute
         "/teacher/dashboard",
         "/teacher/documents",
         "/teacher/student",
+        "/teacher/upload",
         "/teacher/viewer/$documentId"
       ]
     },
@@ -378,6 +401,10 @@ export const routeTree = rootRoute
     },
     "/teacher/student": {
       "filePath": "teacher/student.tsx",
+      "parent": "/teacher"
+    },
+    "/teacher/upload": {
+      "filePath": "teacher/upload.tsx",
       "parent": "/teacher"
     },
     "/auth/": {

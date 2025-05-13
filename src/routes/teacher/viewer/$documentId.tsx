@@ -17,8 +17,8 @@ function DocumentViewerPage() {
   const docId = Number.parseInt(documentId)
 
   const [currentPage, setCurrentPage] = useState(1)
-  const [fontSize, setFontSize] = useState(16)
-  const [fontFamily, setFontFamily] = useState("Noto Sans KR")
+  const [fontSize, setFontSize] = useState(18)
+  const [fontFamily, setFontFamily] = useState("Pretendard")
   const [lineSpacing, setLineSpacing] = useState(1.5)
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [showTips, setShowTips] = useState(true)
