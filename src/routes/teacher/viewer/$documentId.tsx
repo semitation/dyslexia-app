@@ -18,7 +18,7 @@ function DocumentViewerPage() {
 
   const [currentPage, setCurrentPage] = useState(1)
   const [fontSize, setFontSize] = useState(18)
-  const [fontFamily, setFontFamily] = useState("Pretendard")
+  const [fontFamily, setFontFamily] = useState("PeachMarket")
   const [lineSpacing, setLineSpacing] = useState(1.5)
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [showTips, setShowTips] = useState(true)
@@ -126,11 +126,10 @@ function DocumentViewerPage() {
               onChange={(e) => setFontFamily(e.target.value)}
               className="w-40"
             >
+              <option value="PeachMarket" style={{ fontFamily: 'PeachMarket' }}>피치마켓</option>
               <option value="Noto Sans KR" style={{ fontFamily: 'Noto Sans KR' }}>Noto Sans</option>
-              <option value="OpenDyslexic" style={{ fontFamily: 'OpenDyslexic' }}>OpenDyslexic</option>
               <option value="Lexend" style={{ fontFamily: 'Lexend' }}>Lexend</option>
               <option value="Arial" style={{ fontFamily: 'Arial, sans-serif' }}>Arial</option>
-              <option value="PeachMarket" style={{ fontFamily: 'PeachMarket' }}>PeachMarket</option>
             </Select>
             <Button 
               variant={showTips ? "default" : "outline"}
@@ -163,6 +162,8 @@ function DocumentViewerPage() {
                     fontSize={fontSize}
                     fontFamily={fontFamily}
                     lineSpacing={lineSpacing}
+                    documentId={docId}
+                    pageNumber={currentPage}
                   />
                 </div>
               )}

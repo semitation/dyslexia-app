@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import type { Block } from '../model/types';
 import { cn } from '@/lib/utils';
+import { LongPressText } from '@/features/vocabulary-analysis';
 
 interface ParseBlocksOptions {
 	fontSize?: number;
@@ -8,11 +9,13 @@ interface ParseBlocksOptions {
 	lineSpacing?: number;
 	onBlockClick?: (block: Block) => void;
 	activeBlockId?: string | null;
+	documentId: number;
+	pageNumber: number;
 }
 
 export function parseBlocks(
 	blocks: Block[],
-	options?: ParseBlocksOptions,
+	options: ParseBlocksOptions,
 ): ReactNode[] {
 	if (!blocks) return [];
 	const {
@@ -21,7 +24,9 @@ export function parseBlocks(
 		lineSpacing = 1.5,
 		onBlockClick,
 		activeBlockId,
-	} = options || {};
+		documentId,
+		pageNumber,
+	} = options;
 
 	return blocks.map((block, i) => {
 		const key = block.id ? String(block.id) : `${i}`;
@@ -38,19 +43,21 @@ export function parseBlocks(
 		switch (block.type) {
 			case 'TEXT':
 				return (
-					<p
+					<div
 						key={key}
 						style={baseStyle}
-						onClick={onBlockClick ? () => { console.log('onClick fired', block); onBlockClick(block); } : () => {}}
-						onKeyDown={onBlockClick ? (e) => { if (e.key === 'Enter' || e.key === ' ') onBlockClick(block) } : undefined}
-						tabIndex={onBlockClick ? 0 : undefined}
 						className={cn(
 							'cursor-pointer',
 							block.blank && 'mb-4',
 						)}
 					>
-						{block.text}
-					</p>
+						<LongPressText
+							text={block.text}
+							documentId={documentId}
+							pageNumber={pageNumber}
+							blockId={block.id}
+						/>
+					</div>
 				);
 			case 'HEADING1':
 				return (
