@@ -10,6 +10,8 @@ interface ProcessedContentProps {
 	fontSize: number;
 	fontFamily: string;
 	lineSpacing: number;
+	documentId: number;
+	pageNumber: number;
 }
 
 export const ProcessedContent: React.FC<ProcessedContentProps> = ({
@@ -17,6 +19,8 @@ export const ProcessedContent: React.FC<ProcessedContentProps> = ({
 	fontSize,
 	fontFamily,
 	lineSpacing,
+	documentId,
+	pageNumber,
 }) => {
 	const { activeBlockId, speak } = useBlockSpeech();
 	console.log("processed content", { blocks, activeBlockId });
@@ -36,6 +40,8 @@ export const ProcessedContent: React.FC<ProcessedContentProps> = ({
 				lineSpacing,
 				onBlockClick: handleBlockClick,
 				activeBlockId,
+				documentId,
+				pageNumber,
 			})}
 		</>
 	);
