@@ -43,6 +43,8 @@ export function VocaAnalysis({
 		}
 	};
 
+  console.log(phonemeAnalysis);
+
 	if (!phonemeAnalysis) return null;
 
 	return (
@@ -66,7 +68,7 @@ export function VocaAnalysis({
 				</Button>
 			</div>
 
-			<QuoteCard text={currentVocabulary.sentence || "문장이 없습니다."} />
+			<QuoteCard text={currentVocabulary.originalSentence || "문장이 없습니다."} />
 
 			<DefinitionSection 
 				word={currentVocabulary.word}
