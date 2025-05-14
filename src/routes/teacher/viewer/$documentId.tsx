@@ -126,10 +126,10 @@ function DocumentViewerPage() {
               onChange={(e) => setFontFamily(e.target.value)}
               className="w-40"
             >
-              <option value="Noto Sans KR">Noto Sans</option>
-              <option value="OpenDyslexic">OpenDyslexic</option>
-              <option value="Lexend">Lexend</option>
-              <option value="Arial">Arial</option>
+              <option value="Noto Sans KR" style={{ fontFamily: 'Noto Sans KR' }}>Noto Sans</option>
+              <option value="OpenDyslexic" style={{ fontFamily: 'OpenDyslexic' }}>OpenDyslexic</option>
+              <option value="Lexend" style={{ fontFamily: 'Lexend' }}>Lexend</option>
+              <option value="Arial" style={{ fontFamily: 'Arial, sans-serif' }}>Arial</option>
               <option value="PeachMarket" style={{ fontFamily: 'PeachMarket' }}>PeachMarket</option>
             </Select>
             <Button 
