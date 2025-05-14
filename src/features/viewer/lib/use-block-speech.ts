@@ -19,7 +19,7 @@ export function useBlockSpeech() {
     const toastId = toast.loading('오디오를 불러오는 중...')
     try {
       setLoading(true)
-      const blob = await fetchSpeechAudio({ text, voice: 'coral', model: 'tts-1' })
+      const blob = await fetchSpeechAudio({ text, voice: 'fable', model: 'gpt-4o-mini-tts' })
       toast.dismiss(toastId)
       const url = URL.createObjectURL(blob)
       const audio = new Audio(url)

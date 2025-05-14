@@ -26,7 +26,7 @@ export const PageTips: React.FC<PageTipsProps> = ({ tips, fontSize }) => {
 		setLoadingId(id);
 		const toastId = toast.loading('오디오를 불러오는 중...');
 		try {
-			const blob = await fetchSpeechAudio({ text, voice: 'echo' });
+			const blob = await fetchSpeechAudio({ text, voice: 'echo', model: 'tts-1' });
 			toast.dismiss(toastId);
 			const url = URL.createObjectURL(blob);
 			const audio = new Audio(url);
