@@ -127,8 +127,9 @@ function DocumentViewerPage() {
               className="w-40"
             >
               <option value="PeachMarket" style={{ fontFamily: 'PeachMarket' }}>피치마켓</option>
-              <option value="Noto Sans KR">Noto Sans</option>
-              <option value="OpenDyslexic">OpenDyslexic</option>
+              <option value="Noto Sans KR" style={{ fontFamily: 'Noto Sans KR' }}>Noto Sans</option>
+              <option value="Lexend" style={{ fontFamily: 'Lexend' }}>Lexend</option>
+              <option value="Arial" style={{ fontFamily: 'Arial, sans-serif' }}>Arial</option>
             </Select>
             <Button 
               variant={showTips ? "default" : "outline"}
