@@ -37,7 +37,11 @@ export type Block =
   | {
       id: string
       type: 'PAGE_IMAGE'
-      imageId: string
+      imageId?: string
+      url: string;
+      alt?: string
+      prompt?: string
+      concept: string
     }
 
 export interface PageBlockApiResponse {
