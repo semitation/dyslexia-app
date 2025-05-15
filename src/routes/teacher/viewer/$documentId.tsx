@@ -16,12 +16,12 @@ function DocumentViewerPage() {
   const { documentId } = Route.useParams()
   const docId = Number.parseInt(documentId)
 
-  const [currentPage, setCurrentPage] = useState(1)
-  const [fontSize, setFontSize] = useState(18)
-  const [fontFamily, setFontFamily] = useState("PeachMarket")
-  const [lineSpacing, setLineSpacing] = useState(1.5)
-  const [isFullscreen, setIsFullscreen] = useState(false)
-  const [showTips, setShowTips] = useState(true)
+  const [currentPage, setCurrentPage] = useState(1);
+  const [fontSize, setFontSize] = useState(18);
+  const [fontFamily, setFontFamily] = useState("PeachMarket");
+  const [lineSpacing, setLineSpacing] = useState(1.5);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [showTips, setShowTips] = useState(false);
 
   const { data: pageContents = [], isLoading: isLoadingPageContent } = useQuery({
     queryKey: ["document", docId, "page-content", currentPage],
@@ -76,9 +76,6 @@ function DocumentViewerPage() {
       <div className="bg-white shadow-md rounded-lg p-4 mb-6 sticky top-0 z-10">
         <div className="flex flex-col md:flex-row justify-between items-center gap-4">
           <div className="flex items-center gap-2">
-            <Typography variant="h4" className="mr-4">
-              {documentTitle}
-            </Typography>
             <div className="flex items-center gap-1">
               <Button
                 variant="outline"
@@ -88,8 +85,8 @@ function DocumentViewerPage() {
               >
                 <ChevronLeft className="w-4 h-4" />
               </Button>
-              <Typography variant="p" className="mx-2">
-                {currentPage}
+              <Typography variant="p" className="mx-2 text-slate-400">
+                {currentPage} 페이지
               </Typography>
               <Button
                 variant="outline"
@@ -111,7 +108,7 @@ function DocumentViewerPage() {
               >
                 <ZoomOut className="w-4 h-4" />
               </Button>
-              <Typography variant="p">{fontSize}px</Typography>
+              <Typography variant="p" className="text-slate-600 font-bold">{fontSize}px</Typography>
               <Button 
                 variant="outline" 
                 size="sm" 
@@ -138,7 +135,7 @@ function DocumentViewerPage() {
               className="flex items-center gap-1"
             >
               <Info className="w-4 h-4" />
-              <span>팁 {showTips ? '숨기기' : '보기'}</span>
+              <span>핵심 어휘 {showTips ? '숨기기' : '보기'}</span>
             </Button>
             <Button variant="outline" onClick={toggleFullscreen}>
               <Maximize className="w-4 h-4" />
@@ -146,8 +143,15 @@ function DocumentViewerPage() {
           </div>
         </div>
       </div>
-      <Card className="max-w-4xl mx-auto">
-        <CardContent className="p-8">
+
+      <Card className="w-full">
+        <CardContent className="px-8 py-2">
+        <div className="w-full flex justify-end">
+        <Typography variant="h3" className="my-2 text-slate-400">
+              {documentTitle}
+        </Typography>       
+        </div>
+   
           {isLoadingPageContent ? (
             <div className="flex justify-center items-center py-20">
               <Loader2 className="w-8 h-8 animate-spin" />
@@ -177,11 +181,12 @@ function DocumentViewerPage() {
           )}
         </CardContent>
       </Card>
-      <div className="flex justify-between mt-6 max-w-4xl mx-auto">
+      <div className="flex justify-between mt-6 w-full">
         <Button
           variant="outline"
           onClick={() => handlePageChange(currentPage - 1)}
           disabled={currentPage <= 1}
+          size="lg"
         >
           <ChevronLeft className="w-4 h-4 mr-2" />
           이전 페이지
@@ -190,6 +195,7 @@ function DocumentViewerPage() {
           variant="outline"
           onClick={() => handlePageChange(currentPage + 1)}
           disabled={pageContents.length === 0}
+          size="lg"
         >
           다음 페이지
           <ChevronRight className="w-4 h-4 ml-2" />

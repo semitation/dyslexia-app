@@ -20,6 +20,7 @@ export interface VocabularyAnalysis {
   gradeLevel: number;
   phonemeAnalysisJson: string;
   createdAt: string;
+  originalSentence: string;
 }
 
 export interface PhonemeComponent {
@@ -45,11 +46,26 @@ export interface SyllableComponents {
 }
 
 export interface SyllableInfo {
+  character: string;
+  pronunciation: string;
+  difficulty?: number;
   syllable: string;
-  order: number;
-  components: SyllableComponents;
-  combinedSound: string;
   writingTips: string;
+  examples?: string[];
+  components: {
+    initial?: {
+      consonant: string;
+      pronunciation: string;
+    };
+    medial?: {
+      vowel: string;
+      pronunciation: string;
+    };
+    final?: {
+      consonant: string;
+      pronunciation: string;
+    };
+  };
 }
 
 export interface WritingStep {
@@ -65,14 +81,5 @@ export interface LearningTips {
 }
 
 export interface PhonemeAnalysis {
-  word: string;
   syllables: SyllableInfo[];
-  totalPhonemes: {
-    consonants: string[];
-    vowels: string[];
-    uniquePhonemes: string[];
-  };
-  difficultyLevel: string;
-  writingOrder: WritingStep[];
-  learningTips: LearningTips;
 } 

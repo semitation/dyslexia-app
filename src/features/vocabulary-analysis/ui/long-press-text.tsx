@@ -53,7 +53,7 @@ export function LongPressText({
 		toast("계속 누르면 어휘 학습을 할 수 있어요!", {
 			className: "text-[16px] py-3 px-4",
 			position: "top-center",
-			duration: 2000,
+			duration: 500,
 			style: {
 				top: `${bottomY - 26}px`,
 			},
@@ -69,6 +69,7 @@ export function LongPressText({
 		},
 		onFinish: () => setIsPressed(false),
 		onCancel: () => setIsPressed(false),
+		threshold: 500,
 	});
 
 	const handleClick = () => {
@@ -104,7 +105,7 @@ export function LongPressText({
 			<Button
 				variant="ghost"
 				size="icon"
-				className="absolute -right-8 top-1/2 -translate-y-1/2 opacity-0 transition-opacity group-hover:opacity-100"
+				className="border border-slate-200 absolute -right-8 top-1/2 -translate-y-1/2 opacity-0 transition-opacity group-hover:opacity-100"
 				onClick={handleClick}
 				disabled={loading && !isActiveBlock}
 			>

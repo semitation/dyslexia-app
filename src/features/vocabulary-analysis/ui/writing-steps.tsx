@@ -1,7 +1,6 @@
 import type { WritingStep } from '@/shared/api/types';
-import { Card, CardContent } from '@/shared/ui/card';
-import { Check } from 'lucide-react';
 import { Badge } from '@/shared/ui/badge';
+import { Check } from 'lucide-react';
 
 interface WritingStepsProps {
 	steps: WritingStep[];
@@ -31,11 +30,14 @@ const getDifficultyText = (level: string) => {
 
 export function WritingSteps({ steps }: WritingStepsProps) {
 	return (
-		<div className="space-y-4">
-			{steps.map((step) => (
-				<Card key={`${step.syllable}-${step.phoneme}-${step.step}`}>
-					<CardContent className="flex items-center gap-4 p-4">
-						<div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground text-lg font-bold">
+		<div className="space-y-6">
+			<ul className="space-y-4">
+				{steps.map((step) => (
+					<li 
+						key={`${step.syllable}-${step.phoneme}-${step.step}`}
+						className="flex items-center gap-4 border-b pb-4 last:border-b-0"
+					>
+						<div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground text-lg font-bold">
 							{step.step}
 						</div>
 						<div className="flex-1 space-y-2">
@@ -56,12 +58,9 @@ export function WritingSteps({ steps }: WritingStepsProps) {
 								</span>
 							</div>
 						</div>
-						<div className="flex h-8 w-8 items-center justify-center rounded-full bg-green-100">
-							<Check className="h-4 w-4 text-green-600" />
-						</div>
-					</CardContent>
-				</Card>
-			))}
+					</li>
+				))}
+			</ul>
 		</div>
 	);
 } 

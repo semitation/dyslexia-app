@@ -3,7 +3,8 @@ import type { VocabularyAnalysis, PhonemeAnalysis } from '@/shared/api/types';
 import { Button } from '@/shared/ui/button';
 import { Badge } from '@/shared/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs';
-import { Volume, Pencil, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Pencil, ChevronLeft, ChevronRight } from 'lucide-react';
+import { SoundButton } from '@/shared/ui/sound-button';
 import { QuoteCard } from './quote-card';
 import { DefinitionSection } from './definition-section';
 import { SyllableAnalysis } from './syllable-analysis';
@@ -43,21 +44,17 @@ export function VocaAnalysis({
 		}
 	};
 
-  console.log(phonemeAnalysis);
-
 	if (!phonemeAnalysis) return null;
 
 	return (
-		<div className="space-y-4 h-full">
+		<div className="space-y-4 flex flex-col h-full mt-6">
 			<div className="flex items-center justify-between">
 				<div className="flex items-center gap-4">
 					<h3 className="text-2xl font-bold">{currentVocabulary.word}</h3>
 					<Badge className={getDifficultyStyle(currentVocabulary.difficultyLevel)}>
 						{getDifficultyText(currentVocabulary.difficultyLevel)}
 					</Badge>
-					<Button variant="ghost" size="icon" onClick={() => onSpeak(currentVocabulary.word)}>
-						<Volume className="h-4 w-4" />
-					</Button>
+					<SoundButton text={currentVocabulary.word} onSpeak={onSpeak} />
 					<span className="text-sm text-gray-500">
 						{currentIndex + 1} / {totalCount}
 					</span>
@@ -79,19 +76,20 @@ export function VocaAnalysis({
 				onOpenChange={setIsDefinitionOpen}
 			/>
 
-			<Tabs defaultValue="phoneme" className="w-full" onClick={handleTabClick}>
+			<Tabs defaultValue="phoneme" className="w-full flex-1 overflow-y-scroll" onClick={handleTabClick}>
 				<TabsList className="w-full">
 					<TabsTrigger value="phoneme" className="flex-1">음소 분석</TabsTrigger>
 					<TabsTrigger value="writing" className="flex-1">쓰기 순서</TabsTrigger>
 					<TabsTrigger value="tips" className="flex-1">학습 팁</TabsTrigger>
 				</TabsList>
 
-				<div className="overflow-y-auto max-h-[600px] pr-4">
+				<div className="overflow-y-auto pr-4">
 					<TabsContent value="phoneme" className="mt-4">
 						<div className="space-y-6">
 							{phonemeAnalysis.syllables.map((syllable, index) => (
 								<SyllableAnalysis 
-									key={`syllable-${index}`} 
+									key={`syllable-${// biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
+index}`} 
 									syllable={syllable} 
 								/>
 							))}

@@ -1,222 +1,284 @@
 import type React from 'react';
-import { useRef, useEffect, useState } from 'react';
+import { useRef, useEffect, useState, forwardRef, useCallback } from 'react';
 import { Button } from '@/shared/ui/button';
 import { Eraser } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
-interface WritingCanvasProps {
+interface WritingCanvasProps extends React.HTMLAttributes<HTMLCanvasElement> {
 	height?: number;
+	width?: number;
 	onSave?: (pngData: string) => void;
+	initialImage?: string;
+	guideText?: string;
+	guideTextScale?: number;
 }
 
-export function WritingCanvas({ height = 300, onSave }: WritingCanvasProps) {
-	const canvasRef = useRef<HTMLCanvasElement>(null);
-	const contextRef = useRef<CanvasRenderingContext2D | null>(null);
-	const containerRef = useRef<HTMLDivElement>(null);
-	const [isDrawing, setIsDrawing] = useState(false);
-	const [containerWidth, setContainerWidth] = useState(0);
-	const lastPointRef = useRef<{
-		x: number;
-		y: number;
-		pressure: number;
-	} | null>(null);
-	const pointsRef = useRef<{ x: number; y: number; pressure: number }[]>([]);
+export const WritingCanvas = forwardRef<HTMLCanvasElement, WritingCanvasProps>(
+	({ className, height = 300, width, onSave, initialImage, guideText, guideTextScale = 1, ...props }, ref) => {
+		const canvasRef = useRef<HTMLCanvasElement | null>(null);
+		const guideCanvasRef = useRef<HTMLCanvasElement | null>(null);
+		const contextRef = useRef<CanvasRenderingContext2D | null>(null);
+		const guideContextRef = useRef<CanvasRenderingContext2D | null>(null);
+		const containerRef = useRef<HTMLDivElement>(null);
+		const [isDrawing, setIsDrawing] = useState(false);
+		const [containerWidth, setContainerWidth] = useState(0);
+		const lastPointRef = useRef<{ x: number; y: number; pressure: number } | null>(null);
+		const pointsRef = useRef<{ x: number; y: number; pressure: number }[]>([]);
+		const saveTimeoutRef = useRef<number | null>(null);
 
-	useEffect(() => {
-		const updateCanvasSize = () => {
-			const container = containerRef.current;
-			if (!container) return;
-			setContainerWidth(container.clientWidth);
+		const handleSave = useCallback(() => {
+			if (onSave && canvasRef.current) {
+				const pngData = canvasRef.current.toDataURL('image/png');
+				onSave(pngData);
+			}
+		}, [onSave]);
+
+		useEffect(() => {
+			const updateCanvasSize = () => {
+				const container = containerRef.current;
+				if (!container) return;
+				setContainerWidth(width || container.clientWidth);
+			};
+
+			updateCanvasSize();
+			if (!width) {
+				const resizeObserver = new ResizeObserver(updateCanvasSize);
+				if (containerRef.current) {
+					resizeObserver.observe(containerRef.current);
+				}
+				return () => resizeObserver.disconnect();
+			}
+		}, [width]);
+
+		// 가이드 텍스트 렌더링 함수
+		const renderGuideText = useCallback(() => {
+			const guideContext = guideContextRef.current;
+			if (!guideContext || !containerWidth) return;
+
+			// 캔버스 초기화
+			guideContext.clearRect(0, 0, containerWidth, height);
+			
+			if (guideText) {
+				// 가이드 텍스트 스타일 설정
+				guideContext.fillStyle = '#64748b';
+				guideContext.globalAlpha = 0.3;
+				
+				// 텍스트 크기 조정
+				const fontSize = Math.min(height * 0.8, containerWidth * 0.8) * guideTextScale;
+				guideContext.font = `${fontSize}px "Noto Sans KR"`;
+				guideContext.textAlign = 'center';
+				guideContext.textBaseline = 'middle';
+				
+				// 텍스트 렌더링
+				guideContext.fillText(guideText, containerWidth / 2, height / 2);
+			}
+		}, [guideText, containerWidth, height, guideTextScale]);
+
+		useEffect(() => {
+			const canvas = ref ? (ref as React.RefObject<HTMLCanvasElement>).current : canvasRef.current;
+			const guideCanvas = guideCanvasRef.current;
+			if (!canvas || !guideCanvas || containerWidth === 0) return;
+
+			const scale = window.devicePixelRatio;
+			
+			// 가이드 캔버스 설정
+			guideCanvas.width = containerWidth * scale;
+			guideCanvas.height = height * scale;
+			guideCanvas.style.width = `${containerWidth}px`;
+			guideCanvas.style.height = `${height}px`;
+
+			const guideContext = guideCanvas.getContext('2d', { alpha: true });
+			if (!guideContext) return;
+
+			guideContext.scale(scale, scale);
+			guideContextRef.current = guideContext;
+			
+			// 메인 캔버스 설정
+			canvas.width = containerWidth * scale;
+			canvas.height = height * scale;
+			canvas.style.width = `${containerWidth}px`;
+			canvas.style.height = `${height}px`;
+
+			const context = canvas.getContext('2d', { alpha: true });
+			if (!context) return;
+
+			context.scale(scale, scale);
+			context.lineCap = 'round';
+			context.lineJoin = 'round';
+			context.strokeStyle = '#000000';
+			context.shadowColor = '#000000';
+			context.shadowBlur = 1;
+			contextRef.current = context;
+
+			// 초기 이미지가 있다면 로드
+			if (initialImage) {
+				const img = new Image();
+				img.onload = () => {
+					if (context) {
+						context.drawImage(img, 0, 0);
+					}
+				};
+				img.src = initialImage;
+			}
+
+			// 가이드 텍스트 렌더링
+			renderGuideText();
+		}, [ref, containerWidth, height, initialImage, renderGuideText]);
+
+		// 가이드 텍스트가 변경될 때마다 다시 렌더링
+		useEffect(() => {
+			if (guideContextRef.current) {
+				renderGuideText();
+			}
+		}, [renderGuideText]);
+
+		const getStrokeWidth = (pressure: number) => {
+			const minWidth = 3;
+			const maxWidth = 6.5;
+			return minWidth + (maxWidth - minWidth) * pressure;
 		};
 
-		updateCanvasSize();
-		const resizeObserver = new ResizeObserver(updateCanvasSize);
-		if (containerRef.current) {
-			resizeObserver.observe(containerRef.current);
-		}
+		const drawPoints = (points: { x: number; y: number; pressure: number }[]) => {
+			const context = contextRef.current;
+			if (!context || points.length < 2) return;
 
-		return () => resizeObserver.disconnect();
-	}, []);
+			context.beginPath();
+			context.moveTo(points[0].x, points[0].y);
 
-	useEffect(() => {
-		const canvas = canvasRef.current;
-		if (!canvas || containerWidth === 0) return;
+			for (let i = 1; i < points.length - 2; i++) {
+				const c = (points[i].x + points[i + 1].x) / 2;
+				const d = (points[i].y + points[i + 1].y) / 2;
+				const pressure = (points[i].pressure + points[i + 1].pressure) / 2;
 
-		const scale = window.devicePixelRatio;
-		canvas.width = containerWidth * scale;
-		canvas.height = height * scale;
-		canvas.style.width = `${containerWidth}px`;
-		canvas.style.height = `${height}px`;
+				context.lineWidth = getStrokeWidth(pressure);
+				context.quadraticCurveTo(points[i].x, points[i].y, c, d);
+			}
 
-		const context = canvas.getContext('2d');
-		if (!context) return;
+			if (points.length > 2) {
+				const lastPoint = points[points.length - 1];
+				const preLastPoint = points[points.length - 2];
+				context.lineWidth = getStrokeWidth(lastPoint.pressure);
+				context.quadraticCurveTo(
+					preLastPoint.x,
+					preLastPoint.y,
+					lastPoint.x,
+					lastPoint.y,
+				);
+			}
 
-		context.scale(scale, scale);
-		context.lineCap = 'round';
-		context.lineJoin = 'round';
-		context.strokeStyle = '#000000';
-		context.shadowColor = '#000000';
-		context.shadowBlur = 1;
-		context.fillStyle = '#FFFFFF';
-		context.fillRect(0, 0, containerWidth, height);
-
-		contextRef.current = context;
-	}, [containerWidth, height]);
-
-	const getStrokeWidth = (pressure: number) => {
-		// 기본 굵기를 2로 하고, 압력에 따라 1.5~4 사이의 값을 반환
-		const minWidth = 1.5;
-		const maxWidth = 4;
-		return minWidth + (maxWidth - minWidth) * pressure;
-	};
-
-	const drawPoints = (points: { x: number; y: number; pressure: number }[]) => {
-		const context = contextRef.current;
-		if (!context || points.length < 2) return;
-
-		context.beginPath();
-		context.moveTo(points[0].x, points[0].y);
-
-		// Catmull-Rom 스플라인을 사용하여 부드러운 곡선 그리기
-		for (let i = 1; i < points.length - 2; i++) {
-			const c = (points[i].x + points[i + 1].x) / 2;
-			const d = (points[i].y + points[i + 1].y) / 2;
-			const pressure = (points[i].pressure + points[i + 1].pressure) / 2;
-
-			context.lineWidth = getStrokeWidth(pressure);
-			context.quadraticCurveTo(points[i].x, points[i].y, c, d);
-		}
-
-		// 마지막 두 점 처리
-		if (points.length > 2) {
-			const lastPoint = points[points.length - 1];
-			const preLastPoint = points[points.length - 2];
-			context.lineWidth = getStrokeWidth(lastPoint.pressure);
-			context.quadraticCurveTo(
-				preLastPoint.x,
-				preLastPoint.y,
-				lastPoint.x,
-				lastPoint.y,
-			);
-		}
-
-		context.stroke();
-	};
-
-	const startDrawing = (e: React.MouseEvent | React.TouchEvent) => {
-		const canvas = canvasRef.current;
-		if (!canvas || !contextRef.current) return;
-
-		setIsDrawing(true);
-		const point = getEventPoint(e, canvas);
-		lastPointRef.current = point;
-		pointsRef.current = [point];
-	};
-
-	const draw = (e: React.MouseEvent | React.TouchEvent) => {
-		if (!isDrawing || !contextRef.current || !lastPointRef.current) return;
-		e.preventDefault();
-
-		const canvas = canvasRef.current;
-		if (!canvas) return;
-
-		const point = getEventPoint(e, canvas);
-		pointsRef.current.push(point);
-
-		// 부드러운 곡선을 위해 최근 4개의 점만 사용
-		if (pointsRef.current.length > 4) {
-			drawPoints(pointsRef.current.slice(-4));
-			pointsRef.current = pointsRef.current.slice(-3);
-		}
-
-		lastPointRef.current = point;
-	};
-
-	const stopDrawing = () => {
-		if (!contextRef.current) return;
-
-		if (pointsRef.current.length >= 2) {
-			drawPoints(pointsRef.current);
-		}
-
-		setIsDrawing(false);
-		lastPointRef.current = null;
-		pointsRef.current = [];
-
-		if (onSave && canvasRef.current) {
-			const pngData = canvasRef.current.toDataURL('image/png');
-			onSave(pngData);
-		}
-	};
-
-	const getEventPoint = (
-		e: React.MouseEvent | React.TouchEvent,
-		canvas: HTMLCanvasElement,
-	) => {
-		const rect = canvas.getBoundingClientRect();
-		let clientX: number,
-			clientY: number,
-			pressure = 0.5;
-
-		if ('touches' in e) {
-			clientX = e.touches[0].clientX;
-			clientY = e.touches[0].clientY;
-			// Touch API에서 압력 정보 가져오기
-			pressure = (e.touches[0] as any).force || 0.5;
-		} else {
-			clientX = e.clientX;
-			clientY = e.clientY;
-			// 마우스의 경우 기본 압력값 사용
-			pressure = 0.5;
-		}
-
-		return {
-			x: clientX - rect.left,
-			y: clientY - rect.top,
-			pressure,
+			context.stroke();
 		};
-	};
 
-	const clearCanvas = () => {
-		const context = contextRef.current;
-		const canvas = canvasRef.current;
-		if (!context || !canvas) return;
+		const getEventPoint = (e: React.PointerEvent<HTMLCanvasElement>) => {
+			const rect = e.currentTarget.getBoundingClientRect();
+			return {
+				x: e.clientX - rect.left,
+				y: e.clientY - rect.top,
+				pressure: e.pressure !== 0 ? e.pressure : 0.5,
+			};
+		};
 
-		context.fillStyle = '#FFFFFF';
-		context.fillRect(0, 0, canvas.width, canvas.height);
+		const startDrawing = (e: React.PointerEvent<HTMLCanvasElement>) => {
+			const point = getEventPoint(e);
+			setIsDrawing(true);
+			lastPointRef.current = point;
+			pointsRef.current = [point];
+		};
 
-		if (onSave) {
-			const pngData = canvas.toDataURL('image/png');
-			onSave(pngData);
-		}
-	};
+		const draw = (e: React.PointerEvent<HTMLCanvasElement>) => {
+			if (!isDrawing || !contextRef.current || !lastPointRef.current) return;
+			e.preventDefault();
 
-	return (
-		<div className="flex flex-col gap-4" ref={containerRef}>
-			<div className="relative rounded-lg border border-gray-200 bg-white shadow-sm w-full">
-				<canvas
-					ref={canvasRef}
-					onMouseDown={startDrawing}
-					onMouseMove={draw}
-					onMouseUp={stopDrawing}
-					onMouseLeave={stopDrawing}
-					onTouchStart={startDrawing}
-					onTouchMove={draw}
-					onTouchEnd={stopDrawing}
-					className="touch-none w-full"
-					style={{
-						height: `${height}px`,
-					}}
-				/>
-			</div>
-			<Button
-				variant="outline"
-				size="sm"
-				onClick={clearCanvas}
-				className="w-fit"
+			const point = getEventPoint(e);
+			pointsRef.current.push(point);
+
+			if (pointsRef.current.length > 4) {
+				drawPoints(pointsRef.current.slice(-4));
+				pointsRef.current = pointsRef.current.slice(-3);
+			}
+
+			lastPointRef.current = point;
+		};
+
+		const stopDrawing = () => {
+			if (!contextRef.current) return;
+
+			if (pointsRef.current.length >= 2) {
+				drawPoints(pointsRef.current);
+			}
+
+			setIsDrawing(false);
+			lastPointRef.current = null;
+			pointsRef.current = [];
+
+			if (saveTimeoutRef.current) {
+				window.clearTimeout(saveTimeoutRef.current);
+			}
+			saveTimeoutRef.current = window.setTimeout(handleSave, 300);
+		};
+
+		const clearCanvas = () => {
+			const context = contextRef.current;
+			const canvas = canvasRef.current;
+			if (!context || !canvas) return;
+
+			const scale = window.devicePixelRatio;
+			
+			// 메인 캔버스 초기화
+			canvas.width = containerWidth * scale;
+			canvas.height = height * scale;
+			context.scale(scale, scale);
+			context.lineCap = 'round';
+			context.lineJoin = 'round';
+			context.strokeStyle = '#000000';
+			context.shadowColor = '#000000';
+			context.shadowBlur = 1;
+
+			// 가이드 텍스트 다시 렌더링
+			renderGuideText();
+
+			handleSave();
+		};
+
+		return (
+			<div 
+				className="flex flex-col gap-4" 
+				ref={containerRef}
+				style={width ? { width: `${width}px` } : undefined}
 			>
-				<Eraser className="mr-2 h-4 w-4" />
-				다시 쓰기
-			</Button>
-		</div>
-	);
-}
+				<div 
+					className="relative rounded-lg border-2 border-dyslexia-blue shadow-sm w-full overflow-hidden"
+					style={{ 
+						height: `${height}px`,
+						padding: '2px'
+					}}
+				>
+					<canvas
+						ref={guideCanvasRef}
+						className={cn('touch-none absolute top-0 left-0 z-0', className)}
+						style={{ background: 'transparent' }}
+					/>
+					<canvas
+						ref={ref || canvasRef}
+						onPointerDown={startDrawing}
+						onPointerMove={draw}
+						onPointerUp={stopDrawing}
+						onPointerOut={stopDrawing}
+						className={cn('touch-none absolute top-0 left-0 z-10', className)}
+						style={{ background: 'transparent' }}
+						{...props}
+					/>
+				</div>
+				<Button
+					variant="outline"
+					size="sm"
+					onClick={clearCanvas}
+					className="w-fit"
+				>
+					<Eraser className="mr-2 h-4 w-4" />
+					다시 쓰기
+				</Button>
+			</div>
+		);
+	},
+);

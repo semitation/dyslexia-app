@@ -171,9 +171,6 @@ function DocumentsPage() {
     enabled: !!teacherId,
   });
 
-
-  console.log(documents);
-
   // 문서 처리 상태 폴링
   const [processingDocuments, setProcessingDocuments] = useState<Set<number>>(new Set())
   
