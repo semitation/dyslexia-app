@@ -133,8 +133,8 @@ export const WritingCanvas = forwardRef<HTMLCanvasElement, WritingCanvasProps>(
 		}, [renderGuideText]);
 
 		const getStrokeWidth = (pressure: number) => {
-			const minWidth = 1.5;
-			const maxWidth = 4;
+			const minWidth = 3;
+			const maxWidth = 6.5;
 			return minWidth + (maxWidth - minWidth) * pressure;
 		};
 
