@@ -10,10 +10,11 @@ interface WritingCanvasProps extends React.HTMLAttributes<HTMLCanvasElement> {
 	onSave?: (pngData: string) => void;
 	initialImage?: string;
 	guideText?: string;
+	guideTextScale?: number;
 }
 
 export const WritingCanvas = forwardRef<HTMLCanvasElement, WritingCanvasProps>(
-	({ className, height = 300, width, onSave, initialImage, guideText, ...props }, ref) => {
+	({ className, height = 300, width, onSave, initialImage, guideText, guideTextScale = 1, ...props }, ref) => {
 		const canvasRef = useRef<HTMLCanvasElement | null>(null);
 		const guideCanvasRef = useRef<HTMLCanvasElement | null>(null);
 		const contextRef = useRef<CanvasRenderingContext2D | null>(null);
@@ -61,18 +62,17 @@ export const WritingCanvas = forwardRef<HTMLCanvasElement, WritingCanvasProps>(
 				// 가이드 텍스트 스타일 설정
 				guideContext.fillStyle = '#64748b';
 				guideContext.globalAlpha = 0.3;
-				guideContext.font = '120px "Noto Sans KR"';
-				guideContext.textAlign = 'center';
-				guideContext.textBaseline = 'middle';
 				
 				// 텍스트 크기 조정
-				const fontSize = Math.min(height * 0.8, containerWidth * 0.8);
+				const fontSize = Math.min(height * 0.8, containerWidth * 0.8) * guideTextScale;
 				guideContext.font = `${fontSize}px "Noto Sans KR"`;
+				guideContext.textAlign = 'center';
+				guideContext.textBaseline = 'middle';
 				
 				// 텍스트 렌더링
 				guideContext.fillText(guideText, containerWidth / 2, height / 2);
 			}
-		}, [guideText, containerWidth, height]);
+		}, [guideText, containerWidth, height, guideTextScale]);
 
 		useEffect(() => {
 			const canvas = ref ? (ref as React.RefObject<HTMLCanvasElement>).current : canvasRef.current;

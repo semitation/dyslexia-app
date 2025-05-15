@@ -49,44 +49,6 @@ function PhonemeCard({ component, type }: { component: PhonemeComponent | Syllab
 	);
 }
 
-function SyllableAnalysis({ syllable }: { syllable: SyllableInfo }) {
-	return (
-		<Card className="mb-4">
-			<CardHeader>
-				<CardTitle className="flex items-center justify-between">
-					<span className="text-2xl">{syllable.syllable}</span>
-					<span className="text-sm text-gray-500">{syllable.combinedSound}</span>
-				</CardTitle>
-			</CardHeader>
-			<CardContent>
-				<div className="grid grid-cols-3 gap-4">
-					<PhonemeCard component={syllable.components.initial} type="initial" />
-					<PhonemeCard component={syllable.components.medial} type="medial" />
-					{syllable.components.final && (
-						<PhonemeCard component={syllable.components.final} type="final" />
-					)}
-				</div>
-				<div className="mt-4 text-sm text-gray-600">
-					<p>{syllable.writingTips}</p>
-				</div>
-			</CardContent>
-		</Card>
-	);
-}
-
-function WritingSteps({ steps }: { steps: WritingStep[] }) {
-	return (
-		<div className="space-y-2">
-			{steps.map((step) => (
-				<div key={`${step.syllable}-${step.step}-${step.phoneme}`} className="flex items-center gap-2">
-					<Badge className="bg-gray-100 text-gray-800">{step.step}</Badge>
-					<span className="text-lg font-semibold">{step.phoneme}</span>
-					<span className="text-gray-500">in {step.syllable}</span>
-				</div>
-			))}
-		</div>
-	);
-}
 
 function LearningTipsSection({ tips }: { tips: LearningTips }) {
 	return (

@@ -3,7 +3,7 @@ import type { PhonemeAnalysis } from '@/shared/api/types';
 import { Button } from '@/shared/ui/button';
 import { ProgressBar } from '@/shared/ui/progress-bar';
 import { SoundButton } from '@/shared/ui/sound-button';
-import { Card, CardContent } from '@/shared/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
 import { toast } from 'sonner';
 import { useWritingStore } from '../model/writing-store';
@@ -25,15 +25,19 @@ export function WritingPractice({ word, phonemeAnalysis, onBack, onSpeak }: Writ
 		setCurrentSyllable,
 		reset
 	} = useWritingStore();
-	const [showSyllable, setShowSyllable] = useState(false);
-	const showSyllableRef = useRef(false);
+
+	const [showResult, setShowResult] = useState(false);
 
 	useEffect(() => {
 		reset();
 	}, [reset]);
 
 	const syllable = phonemeAnalysis.syllables[currentSyllableIndex];
-	if (!syllable) return null;
+
+	console.log({
+		currentSyllableIndex,
+		syllabelLength: phonemeAnalysis.syllables.length,
+	});
 
 	const handleSave = (component: 'initial' | 'medial' | 'final' | 'syllable', imageData: string) => {
 		setWritingData(currentSyllableIndex, { [component]: imageData });
@@ -58,8 +62,20 @@ export function WritingPractice({ word, phonemeAnalysis, onBack, onSpeak }: Writ
 	};
 
 	const moveToNextSyllable = () => {
-		if (currentSyllableIndex < phonemeAnalysis.syllables.length - 1) {
-			setCurrentSyllable(currentSyllableIndex + 1);
+		if (currentSyllableIndex < phonemeAnalysis.syllables.length) {
+			if (currentSyllableIndex === phonemeAnalysis.syllables.length - 1) {
+				// 마지막 음절에서 다음을 누르면 결과 화면 표시
+				setShowResult(true);
+				toast.success(
+					`정말 잘했어요! '${word}' 쓰기를 완성했어요!`,
+					{
+						duration: 2000,
+						position: 'top-center',
+					}
+				);
+			} else {
+				setCurrentSyllable(currentSyllableIndex + 1);
+			}
 		}
 	};
 
@@ -70,6 +86,77 @@ export function WritingPractice({ word, phonemeAnalysis, onBack, onSpeak }: Writ
 	};
 
 	const progress = ((currentSyllableIndex + 1) / phonemeAnalysis.syllables.length) * 100;
+
+	if (!syllable && !showResult) return null;
+
+	if (showResult) {
+		return (
+			<div className="flex flex-col h-full">
+				<div className="flex items-center justify-between mb-6">
+					<h2 className="text-2xl font-bold">쓰기 연습 결과</h2>
+				</div>
+
+				<div className="flex-1 overflow-y-auto">
+					<div className="grid grid-cols-2 gap-6">
+						{Object.entries(writingData).map(([index, data]) => {
+							const syllableInfo = phonemeAnalysis.syllables[Number(index)];
+							return (
+								<Card key={index} className="p-4">
+									<CardHeader>
+										<CardTitle>{syllableInfo.syllable}</CardTitle>
+									</CardHeader>
+									<CardContent className="space-y-4">
+										<div className="grid grid-cols-3 gap-2">
+											{data.initial && (
+												<div>
+													<Typography variant="p" className="text-sm text-muted-foreground mb-1">초성</Typography>
+													<img src={data.initial} alt="초성" className="border rounded" />
+												</div>
+											)}
+											{data.medial && (
+												<div>
+													<Typography variant="p" className="text-sm text-muted-foreground mb-1">중성</Typography>
+													<img src={data.medial} alt="중성" className="border rounded" />
+												</div>
+											)}
+											{data.final && (
+												<div>
+													<Typography variant="p" className="text-sm text-muted-foreground mb-1">종성</Typography>
+													<img src={data.final} alt="종성" className="border rounded" />
+												</div>
+											)}
+										</div>
+										{data.syllable && (
+											<div>
+												<Typography variant="p" className="text-sm text-muted-foreground mb-1">음절</Typography>
+												<img src={data.syllable} alt="음절" className="border rounded" />
+											</div>
+										)}
+										{data.word && (
+											<div>
+												<Typography variant="p" className="text-sm text-muted-foreground mb-1">단어</Typography>
+												<img src={data.word} alt="단어" className="border rounded" />
+											</div>
+										)}
+									</CardContent>
+								</Card>
+							);
+						})}
+					</div>
+				</div>
+
+				<div className="mt-6">
+					<Button 
+						className="w-full" 
+						size="xl" 
+						onClick={onBack}
+					>
+						어휘 분석으로 돌아가기
+					</Button>
+				</div>
+			</div>
+		);
+	}
 
 	return (
 		<div className="flex flex-col h-full">
@@ -138,17 +225,35 @@ export function WritingPractice({ word, phonemeAnalysis, onBack, onSpeak }: Writ
 					)}
 				</div>
 
-				<section className="w-full flex flex-col gap-y-4 items-center">
-					<WritingComponent
-						title="한번에 써보기"
-						description={`${syllable.syllable}를 한 번에 써보세요`}
-						width={400}
-						height={280}
-						onSave={(imageData) => handleSave('syllable', imageData)}
-						initialImage={writingData[currentSyllableIndex]?.syllable}
-						guideText={syllable.syllable}
-					/>
-				</section>
+				{currentSyllableIndex !== phonemeAnalysis.syllables.length && (
+        <section className="w-full flex flex-col gap-y-4 items-center">
+				<WritingComponent
+					title="한번에 써보기"
+					description={`${syllable.syllable}를 한 번에 써보세요`}
+					width={400}
+					height={280}
+					onSave={(imageData) => handleSave('syllable', imageData)}
+					initialImage={writingData[currentSyllableIndex]?.syllable}
+					guideText={syllable.syllable}
+				/>
+			</section>			
+			)}
+				{currentSyllableIndex === phonemeAnalysis.syllables.length - 1 && (
+					<section className="w-full flex flex-col gap-y-4 items-center pt-8 border-t">
+						<WritingComponent
+							title="단어 전체 쓰기"
+							description={`'${word}'를 한 번에 써보세요`}
+							width={600}
+							height={280}
+							onSave={(imageData) => {
+								setWritingData(currentSyllableIndex, { word: imageData });
+							}}
+							initialImage={writingData[currentSyllableIndex]?.word}
+							guideText={word}
+							guideTextScale={0.5}
+						/>
+					</section>
+				)}
 			</div>
 
 			{/* 네비게이션 버튼 - 고정 */}
@@ -163,7 +268,7 @@ export function WritingPractice({ word, phonemeAnalysis, onBack, onSpeak }: Writ
 				</Button>
 				<Button
 					onClick={moveToNextSyllable}
-					disabled={currentSyllableIndex === phonemeAnalysis.syllables.length - 1}
+					disabled={currentSyllableIndex === phonemeAnalysis.syllables.length}
 				>
 					다음 음절
 					<ArrowRight className="ml-2 h-4 w-4" />

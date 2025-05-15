@@ -5,6 +5,7 @@ interface WritingData {
 	medial?: string;
 	final?: string;
 	syllable?: string;
+	word?: string;
 }
 
 interface WritingStore {
