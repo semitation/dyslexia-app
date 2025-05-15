@@ -104,7 +104,7 @@ export function LongPressText({
 			<Button
 				variant="ghost"
 				size="icon"
-				className="absolute -right-8 top-1/2 -translate-y-1/2 opacity-0 transition-opacity group-hover:opacity-100"
+				className="border border-slate-200 absolute -right-8 top-1/2 -translate-y-1/2 opacity-0 transition-opacity group-hover:opacity-100"
 				onClick={handleClick}
 				disabled={loading && !isActiveBlock}
 			>
