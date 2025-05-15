@@ -56,7 +56,7 @@ export function Sidebar({ open, onClose, onOpen }: SidebarProps) {
 				/>
 			)}
 			<aside
-				className={`h-screen fixed z-40 top-0 left-0 flex flex-col justify-between bg-white border-r py-8 transition-all duration-200
+				className={`fixed top-0 h-screen z-40 left-0 flex flex-col justify-between bg-white border-r py-8 transition-all duration-200
 					${open ? 'w-80 md:static md:translate-x-0' : 'w-12 md:w-12'}
 					${open ? 'translate-x-0' : '-translate-x-0'}
 				`}
@@ -75,7 +75,7 @@ export function Sidebar({ open, onClose, onOpen }: SidebarProps) {
 				{/* 열린 상태: 전체 메뉴 */}
 				{open && (
 					<>
-						<div>
+						<div className="h-full">
 							<div className="flex items-center px-6 py-4 justify-between">
 								<div className="flex items-center w-full justify-between">
 									<div className="flex">
