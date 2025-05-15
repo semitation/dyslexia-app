@@ -171,7 +171,6 @@ function DocumentViewerPage() {
                   />
                 </div>
               )}
-              <PageImages images={pageImages} />
               {showTips && <PageTips tips={pageTips} fontSize={fontSize} />}
             </>
           ) : (

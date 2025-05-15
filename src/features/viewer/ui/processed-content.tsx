@@ -5,6 +5,11 @@ import { Typography } from '@/shared/ui';
 import { Volume2 } from 'lucide-react';
 import type React from 'react';
 
+function splitBlocksIntoColumns(blocks: Block[]): [Block[], Block[]] {
+	const midpoint = Math.ceil(blocks.length / 2);
+	return [blocks.slice(0, midpoint), blocks.slice(midpoint)];
+}
+
 interface ProcessedContentProps {
 	blocks: Block[];
 	fontSize: number;
@@ -23,7 +28,7 @@ export const ProcessedContent: React.FC<ProcessedContentProps> = ({
 	pageNumber,
 }) => {
 	const { activeBlockId, speak } = useBlockSpeech();
-	console.log("processed content", { blocks, activeBlockId });
+	const [leftBlocks, rightBlocks] = splitBlocksIntoColumns(blocks);
 
 	const handleBlockClick = (block: Block) => {
 		console.log({ block })
@@ -32,17 +37,25 @@ export const ProcessedContent: React.FC<ProcessedContentProps> = ({
 		}
 	};
 
+	const blockOptions = {
+		fontSize,
+		fontFamily,
+		lineSpacing,
+		onBlockClick: handleBlockClick,
+		activeBlockId,
+		documentId,
+		pageNumber,
+	};
+
 	return (
-		<>
-			{parseBlocks(blocks, {
-				fontSize,
-				fontFamily,
-				lineSpacing,
-				onBlockClick: handleBlockClick,
-				activeBlockId,
-				documentId,
-				pageNumber,
-			})}
-		</>
+		<div className="flex flex-row gap-x-4 items-stretch">
+			<div className="flex-1">
+				{parseBlocks(leftBlocks, blockOptions)}
+			</div>
+			<div className="w-[2px] bg-slate-100 mx-2 self-stretch" />
+			<div className="flex-1">
+				{parseBlocks(rightBlocks, blockOptions)}
+			</div>
+		</div>
 	);
 };
