@@ -6,6 +6,7 @@ import {
 	CollapsibleContent,
 	CollapsibleTrigger,
 } from "@/shared/ui/collapsible"
+import { useTextToSpeech } from '@/shared/hooks/use-text-to-speech';
 
 interface DefinitionSectionProps {
 	word: string;
@@ -24,6 +25,7 @@ export function DefinitionSection({
 	isOpen,
 	onOpenChange,
 }: DefinitionSectionProps) {
+	const { speak } = useTextToSpeech();
 	const exampleList = examples.replace(/[\[\]"]/g, '').split(',').map(example => example.trim());
 
 	return (
@@ -54,12 +56,21 @@ export function DefinitionSection({
 								<h4 className="mb-2 font-semibold">이렇게 사용해요!</h4>
 								<div className="space-y-2">
 									{exampleList.map((example, index) => (
+										<button
+											key={example}
+											type="button"
+											onClick={(e) => {
+												e.preventDefault();
+												speak(example);
+											}}
+										>
 										<div 
-											key={`example-${index}`}
 											className="rounded-lg bg-amber-50 p-4"
 										>
 											<p className="text-orange-700">{example}</p>
-										</div>
+										</div>											
+										</button>
+
 									))}
 								</div>
 							</div>

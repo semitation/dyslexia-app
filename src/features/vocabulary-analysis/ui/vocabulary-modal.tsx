@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import type { VocabularyAnalysis, PhonemeAnalysis, PhonemeComponent, SyllableComponents, SyllableInfo, WritingStep, LearningTips } from '@/shared/api/types';
+import { useState } from 'react';
+import type { VocabularyAnalysis, PhonemeComponent, SyllableComponents, SyllableInfo, WritingStep, LearningTips } from '@/shared/api/types';
 import {
 	Dialog,
 	DialogContent,
@@ -8,19 +8,18 @@ import {
 	DialogFooter,
 } from '@/shared/ui/dialog';
 import { Button } from '@/shared/ui/button';
-import { Volume, Pencil, ChevronLeft, ChevronRight, Quote, ChevronDown } from 'lucide-react';
+import { Quote, ChevronDown } from 'lucide-react';
 import { Badge } from '@/shared/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs';
 import { useTextToSpeech } from '@/shared/hooks/use-text-to-speech';
 import {
 	Collapsible,
 	CollapsibleContent,
 	CollapsibleTrigger,
 } from "@/shared/ui/collapsible"
-import { WritingCanvas } from './writing-canvas';
 import { VocaAnalysis } from './voca-analysis';
 import { WritingPractice } from './writing-practice';
+import { cn } from '@/lib/utils';
 
 interface VocabularyModalProps {
 	isOpen: boolean;
@@ -28,7 +27,16 @@ interface VocabularyModalProps {
 	vocabularyList?: VocabularyAnalysis[];
 }
 
-function PhonemeCard({ component, type }: { component: PhonemeComponent | SyllableComponents['medial']; type: 'initial' | 'medial' | 'final' }) {
+function PhonemeCard({ component, type }: { component: PhonemeComponent | SyllableComponents['medial'] | null; type: 'initial' | 'medial' | 'final' }) {
+	if (!component) {
+		return (
+			<div className="flex flex-col items-center gap-2 rounded-lg border border-dashed p-3 text-center">
+				<div className="text-2xl font-bold text-muted-foreground">-</div>
+				<div className="text-sm text-muted-foreground">{type === 'final' ? '받침' : type === 'medial' ? '모음' : '자음'}이 없어요</div>
+			</div>
+		);
+	}
+
 	return (
 		<div className="flex flex-col items-center gap-2 rounded-lg border p-3 text-center">
 			<div className="text-2xl font-bold">{type === 'medial' ? (component as SyllableComponents['medial']).vowel : (component as PhonemeComponent).consonant}</div>
@@ -225,6 +233,8 @@ export function VocabularyModal({
 		? JSON.parse(currentVocabulary.phonemeAnalysisJson)
 		: null;
 
+    console.log({ phonemeAnalysis, currentVocabulary });
+
 	const handlePrevious = () => {
 		setCurrentIndex((prev) => (prev > 0 ? prev - 1 : vocabularyList.length - 1));
 	};
@@ -244,8 +254,16 @@ export function VocabularyModal({
 	if (!phonemeAnalysis) return null;
 
 	return (
-		<Dialog open={isOpen} onOpenChange={onClose}>
-			<DialogContent className="max-w-screen-xl h-[95vh] max-h-[95vh] w-[95vw]">
+		<Dialog
+      open={isOpen}
+      onOpenChange={onClose}
+    >
+			<DialogContent 
+        className={cn([
+          'max-w-screen-xl h-[95vh] max-h-[95vh] w-[95vw]',
+          'gap-0'
+        ])}
+      >
 				<DialogHeader className="pb-0">
 					<DialogTitle className="flex items-center justify-between">
 						<div className="flex items-center gap-4">
@@ -259,8 +277,8 @@ export function VocabularyModal({
 					</DialogTitle>
 				</DialogHeader>
 
-				<div className="relative flex-1 flex flex-col h-full overflow-hidden">
-					<div className="px-16 overflow-y-auto flex-1">
+				<div className="relative flex-1 flex flex-col h-full overflow-y-hidden">
+					<div className="px-16 overflow-y-hidden flex-1">
 						{isWritingMode ? (
 							<WritingPractice
 								word={currentVocabulary.word}
@@ -282,10 +300,10 @@ export function VocabularyModal({
 					</div>
 				</div>
 
-				<DialogFooter className="w-full">
+				<DialogFooter className="w-full pt-6">
 					<Button 
 						variant="default" 
-						size="xl" 
+						size="xl"
 						onClick={onClose} 
 						className="w-full text-[18px] h-[52px]"
 					>
