@@ -120,15 +120,22 @@ export function parseBlocks(
 						))}
 					</ul>
 				);
-			case 'IMAGE':
+			case 'PAGE_IMAGE':
 				return (
-					<figure key={key} className="mb-4">
+					<figure key={key} className="mb-8 mt-4 flex flex-col">
+						<div className="w-[420px] flex justify-center flex-col">
 						<img
 							src={block.url}
 							alt={block.alt}
+							style={{ width: '420px', height: 'auto' }}
 							className="rounded-md max-w-full h-auto"
-							style={{ width: block.width, height: block.height }}
 						/>
+						{block.concept && (
+							<figcaption className="text-center mt-2 text-sm text-gray-600">
+								{block.concept}
+							</figcaption>
+						)}
+						</div>
 					</figure>
 				);
 			case 'TABLE':
