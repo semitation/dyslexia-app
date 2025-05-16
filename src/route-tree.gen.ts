@@ -13,6 +13,7 @@
 import { Route as rootRoute } from './routes/__root';
 import { Route as KakaoImport } from './routes/kakao';
 import { Route as TeacherRouteImport } from './routes/teacher/route';
+import { Route as StudentRouteImport } from './routes/student/route';
 import { Route as IndexImport } from './routes/index';
 import { Route as SignupIndexImport } from './routes/signup/index';
 import { Route as AuthIndexImport } from './routes/auth/index';
@@ -36,6 +37,12 @@ const KakaoRoute = KakaoImport.update({
 const TeacherRouteRoute = TeacherRouteImport.update({
   id: '/teacher',
   path: '/teacher',
+  getParentRoute: () => rootRoute,
+} as any);
+
+const StudentRouteRoute = StudentRouteImport.update({
+  id: '/student',
+  path: '/student',
   getParentRoute: () => rootRoute,
 } as any);
 
@@ -114,6 +121,13 @@ declare module '@tanstack/react-router' {
       path: '/';
       fullPath: '/';
       preLoaderRoute: typeof IndexImport;
+      parentRoute: typeof rootRoute;
+    };
+    '/student': {
+      id: '/student';
+      path: '/student';
+      fullPath: '/student';
+      preLoaderRoute: typeof StudentRouteImport;
       parentRoute: typeof rootRoute;
     };
     '/teacher': {
@@ -229,6 +243,7 @@ const TeacherRouteRouteWithChildren = TeacherRouteRoute._addFileChildren(
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute;
+  '/student': typeof StudentRouteRoute;
   '/teacher': typeof TeacherRouteRouteWithChildren;
   '/kakao': typeof KakaoRoute;
   '/signup/student': typeof SignupStudentRoute;
@@ -245,6 +260,7 @@ export interface FileRoutesByFullPath {
 
 export interface FileRoutesByTo {
   '/': typeof IndexRoute;
+  '/student': typeof StudentRouteRoute;
   '/teacher': typeof TeacherRouteRouteWithChildren;
   '/kakao': typeof KakaoRoute;
   '/signup/student': typeof SignupStudentRoute;
@@ -262,6 +278,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRoute;
   '/': typeof IndexRoute;
+  '/student': typeof StudentRouteRoute;
   '/teacher': typeof TeacherRouteRouteWithChildren;
   '/kakao': typeof KakaoRoute;
   '/signup/student': typeof SignupStudentRoute;
@@ -280,6 +297,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath;
   fullPaths:
     | '/'
+    | '/student'
     | '/teacher'
     | '/kakao'
     | '/signup/student'
@@ -295,6 +313,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo;
   to:
     | '/'
+    | '/student'
     | '/teacher'
     | '/kakao'
     | '/signup/student'
@@ -310,6 +329,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/student'
     | '/teacher'
     | '/kakao'
     | '/signup/student'
@@ -327,6 +347,7 @@ export interface FileRouteTypes {
 
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute;
+  StudentRouteRoute: typeof StudentRouteRoute;
   TeacherRouteRoute: typeof TeacherRouteRouteWithChildren;
   KakaoRoute: typeof KakaoRoute;
   SignupStudentRoute: typeof SignupStudentRoute;
@@ -337,6 +358,7 @@ export interface RootRouteChildren {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  StudentRouteRoute: StudentRouteRoute,
   TeacherRouteRoute: TeacherRouteRouteWithChildren,
   KakaoRoute: KakaoRoute,
   SignupStudentRoute: SignupStudentRoute,
@@ -356,6 +378,7 @@ export const routeTree = rootRoute
       "filePath": "__root.tsx",
       "children": [
         "/",
+        "/student",
         "/teacher",
         "/kakao",
         "/signup/student",
@@ -366,6 +389,9 @@ export const routeTree = rootRoute
     },
     "/": {
       "filePath": "index.tsx"
+    },
+    "/student": {
+      "filePath": "student/route.tsx"
     },
     "/teacher": {
       "filePath": "teacher/route.tsx",
