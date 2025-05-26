@@ -1,6 +1,6 @@
 import { Button } from '@/shared/ui/button';
 import { Typography } from '@/shared/ui/typography';
-import { useLocation, useRouter } from '@tanstack/react-router';
+import { useRouter } from '@tanstack/react-router';
 import { useAuth } from '@/shared/hooks/use-auth';
 import { X, Menu } from 'lucide-react';
 import type { ReactNode } from 'react';
@@ -15,22 +15,11 @@ interface SidebarProps {
 export function Sidebar({ open, onClose, onOpen }: SidebarProps) {
   const { my, logout } = useAuth();
   const router = useRouter();
-  const location = useLocation({ select: (l) => l.pathname });
 
-  /*학생용 목데이터*/
   const grade = '중학교 2학년';
   const lastContent = { subject: '과학', title: '2단원 3강', date: '2025-05-14 20:30' };
   const todayTodos = ['국어 독서 1강 수강', '과학 문제풀이'];
-  const subjects = ['국어', '과학', '도덕'];
 
-  const isActive = (path: string) => location.includes(path);
-  const navCls = (active: boolean) =>
-    [
-      'w-full justify-start h-10 text-base',
-      active
-        ? 'bg-blue-50 text-blue-600 hover:bg-blue-100'
-        : 'text-gray-600 hover:bg-gray-50 hover:text-blue-600',
-    ].join(' ');
 
   return (
     <>
@@ -46,24 +35,25 @@ export function Sidebar({ open, onClose, onOpen }: SidebarProps) {
       )}
 
       <aside
-        className={`fixed z-40 top-0 left-0 flex h-screen flex-col justify-between border-r bg-white py-8 transition-all duration-200
+        className={`fixed md:sticky top-0 h-screen z-40 left-0 flex flex-col justify-between bg-white border-r py-8 transition-all duration-200
           ${open ? 'w-80 md:static md:translate-x-0' : 'w-12 md:w-12'}
-          ${open ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`}
+          ${open ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
+        `}
       >
         {!open && (
           <button
-            className="flex h-12 w-12 items-center justify-center text-gray-600 hover:text-blue-600"
+            className="flex items-center justify-center w-12 h-12 text-gray-600 hover:text-blue-600"
             onClick={onOpen}
             aria-label="사이드바 열기"
             type="button"
           >
-            <Menu className="h-6 w-6" />
+            <Menu className="w-6 h-6" />
           </button>
         )}
 
         {open && (
           <>
-            <div className="flex items-center justify-between px-6 py-4 md:justify-between">
+            <div className="flex items-center justify-between px-6 py-4">
               <div className="flex items-center gap-2">
                 <div className="h-6 w-6 rounded bg-dyslexia-blue" />
                 <Typography variant="h3" size="lg" weight="bold" color="primary">
@@ -71,7 +61,7 @@ export function Sidebar({ open, onClose, onOpen }: SidebarProps) {
                 </Typography>
               </div>
               <button
-                className="ml-2 text-gray-500 hover:text-gray-800 md:hidden"
+                className="ml-2 text-gray-500 hover:text-gray-800"
                 onClick={onClose}
                 aria-label="사이드바 닫기"
                 type="button"
@@ -113,23 +103,6 @@ export function Sidebar({ open, onClose, onOpen }: SidebarProps) {
                 </ul>
               </section>
 
-              <section>
-                <Typography variant="p" size="sm" className="text-gray-500">
-                  수강 과목
-                </Typography>
-                <nav className="mt-2 flex flex-col gap-2">
-                  {subjects.map((s) => (
-                    <Button
-                      key={s}
-                      variant="ghost"
-                      className={navCls(isActive(`/student/library/${s}`))}
-                      onClick={() => router.navigate({ to: `/student/library/${s}` })}
-                    >
-                      {s}
-                    </Button>
-                  ))}
-                </nav>
-              </section>
             </div>
 
             <div className="mt-6 border-t px-6 pt-4">

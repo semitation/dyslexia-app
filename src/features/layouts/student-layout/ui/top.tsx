@@ -27,9 +27,8 @@ export function TopHeader({ onToggleSidebar }: TopHeaderProps) {
       {/* biome-ignore lint/a11y/useKeyWithClickEvents: <explanation> */}
 <div
         className="flex cursor-pointer items-center gap-2"
-        onClick={() => navigate({ to: '/' })}
+        onClick={() => navigate({ to: '/student/library' })}
       >
-        <img src="/logo.svg" alt="홈" className="h-8 w-auto" />
         <Typography variant="p" weight="bold" className="text-lg">
           EduService
         </Typography>
