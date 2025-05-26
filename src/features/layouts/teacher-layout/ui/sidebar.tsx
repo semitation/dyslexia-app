@@ -55,12 +55,12 @@ export function Sidebar({ open, onClose, onOpen }: SidebarProps) {
 					aria-label="사이드바 오버레이 닫기"
 				/>
 			)}
-			<aside
-				className={`fixed top-0 h-screen z-40 left-0 flex flex-col justify-between bg-white border-r py-8 transition-all duration-200
-					${open ? 'w-80 md:static md:translate-x-0' : 'w-12 md:w-12'}
-					${open ? 'translate-x-0' : '-translate-x-0'}
-				`}
-			>
+<aside
+  className={`fixed md:sticky top-0 h-screen z-40 left-0 flex flex-col justify-between bg-white border-r py-8 transition-all duration-200
+    ${open ? 'w-80 md:static md:translate-x-0' : 'w-12 md:w-12'}
+    ${open ? 'translate-x-0' : '-translate-x-0'}
+  `}
+>
 				{/* 닫힌 상태: 햄버거 버튼만 */}
 				{!open && (
 					<button
@@ -117,37 +117,27 @@ export function Sidebar({ open, onClose, onOpen }: SidebarProps) {
 								</Button>
 								<Button
 									variant="ghost"
+									className={getNavButtonClass(isActive('/teacher/documents'))}
+									onClick={() => router.navigate({ to: '/teacher/documents' })}
+								>
+									콘텐츠 관리
+								</Button>
+								<Button
+									variant="ghost"
 									className={getNavButtonClass(isActive('/teacher/student'))}
 									onClick={() => router.navigate({ to: '/teacher/student' })}
 								>
 									학생 관리
-								</Button>
-								<Button
-									variant="ghost"
-									className={getNavButtonClass(isActive('/teacher/content'))}
-									onClick={() => router.navigate({ to: '/teacher/content' })}
-								>
-									컨텐츠 관리
-								</Button>
-								<Button
-									variant="ghost"
-									className={getNavButtonClass(isActive('/teacher/upload'))}
-									onClick={() => router.navigate({ to: '/teacher/documents' })}
-								>
-									자료 업로드
 								</Button>
 							</nav>
 						</div>
 
 						<div className="mt-6 border-t px-6 pt-4">
 							<div className="flex items-center space-x-2">
-								<div className="h-10 w-10 rounded-full bg-gray-200" />
+								{/* <div className="h-10 w-10 rounded-full bg-gray-200" /> */}
 								<div>
 									<Typography variant="p" weight="semibold" className="text-gray-900">
 										{my?.name} 선생님
-									</Typography>
-									<Typography variant="p" size="sm" className="text-gray-500">
-										서울 초등학교
 									</Typography>
 								</div>
 							</div>

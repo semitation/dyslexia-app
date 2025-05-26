@@ -18,16 +18,16 @@ export function TopHeader() {
             <div className="mt-3 flex items-center space-x-4 md:mt-0">
 
                 <Button variant="ghost" className="relative p-2 text-gray-600">
-                    <div className="h-5 w-5 bg-current" />
-                    <span className="absolute right-1 top-1 block h-2 w-2 rounded-full bg-red-500 ring-2 ring-white" />
+                    {/* <div className="h-5 w-5 bg-current" /> */}
+                    {/* <span className="absolute right-1 top-1 block h-2 w-2 rounded-full bg-red-500 ring-2 ring-white" /> */}
                 </Button>
 
                 <div className="flex items-center space-x-1">
-                    <div className="h-6 w-6 rounded-full bg-gray-200" />
+                    {/* <div className="h-6 w-6 rounded-full bg-gray-200" /> */}
                     <Typography variant="p" size="sm" className="text-gray-700">
                         {my?.name}
                     </Typography>
-                    <div className="h-4 w-4 bg-current text-gray-500" />
+                    {/* <div className="h-4 w-4 bg-current text-gray-500" /> */}
                 </div>
             </div>
         </header>
