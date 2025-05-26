@@ -4,6 +4,7 @@ import { Typography } from "@/shared/ui/typography";
 import { DataTable, Badge, DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator} from "@/shared/ui";
 import { MoreVertical } from "lucide-react";
 import type { ColumnDef } from "@tanstack/react-table";
+import { useRouter } from "@tanstack/react-router";
 
 interface ContentItem {
   id: string;
@@ -111,6 +112,8 @@ const columns: ColumnDef<ContentItem>[] = [
 ];
 
 export default function TeacherDashboardPage() {
+  const router = useRouter();
+
   return (
       <div className="space-y-6">
         <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
@@ -274,7 +277,7 @@ export default function TeacherDashboardPage() {
             <Typography variant="h3" size="lg" weight="bold">
               최근 생성된 콘텐츠
             </Typography>
-            <Button variant="outline" className="px-4">
+            <Button variant="outline" className="px-4" onClick={() => router.navigate({ to: "/teacher/documents" })}>
               + 새 컨텐츠
             </Button>
           </div>

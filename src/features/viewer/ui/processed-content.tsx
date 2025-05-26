@@ -1,8 +1,6 @@
 import type { Block } from '../model/types';
 import { parseBlocks } from '../lib/parse-blocks';
 import { useBlockSpeech } from '../lib/use-block-speech';
-import { Typography } from '@/shared/ui';
-import { Volume2 } from 'lucide-react';
 import type React from 'react';
 
 function splitBlocksIntoColumns(blocks: Block[]): [Block[], Block[]] {

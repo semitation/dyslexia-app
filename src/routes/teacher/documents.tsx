@@ -427,7 +427,7 @@ function DocumentsPage() {
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
-                <label htmlFor="file" className="block text-sm font-medium">
+                <label htmlFor="file" className="block t요ext-sm font-medium">
                   PDF 파일
                 </label>
                 <Input
@@ -453,7 +453,7 @@ function DocumentsPage() {
               </div>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
+                {/* <div className="space-y-2">
                   <label htmlFor="grade" className="block text-sm font-medium">
                     학년
                   </label>
@@ -470,9 +470,9 @@ function DocumentsPage() {
                     <option value="GRADE_5">5학년</option>
                     <option value="GRADE_6">6학년</option>
                   </Select>
-                </div>
+                </div> */}
                 
-                <div className="space-y-2">
+                {/* <div className="space-y-2">
                   <label htmlFor="subjectPath" className="block text-sm font-medium">
                     과목 경로 (선택)
                   </label>
@@ -483,7 +483,7 @@ function DocumentsPage() {
                     placeholder="예: science/ecology"
                     className="w-full"
                   />
-                </div>
+                </div> */}
               </div>
               
               <div className="flex justify-end">

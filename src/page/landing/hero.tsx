@@ -40,7 +40,7 @@ export default function Hero() {
           <div className="flex flex-col gap-3">
             <Button
               size="xl"
-              onClick={() => router.navigate({ to: "/teacher/dashboard" })}
+              onClick={() => router.navigate({ to: "/teacher/documents" })}
             >
               교사로 시작하기
             </Button>

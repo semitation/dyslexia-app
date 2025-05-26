@@ -5,6 +5,7 @@ import { DataTable } from "@/shared/ui/table";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from "@/shared/ui/dropdown-menu";
 import { MoreVertical } from "lucide-react";
 import type { ColumnDef } from "@tanstack/react-table";
+import { useRouter } from "@tanstack/react-router";
 
 interface ContentItem {
   id: string;
@@ -98,6 +99,8 @@ const columns: ColumnDef<ContentItem>[] = [
 ];
 
 export default function ContentManagePage() {
+	const router = useRouter();
+
   return (
       <div className="space-y-6">
         <Card className="p-6">
@@ -108,7 +111,7 @@ export default function ContentManagePage() {
             학생들을 위한 맞춤형 학습 컨텐츠를 관리하세요.
           </Typography>
           <div className="flex justify-end">
-            <Button variant="default" size="lg">
+            <Button variant="default" size="lg" onClick={() => router.navigate({ to: "/teacher/documents" })}>
               + 새 컨텐츠
             </Button>
           </div>
