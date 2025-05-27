@@ -235,13 +235,16 @@ function DocumentsPage() {
     mutationFn: (formData: FormData) => documentApi.uploadDocument(teacherId, formData),
     onSuccess: (data) => {
       toast.success('PDF 문서가 업로드되었습니다.')
-      // 폴링 대상에 새 문서 추가
       setProcessingDocuments(prev => {
         const updated = new Set(prev)
-        updated.add(data.document.id)
+        if (data?.document?.id) {
+          updated.add(data.document.id)
+        }
         return updated
       })
-      queryClient.invalidateQueries({ queryKey: ['teacher', teacherId, 'documents'] })
+      setTimeout(() => {
+        queryClient.invalidateQueries({ queryKey: ['teacher', teacherId, 'documents'] })
+      }, 3000)
       resetForm()
     },
     onError: (error) => {
