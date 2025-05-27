@@ -13,6 +13,12 @@ interface ParseBlocksOptions {
 	pageNumber: number;
 }
 
+function extractUploadPath(url: string): string | null {
+  const idx = url.indexOf("uploads/");
+  if (idx === -1) return null;
+  return url.slice(idx + "uploads/".length);
+}
+
 export function parseBlocks(
 	blocks: Block[],
 	options: ParseBlocksOptions,
@@ -125,7 +131,7 @@ export function parseBlocks(
 					<figure key={key} className="mb-8 mt-4 flex flex-col">
 						<div className="w-[420px] flex justify-center flex-col">
 						<img
-							src={block.url}
+							src={`${import.meta.env.VITE_API_BASE_URL.replace('api', '')}api/pageImage/${extractUploadPath(block.url)}`}
 							alt={block.alt}
 							style={{ width: '420px', height: 'auto' }}
 							className="rounded-md max-w-full h-auto"
