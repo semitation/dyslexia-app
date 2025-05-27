@@ -244,7 +244,8 @@ function DocumentsPage() {
       queryClient.invalidateQueries({ queryKey: ['teacher', teacherId, 'documents'] })
       resetForm()
     },
-    onError: () => {
+    onError: (error) => {
+      console.error(error);
       toast.error('PDF 업로드에 실패했습니다.')
     },
   })

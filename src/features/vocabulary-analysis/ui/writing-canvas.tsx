@@ -79,30 +79,26 @@ export const WritingCanvas = forwardRef<HTMLCanvasElement, WritingCanvasProps>(
 			const guideCanvas = guideCanvasRef.current;
 			if (!canvas || !guideCanvas || containerWidth === 0) return;
 
-			const scale = window.devicePixelRatio;
-			
 			// 가이드 캔버스 설정
-			guideCanvas.width = containerWidth * scale;
-			guideCanvas.height = height * scale;
+			guideCanvas.width = containerWidth;
+			guideCanvas.height = height;
 			guideCanvas.style.width = `${containerWidth}px`;
 			guideCanvas.style.height = `${height}px`;
 
 			const guideContext = guideCanvas.getContext('2d', { alpha: true });
 			if (!guideContext) return;
-
-			guideContext.scale(scale, scale);
+			guideContext.setTransform(1, 0, 0, 1, 0, 0);
 			guideContextRef.current = guideContext;
-			
+
 			// 메인 캔버스 설정
-			canvas.width = containerWidth * scale;
-			canvas.height = height * scale;
+			canvas.width = containerWidth;
+			canvas.height = height;
 			canvas.style.width = `${containerWidth}px`;
 			canvas.style.height = `${height}px`;
 
 			const context = canvas.getContext('2d', { alpha: true });
 			if (!context) return;
-
-			context.scale(scale, scale);
+			context.setTransform(1, 0, 0, 1, 0, 0);
 			context.lineCap = 'round';
 			context.lineJoin = 'round';
 			context.strokeStyle = '#000000';
@@ -114,9 +110,8 @@ export const WritingCanvas = forwardRef<HTMLCanvasElement, WritingCanvasProps>(
 			if (initialImage) {
 				const img = new Image();
 				img.onload = () => {
-					if (context) {
-						context.drawImage(img, 0, 0);
-					}
+					context.clearRect(0, 0, canvas.width, canvas.height);
+					context.drawImage(img, 0, 0, canvas.width, canvas.height);
 				};
 				img.src = initialImage;
 			}
@@ -218,27 +213,42 @@ export const WritingCanvas = forwardRef<HTMLCanvasElement, WritingCanvasProps>(
 		};
 
 		const clearCanvas = () => {
-			const context = contextRef.current;
 			const canvas = canvasRef.current;
-			if (!context || !canvas) return;
+			if (!canvas) return;
 
-			const scale = window.devicePixelRatio;
-			
-			// 메인 캔버스 초기화
-			canvas.width = containerWidth * scale;
-			canvas.height = height * scale;
-			context.scale(scale, scale);
+			canvas.width = containerWidth;
+			canvas.height = height;
+			canvas.style.width = `${containerWidth}px`;
+			canvas.style.height = `${height}px`;
+
+			const context = canvas.getContext('2d', { alpha: true });
+			if (!context) return;
+			context.setTransform(1, 0, 0, 1, 0, 0);
 			context.lineCap = 'round';
 			context.lineJoin = 'round';
 			context.strokeStyle = '#000000';
 			context.shadowColor = '#000000';
 			context.shadowBlur = 1;
+			contextRef.current = context;
 
-			// 가이드 텍스트 다시 렌더링
 			renderGuideText();
 
 			handleSave();
 		};
+
+		// initialImage가 바뀔 때만 캔버스를 초기화
+		useEffect(() => {
+			if (!initialImage) return;
+			const canvas = canvasRef.current;
+			const context = contextRef.current;
+			if (!canvas || !context) return;
+			const img = new window.Image();
+			img.onload = () => {
+				context.clearRect(0, 0, canvas.width, canvas.height);
+				context.drawImage(img, 0, 0, canvas.width, canvas.height);
+			};
+			img.src = initialImage;
+		}, [initialImage]);
 
 		return (
 			<div 

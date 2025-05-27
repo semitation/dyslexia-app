@@ -13,9 +13,6 @@ function PhonemeCard({ component, type }: { component: PhonemeComponent | Syllab
 			<div className="text-2xl font-bold">{type === 'medial' ? (component as SyllableComponents['medial']).vowel : (component as PhonemeComponent).consonant}</div>
 			<div className="text-sm text-gray-500">{component.pronunciation}</div>
 			<div className="text-xs text-gray-400">{component.sound}</div>
-			<Badge className={getDifficultyStyle(component.difficulty)}>
-				{getDifficultyText(component.difficulty)}
-			</Badge>
 			<div className="absolute top-2 right-2">
 				<SoundButton text={component.sound} onSpeak={() => speak(component.pronunciation)} />
 			</div>

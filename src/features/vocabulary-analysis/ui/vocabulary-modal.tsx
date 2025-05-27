@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import type { VocabularyAnalysis, PhonemeComponent, SyllableComponents, SyllableInfo, WritingStep, LearningTips } from '@/shared/api/types';
 import {
 	Dialog,
@@ -20,6 +20,7 @@ import {
 import { VocaAnalysis } from './voca-analysis';
 import { WritingPractice } from './writing-practice';
 import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
 
 interface VocabularyModalProps {
 	isOpen: boolean;
@@ -109,7 +110,7 @@ function DefinitionSection({
 	isOpen: boolean;
 	onOpenChange: (open: boolean) => void;
 }) {
-	const exampleList = examples.replace(/[\[\]"]/g, '').split(',').map(example => example.trim());
+	const exampleList = examples?.replace(/[\[\]"]/g, '').split(',').map(example => example.trim());
 
 	return (
 		<div className="space-y-4">
@@ -138,7 +139,7 @@ function DefinitionSection({
 							<div>
 								<h4 className="mb-2 font-semibold">이렇게 사용해요!</h4>
 								<div className="space-y-2">
-									{exampleList.map((example, index) => (
+									{exampleList?.map((example, index) => (
 										<div 
 											// biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
 											key={index} 
@@ -187,6 +188,7 @@ export function VocabularyModal({
 	const [currentIndex, setCurrentIndex] = useState(0);
 	const { speak } = useTextToSpeech();
 	const [isWritingMode, setIsWritingMode] = useState(false);
+	const toastTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 	
 	if (!vocabularyList.length) return null;
 
@@ -213,7 +215,22 @@ export function VocabularyModal({
 		setIsWritingMode(false);
 	};
 
-	if (!phonemeAnalysis) return null;
+	const showDebouncedToast = () => {
+		if (toastTimeoutRef.current) return;
+		toastTimeoutRef.current = setTimeout(() => {
+			toast.error('해당 문장에 분석된 어휘가 없어요.', {
+				description: '다른 문장을 선택해주세요',
+				position: 'top-center',
+				duration: 1000,
+			});
+			toastTimeoutRef.current = null;
+		}, 1000);
+	};
+
+	if (!phonemeAnalysis || (typeof phonemeAnalysis === 'object' && 'error' in phonemeAnalysis)) {
+		showDebouncedToast();
+		return null;
+	}
 
 	return (
 		<Dialog

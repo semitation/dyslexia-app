@@ -40,10 +40,10 @@ export function WritingPractice({ word, phonemeAnalysis, onBack, onSpeak }: Writ
 	});
 
 	const handleSave = (component: 'initial' | 'medial' | 'final' | 'syllable', imageData: string) => {
-		setWritingData(currentSyllableIndex, { [component]: imageData });
+		const prev = writingData[currentSyllableIndex] || {};
+		setWritingData(currentSyllableIndex, { ...prev, [component]: imageData });
 		
-		const currentData = writingData[currentSyllableIndex] || {};
-		const updatedData = { ...currentData, [component]: imageData };
+		const currentData = { ...prev, [component]: imageData };
 		const requiredComponents: ('initial' | 'medial' | 'final')[] = [];
 		
 		if (syllable.components.initial?.consonant) {
@@ -58,7 +58,7 @@ export function WritingPractice({ word, phonemeAnalysis, onBack, onSpeak }: Writ
 
 		// TODO: 이거 나중에 활용해요.  
 		const isAllComponentsWritten = requiredComponents.length > 0 && 
-			requiredComponents.every(comp => updatedData[comp]);
+			requiredComponents.every(comp => currentData[comp]);
 	};
 
 	const moveToNextSyllable = () => {
@@ -194,6 +194,7 @@ export function WritingPractice({ word, phonemeAnalysis, onBack, onSpeak }: Writ
 					{/* 초성 */}
 					{syllable.components.initial && (
 						<WritingComponent
+							key={`initial-${currentSyllableIndex}`}
 							title="초성"
 							description={`${syllable.components.initial.consonant} - ${syllable.components.initial.pronunciation}`}
 							onSave={(imageData) => handleSave('initial', imageData)}
@@ -205,6 +206,7 @@ export function WritingPractice({ word, phonemeAnalysis, onBack, onSpeak }: Writ
 					{/* 중성 */}
 					{syllable.components.medial && (
 						<WritingComponent
+							key={`medial-${currentSyllableIndex}`}
 							title="중성"
 							description={`${syllable.components.medial.vowel} - ${syllable.components.medial.pronunciation}`}
 							onSave={(imageData) => handleSave('medial', imageData)}
@@ -216,6 +218,7 @@ export function WritingPractice({ word, phonemeAnalysis, onBack, onSpeak }: Writ
 					{/* 종성 */}
 					{syllable.components.final && (
 						<WritingComponent
+							key={`final-${currentSyllableIndex}`}
 							title="종성"
 							description={`${syllable.components.final.consonant} - ${syllable.components.final.pronunciation}`}
 							onSave={(imageData) => handleSave('final', imageData)}
@@ -228,6 +231,7 @@ export function WritingPractice({ word, phonemeAnalysis, onBack, onSpeak }: Writ
 				{currentSyllableIndex !== phonemeAnalysis.syllables.length && (
         <section className="w-full flex flex-col gap-y-4 items-center">
 				<WritingComponent
+					key={`syllable-${currentSyllableIndex}`}
 					title="한번에 써보기"
 					description={`${syllable.syllable}를 한 번에 써보세요`}
 					width={400}
@@ -241,6 +245,7 @@ export function WritingPractice({ word, phonemeAnalysis, onBack, onSpeak }: Writ
 				{currentSyllableIndex === phonemeAnalysis.syllables.length - 1 && (
 					<section className="w-full flex flex-col gap-y-4 items-center pt-8 border-t">
 						<WritingComponent
+							key={`word-${currentSyllableIndex}`}
 							title="단어 전체 쓰기"
 							description={`'${word}'를 한 번에 써보세요`}
 							width={600}

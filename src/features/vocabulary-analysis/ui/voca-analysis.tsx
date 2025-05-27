@@ -10,6 +10,7 @@ import { DefinitionSection } from './definition-section';
 import { SyllableAnalysis } from './syllable-analysis';
 import { WritingSteps } from './writing-steps';
 import { LearningTipsSection } from './learning-tips-section';
+import { toast } from 'sonner';
 
 interface VocaAnalysisProps {
 	currentVocabulary: VocabularyAnalysis;
@@ -44,7 +45,9 @@ export function VocaAnalysis({
 		}
 	};
 
-	if (!phonemeAnalysis) return null;
+	if (!phonemeAnalysis || ((phonemeAnalysis as any)?.error)) {
+		return null;
+	}
 
 	return (
 		<div className="space-y-4 flex flex-col h-full mt-6">
@@ -79,8 +82,6 @@ export function VocaAnalysis({
 			<Tabs defaultValue="phoneme" className="w-full flex-1 overflow-y-scroll" onClick={handleTabClick}>
 				<TabsList className="w-full">
 					<TabsTrigger value="phoneme" className="flex-1">음소 분석</TabsTrigger>
-					<TabsTrigger value="writing" className="flex-1">쓰기 순서</TabsTrigger>
-					<TabsTrigger value="tips" className="flex-1">학습 팁</TabsTrigger>
 				</TabsList>
 
 				<div className="overflow-y-auto pr-4">

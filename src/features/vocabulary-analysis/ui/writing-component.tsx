@@ -2,8 +2,6 @@ import { Typography } from '@/shared/ui';
 import { WritingCanvas } from './writing-canvas';
 import { SoundButton } from '@/shared/ui/sound-button';
 import { useTextToSpeech } from '@/shared/hooks/use-text-to-speech';
-import { toast } from 'sonner';
-import { useEffect, useRef } from 'react';
 
 interface WritingComponentProps {
 	title: string;

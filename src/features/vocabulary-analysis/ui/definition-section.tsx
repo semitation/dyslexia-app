@@ -26,7 +26,7 @@ export function DefinitionSection({
 	onOpenChange,
 }: DefinitionSectionProps) {
 	const { speak } = useTextToSpeech();
-	const exampleList = examples.replace(/[\[\]"]/g, '').split(',').map(example => example.trim());
+	const exampleList = examples?.replace(/[\[\]"]/g, '').split(',').map(example => example.trim());
 
 	return (
 		<div className="space-y-4">
@@ -55,7 +55,7 @@ export function DefinitionSection({
 							<div>
 								<h4 className="mb-2 font-semibold">이렇게 사용해요!</h4>
 								<div className="space-y-2">
-									{exampleList.map((example, index) => (
+									{exampleList?.map((example, index) => (
 										<button
 											key={example}
 											type="button"
