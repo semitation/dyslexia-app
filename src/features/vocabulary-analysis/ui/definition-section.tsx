@@ -53,26 +53,6 @@ export function DefinitionSection({
 								<p className="text-sm text-muted-foreground">{definition}</p>
 							</div>
 							<div>
-								<h4 className="mb-2 font-semibold">이렇게 사용해요!</h4>
-								<div className="space-y-2">
-									{exampleList?.map((example, index) => (
-										<button
-											key={example}
-											type="button"
-											onClick={(e) => {
-												e.preventDefault();
-												speak(example);
-											}}
-										>
-										<div 
-											className="rounded-lg bg-amber-50 p-4"
-										>
-											<p className="text-orange-700">{example}</p>
-										</div>											
-										</button>
-
-									))}
-								</div>
 							</div>
 						</CardContent>
 					</CollapsibleContent>
