@@ -131,7 +131,7 @@ export function parseBlocks(
 					<figure key={key} className="mb-8 mt-4 flex flex-col">
 						<div className="w-[420px] flex justify-center flex-col">
 						<img
-							src={`${import.meta.env.VITE_API_BASE_URL.replace('api', '')}api/pageImage/${extractUploadPath(block.url)}`}
+							src={`${import.meta.env.VITE_API_BASE_URL.replace('api', '')}api/pageImage/${block.url}`}
 							alt={block.alt}
 							style={{ width: '420px', height: 'auto' }}
 							className="rounded-md max-w-full h-auto"
