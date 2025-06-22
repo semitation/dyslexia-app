@@ -1,69 +1,72 @@
-import { Button } from "@/shared/ui/button";
 import { Typography } from "@/shared/ui/typography";
+import { Button } from "@/shared/ui/button";
 import { useRouter } from "@tanstack/react-router";
+import { useState } from "react";
 
 export default function Hero() {
   const router = useRouter();
-  return (
-    <section className="w-full pt-32 flex justify-center items-center bg-white">
-      <div className="max-w-[768px] w-full flex gap-8">
-        <div className="flex flex-col gap-6 pt-12 flex-[0.4]">
-          <div className="flex flex-col gap-4">
-            <Typography
-              as="h1"
-              weight="bold"
-              variant="h1"
-              color="primary"
-              className="!leading-tight text-5xl"
-            >
-              리딩브릿지
-            </Typography>
-            <Typography
-              as="h2"
-              variant="h2"
-              weight="bold"
-              className="text-slate-600 text-2xl leading-8"
-            >
-              난독증 학생들을 위한 <br />
-              맞춤형 학습 경험
-            </Typography>
-            <Typography
-              color="secondary"
-              size="lg"
-              className="!leading-tight text-slate-500"
-            >
-              교사가 업로드한 PDF 교안을 AI로 변환, 모든 학생이 쉽게 배울 수
-              있도록
-            </Typography>
-          </div>
+  const [showDemo, setShowDemo] = useState(false);
 
-          <div className="flex flex-col gap-3">
-            <Button
-              size="xl"
-              onClick={() => router.navigate({ to: "/teacher/documents" })}
-            >
-              교사로 시작하기
-            </Button>
-            <Button variant="outline" size="xl">
-              학생으로 시작하기
-            </Button>
-          </div>
+  return (
+    <section className="bg-white py-20 px-4 sm:px-8 w-full">
+      <div className="max-w-6xl mx-auto text-center">
+        <Typography
+          as="h1"
+          variant="h1"
+          weight="bold"
+          className="text-5xl text-primary mb-6"
+        >
+          리딩브릿지
+        </Typography>
+
+        <Typography
+          as="h2"
+          variant="h2"
+          className="text-2xl text-gray-700 mb-4"
+        >
+          난독증 학생들을 위한 맞춤형 학습 경험
+        </Typography>
+
+        <Typography
+          variant="p"
+          className="text-lg text-gray-600 mb-8 max-w-2xl mx-auto"
+        >
+          보호자가 업로드한 PDF 교안을 AI로 변환하여 모든 학생이 쉽게 배울 수 있도록 지원합니다
+        </Typography>
+
+        <div className="flex justify-center gap-4 mb-12 flex-wrap">
+          <Button
+            size="lg"
+            variant="outline"
+            className="text-lg px-8 py-4 border-primary text-primary hover:bg-primary hover:text-white"
+            onClick={() => setShowDemo(true)}
+          >
+            체험해보기
+          </Button>
+          <Button
+            size="lg"
+            className="bg-primary hover:bg-primary/90 text-lg px-8 py-4 text-white"
+            onClick={() => router.navigate({ to: "/signup/select-role" })}
+          >
+            무료로 시작하기
+          </Button>
         </div>
 
-        <div className="w-full flex-[0.6] flex justify-center items-center flex-col aspect-square gap-y-6">
-          <div className="relative">
-            <img
-              src="/images/service-screen-0.png"
-              alt="리딩브릿지 미리보기"
-              className="w-full object-contain"
-            />
-            <div className="absolute bottom-4 left-6">
-              <Typography as="p" size="lg" className="text-white">
-                기존 교안을 난독증 학생용으로 쉽게 변환하세요.
-              </Typography>
+        {!showDemo && (
+          <div className="w-full flex justify-center">
+            <div className="relative bg-gray-800 rounded-3xl p-4 shadow-2xl w-full max-w-4xl">
+              <div className="bg-black rounded-2xl p-2">
+                <div className="bg-white rounded-xl overflow-hidden aspect-[4/3]">
+                  <img
+                    src="/images/reading-preview.png"
+                    alt="리딩 예시 미리보기"
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              </div>
             </div>
           </div>
-        </div>
+        )}
       </div>
     </section>
   );
