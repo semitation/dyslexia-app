@@ -12,25 +12,25 @@ export default function Header() {
             as="h1"
             variant="h3"
             weight="bold"
-            className="text-primary text-xl sm:text-2xl"
+            className="text-primary text-lg sm:text-xl"
           >
             리딩브릿지
           </Typography>
         </Link>
 
         {/* 우측 메뉴 */}
-        <div className="flex gap-3 items-center">
+        <div className="flex gap-2 sm:gap-3 items-center">
           <Link to="/login">
             <Button
               variant="ghost"
-              className="text-gray-700 hover:bg-gray-100 rounded-lg px-6"
+              className="text-sm sm:text-base text-gray-700 border border-gray-200 hover:bg-gray-100 rounded-md px-4 sm:px-6 py-1.5"
             >
               로그인
             </Button>
           </Link>
           <Link to="/signup/select-role">
             <Button
-              className="bg-primary hover:bg-primary/90 text-white rounded-lg px-6"
+              className="bg-primary hover:bg-primary/90 text-white text-sm sm:text-base rounded-md px-4 sm:px-6 py-1.5"
             >
               회원가입
             </Button>

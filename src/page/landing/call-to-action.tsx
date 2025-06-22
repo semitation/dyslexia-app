@@ -26,7 +26,7 @@ export default function CallToAction() {
         <Button
           size="lg"
           variant="secondary"
-          className="bg-white text-primary hover:bg-gray-50 text-lg px-8 py-4 rounded-lg"
+          className="bg-white text-primary hover:bg-gray-50 text-lg px-8 py-4 rounded-lg font-semibold"
           onClick={() => router.navigate({ to: "/signup/select-role" })}
         >
           무료 체험 시작하기

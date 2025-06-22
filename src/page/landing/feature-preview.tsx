@@ -38,10 +38,20 @@ export default function FeaturePreview() {
                 {/* 본문 */}
                 <div className="flex-1 flex">
                   {/* 좌측 툴바 */}
-                  <div className="w-16 bg-gray-50 border-r border-gray-200 flex flex-col items-center gap-3 p-2">
-                    <img src="/icons/tts.svg" className="w-6 h-6" />
-                    <img src="/icons/font.svg" className="w-6 h-6" />
-                    <img src="/icons/word.svg" className="w-6 h-6" />
+                  <div className="w-16 bg-gray-50 border-r border-gray-200 flex flex-col items-center gap-3 p-3">
+                    {[
+                      { icon: "/icons/tts.svg", bg: "bg-primary", alt: "TTS" },
+                      { icon: "/icons/font.svg", bg: "bg-orange-400", alt: "Font" },
+                      { icon: "/icons/word.svg", bg: "bg-yellow-400", alt: "Word" },
+                      { icon: "/icons/book.svg", bg: "bg-sky-500", alt: "읽기" },
+                    ].map((tool, i) => (
+                      <div
+                        key={i}
+                        className={`w-10 h-10 ${tool.bg} rounded-lg flex items-center justify-center`}
+                      >
+                        <img src={tool.icon} alt={tool.alt} className="w-5 h-5 text-white" />
+                      </div>
+                    ))}
                   </div>
 
                   {/* 본문 내용 */}
@@ -86,28 +96,6 @@ export default function FeaturePreview() {
               </div>
             </div>
           </div>
-        </div>
-
-        {/* 하이라이트 기능 설명 */}
-        <div className="mt-12 grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
-          {[
-            { icon: "/icons/tts.svg", title: "TTS 음성 지원", desc: "텍스트를 음성으로 읽어줘요" },
-            { icon: "/icons/font.svg", title: "폰트 조절", desc: "읽기 편한 글씨체로 변경" },
-            { icon: "/icons/word.svg", title: "어휘 분석", desc: "어려운 단어를 쉽게 설명" },
-            { icon: "/icons/book.svg", title: "책처럼 읽기", desc: "자연스러운 읽기 경험 제공" },
-          ].map((item, i) => (
-            <div key={i} className="flex flex-col items-center">
-              <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mb-2">
-                <img src={item.icon} className="w-6 h-6" />
-              </div>
-              <Typography variant="h5" className="text-gray-800 font-semibold">
-                {item.title}
-              </Typography>
-              <Typography variant="p" className="text-sm text-gray-600">
-                {item.desc}
-              </Typography>
-            </div>
-          ))}
         </div>
       </div>
     </section>
