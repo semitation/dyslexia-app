@@ -6,7 +6,6 @@ export default function Header() {
   return (
     <header className="w-full px-4 py-4 border-b border-gray-200 bg-white sticky top-0 z-50">
       <div className="max-w-6xl mx-auto flex justify-between items-center">
-        {/* 로고 */}
         <Link to="/">
           <Typography
             as="h1"
@@ -18,7 +17,6 @@ export default function Header() {
           </Typography>
         </Link>
 
-        {/* 우측 메뉴 */}
         <div className="flex gap-2 sm:gap-3 items-center">
           <Link to="/login">
             <Button
@@ -28,7 +26,7 @@ export default function Header() {
               로그인
             </Button>
           </Link>
-          <Link to="/signup/select-role">
+          <Link to="/signup">
             <Button
               className="bg-primary hover:bg-primary/90 text-white text-sm sm:text-base rounded-md px-4 sm:px-6 py-1.5"
             >

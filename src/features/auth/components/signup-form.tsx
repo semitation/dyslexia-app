@@ -70,24 +70,24 @@ export const SignUpForm = ({
 
   return (
     <>
-      <Card className="w-full max-w-md mx-auto">
-        <CardContent>
+      <Card className="w-full max-w-md mx-auto shadow-md border border-gray-200">
+        <CardContent className="px-6 py-8">
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
               <FormField
                 control={form.control}
                 name="name"
-                render={({ field, fieldState, formState }) => (
+                render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-base">이름</FormLabel>
+                    <FormLabel className="text-sm font-medium text-gray-700">이름</FormLabel>
                     <FormControl>
-                      <Input 
-                        placeholder="이름을 입력하세요" 
-                        {...field} 
-                        className="h-12 text-base"
+                      <Input
+                        placeholder="이름을 입력하세요"
+                        {...field}
+                        className="h-12 px-4 text-sm border border-gray-300 rounded-md"
                       />
                     </FormControl>
-                    <FormMessage />
+                    <FormMessage className="text-xs text-red-500 mt-1" />
                   </FormItem>
                 )}
               />
@@ -96,13 +96,13 @@ export const SignUpForm = ({
                 <FormField
                   control={form.control}
                   name="grade"
-                  render={({ field, fieldState, formState }) => (
+                  render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-base">학년</FormLabel>
+                      <FormLabel className="text-sm font-medium text-gray-700">학년</FormLabel>
                       <Select
                         onChange={field.onChange}
                         value={field.value}
-                        className="h-12 text-base"
+                        className="h-12 w-full px-4 text-sm border border-gray-300 rounded-md"
                       >
                         <option value="">학년을 선택하세요</option>
                         <option value="GRADE_1">1학년</option>
@@ -112,7 +112,7 @@ export const SignUpForm = ({
                         <option value="GRADE_5">5학년</option>
                         <option value="GRADE_6">6학년</option>
                       </Select>
-                      <FormMessage />
+                      <FormMessage className="text-xs text-red-500 mt-1" />
                     </FormItem>
                   )}
                 />
@@ -121,25 +121,25 @@ export const SignUpForm = ({
               <FormField
                 control={form.control}
                 name="organization"
-                render={({ field, fieldState, formState }) => (
+                render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-base">소속</FormLabel>
+                    <FormLabel className="text-sm font-medium text-gray-700">소속</FormLabel>
                     <FormControl>
-                      <Input 
-                        placeholder="소속을 입력하세요" 
-                        {...field} 
-                        className="h-12 text-base"
+                      <Input
+                        placeholder="소속을 입력하세요"
+                        {...field}
+                        className="h-12 px-4 text-sm border border-gray-300 rounded-md"
                       />
                     </FormControl>
-                    <FormMessage />
+                    <FormMessage className="text-xs text-red-500 mt-1" />
                   </FormItem>
                 )}
               />
 
-              <Button 
-                type="submit" 
+              <Button
+                type="submit"
                 disabled={isPending}
-                className="w-full h-12 text-base font-semibold"
+                className="w-full h-12 text-base font-semibold rounded-md bg-primary text-white hover:bg-primary-dark"
               >
                 {isPending ? '처리 중...' : '회원가입'}
               </Button>

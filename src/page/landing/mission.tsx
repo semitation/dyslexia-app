@@ -28,14 +28,14 @@ export default function Mission() {
   return (
     <section className="py-20 px-4 bg-white">
       <div className="max-w-6xl mx-auto text-center">
-        <Typography
-          variant="h2"
-          size="2xl"
-          weight="bold"
-          className="mb-12 text-primary"
-        >
-          모든 학생은 배울 권리가 있습니다.
-        </Typography>
+                <Typography
+                  as="h2"
+                  variant="h2"
+                  weight="bold"
+                  className="text-3xl mb-12 leading-8 text-primary"
+                >
+                  모든 학생은 배울 권리가 있습니다.
+                </Typography>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
           {missions.map((item, idx) => (

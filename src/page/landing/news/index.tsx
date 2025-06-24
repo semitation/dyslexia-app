@@ -5,14 +5,7 @@ export default function News() {
   return (
     <section className="w-full px-4 py-20 bg-white">
       <div className="max-w-4xl mx-auto text-center">
-        <Typography
-          as="h2"
-          variant="h2"
-          weight="bold"
-          className="text-3xl mb-12 leading-8 text-primary"
-        >
-          모든 학생은 배울 권리가 있습니다.
-        </Typography>
+
 
         <div className="flex flex-col gap-6">
           {newsData.map((news) => (
