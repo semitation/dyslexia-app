@@ -16,6 +16,7 @@ import { Route as TeacherRouteImport } from './routes/teacher/route';
 import { Route as StudentRouteImport } from './routes/student/route';
 import { Route as IndexImport } from './routes/index';
 import { Route as SignupIndexImport } from './routes/signup/index';
+import { Route as LoginIndexImport } from './routes/login/index';
 import { Route as AuthIndexImport } from './routes/auth/index';
 import { Route as TeacherUploadImport } from './routes/teacher/upload';
 import { Route as TeacherStudentImport } from './routes/teacher/student';
@@ -56,6 +57,12 @@ const IndexRoute = IndexImport.update({
 const SignupIndexRoute = SignupIndexImport.update({
   id: '/signup/',
   path: '/signup/',
+  getParentRoute: () => rootRoute,
+} as any);
+
+const LoginIndexRoute = LoginIndexImport.update({
+  id: '/login/',
+  path: '/login/',
   getParentRoute: () => rootRoute,
 } as any);
 
@@ -214,6 +221,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthIndexImport;
       parentRoute: typeof rootRoute;
     };
+    '/login/': {
+      id: '/login/';
+      path: '/login';
+      fullPath: '/login';
+      preLoaderRoute: typeof LoginIndexImport;
+      parentRoute: typeof rootRoute;
+    };
     '/signup/': {
       id: '/signup/';
       path: '/signup';
@@ -281,6 +295,7 @@ export interface FileRoutesByFullPath {
   '/teacher/student': typeof TeacherStudentRoute;
   '/teacher/upload': typeof TeacherUploadRoute;
   '/auth': typeof AuthIndexRoute;
+  '/login': typeof LoginIndexRoute;
   '/signup': typeof SignupIndexRoute;
   '/teacher/viewer/$documentId': typeof TeacherViewerDocumentIdRoute;
 }
@@ -299,6 +314,7 @@ export interface FileRoutesByTo {
   '/teacher/student': typeof TeacherStudentRoute;
   '/teacher/upload': typeof TeacherUploadRoute;
   '/auth': typeof AuthIndexRoute;
+  '/login': typeof LoginIndexRoute;
   '/signup': typeof SignupIndexRoute;
   '/teacher/viewer/$documentId': typeof TeacherViewerDocumentIdRoute;
 }
@@ -318,6 +334,7 @@ export interface FileRoutesById {
   '/teacher/student': typeof TeacherStudentRoute;
   '/teacher/upload': typeof TeacherUploadRoute;
   '/auth/': typeof AuthIndexRoute;
+  '/login/': typeof LoginIndexRoute;
   '/signup/': typeof SignupIndexRoute;
   '/teacher/viewer/$documentId': typeof TeacherViewerDocumentIdRoute;
 }
@@ -338,6 +355,7 @@ export interface FileRouteTypes {
     | '/teacher/student'
     | '/teacher/upload'
     | '/auth'
+    | '/login'
     | '/signup'
     | '/teacher/viewer/$documentId';
   fileRoutesByTo: FileRoutesByTo;
@@ -355,6 +373,7 @@ export interface FileRouteTypes {
     | '/teacher/student'
     | '/teacher/upload'
     | '/auth'
+    | '/login'
     | '/signup'
     | '/teacher/viewer/$documentId';
   id:
@@ -372,6 +391,7 @@ export interface FileRouteTypes {
     | '/teacher/student'
     | '/teacher/upload'
     | '/auth/'
+    | '/login/'
     | '/signup/'
     | '/teacher/viewer/$documentId';
   fileRoutesById: FileRoutesById;
@@ -385,6 +405,7 @@ export interface RootRouteChildren {
   SignupStudentRoute: typeof SignupStudentRoute;
   SignupTeacherRoute: typeof SignupTeacherRoute;
   AuthIndexRoute: typeof AuthIndexRoute;
+  LoginIndexRoute: typeof LoginIndexRoute;
   SignupIndexRoute: typeof SignupIndexRoute;
 }
 
@@ -396,6 +417,7 @@ const rootRouteChildren: RootRouteChildren = {
   SignupStudentRoute: SignupStudentRoute,
   SignupTeacherRoute: SignupTeacherRoute,
   AuthIndexRoute: AuthIndexRoute,
+  LoginIndexRoute: LoginIndexRoute,
   SignupIndexRoute: SignupIndexRoute,
 };
 
@@ -416,6 +438,7 @@ export const routeTree = rootRoute
         "/signup/student",
         "/signup/teacher",
         "/auth/",
+        "/login/",
         "/signup/"
       ]
     },
@@ -474,6 +497,9 @@ export const routeTree = rootRoute
     },
     "/auth/": {
       "filePath": "auth/index.tsx"
+    },
+    "/login/": {
+      "filePath": "login/index.tsx"
     },
     "/signup/": {
       "filePath": "signup/index.tsx"
