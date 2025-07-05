@@ -1,4 +1,4 @@
-import { LibraryPage } from '@/page/student';
+import  StudentDashboardPage  from '@/page/student';
 import { createFileRoute } from '@tanstack/react-router';
 
 export const Route = createFileRoute('/student/library')({
@@ -8,7 +8,7 @@ export const Route = createFileRoute('/student/library')({
 function RouteComponent() {
   return (
     <div>
-      <LibraryPage />
+      <StudentDashboardPage />
     </div>
   );
 }
