@@ -1,4 +1,4 @@
-import { StudentPage } from '@/page/teacher';
+import { StudentManagementPage } from '@/page/teacher';
 import { createFileRoute } from '@tanstack/react-router';
 
 export const Route = createFileRoute('/teacher/student')({
@@ -8,7 +8,7 @@ export const Route = createFileRoute('/teacher/student')({
 function RouteComponent() {
 	return (
 		<div>
-			<StudentPage />
+			<StudentManagementPage />
 		</div>
 	);
 }

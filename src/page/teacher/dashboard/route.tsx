@@ -1,288 +1,138 @@
-import { Card } from "@/shared/ui/card";
 import { Button } from "@/shared/ui/button";
-import { Typography } from "@/shared/ui/typography";
-import { DataTable, Badge, DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator} from "@/shared/ui";
-import { MoreVertical } from "lucide-react";
-import type { ColumnDef } from "@tanstack/react-table";
-import { useRouter } from "@tanstack/react-router";
+import { Card, CardContent } from "@/shared/ui/card";
+import { Badge } from "@/shared/ui/badge";
 
-interface ContentItem {
-  id: string;
-  title: string;
-  subject: string;
-  grade: string;
-  date: string;
-  status: "published" | "draft";
-}
-
-const contentData: ContentItem[] = [
-  {
-    id: "1",
-    title: "생태계와 환경",
-    subject: "과학",
-    grade: "3학년",
-    date: "2025-03-10",
-    status: "published",
-  },
-  {
-    id: "2",
-    title: "우리 동네 탐험",
-    subject: "사회",
-    grade: "2학년",
-    date: "2025-03-09",
-    status: "draft",
-  },
-  {
-    id: "3",
-    title: "곤충의 한살이",
-    subject: "과학",
-    grade: "3학년",
-    date: "2025-03-08",
-    status: "published",
-  },
-];
-
-const columns: ColumnDef<ContentItem>[] = [
-  {
-    accessorKey: "title",
-    header: "제목",
-    size: 100,
-  },
-  {
-    accessorKey: "subject",
-    header: "과목",
-    size: 80,
-    cell: ({ row }) => <div className="text-center">{row.original.subject}</div>,
-  },
-  {
-    accessorKey: "grade",
-    header: "학년",
-    size: 60,
-    cell: ({ row }) => (
-      <div className="text-center">{row.original.grade}</div>
-    ),
-  },
-  {
-    accessorKey: "date",
-    header: "생성일",
-    size: 100,
-  },
-  {
-    accessorKey: "status",
-    header: "상태",
-    size: 80,
-    cell: ({ row }) => {
-      const val = row.original.status;
-      if (val === "published") {
-        return (
-          <Badge variant="white" size="sm" className="text-blue-600 border border-blue-200">
-            게시됨
-          </Badge>
-        );
-      }
-      return (
-        <Badge variant="white" size="sm" className="text-gray-600 border border-gray-300">
-          초안
-        </Badge>
-      );
-    },
-  },
-  
-  {
-    accessorKey: "more",
-    header: "",
-    size: 32,
-    cell: () => {
-      return (
-        <DropdownMenu>
-          <DropdownMenuTrigger className="flex items-center justify-center w-full h-full p-1 hover:bg-gray-100 rounded-full cursor-pointer">
-            <MoreVertical className="h-5 w-5 text-gray-500" />
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem>편집</DropdownMenuItem>
-            <DropdownMenuItem>미리보기</DropdownMenuItem>
-            <DropdownMenuItem>복제</DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem variant="destructive">삭제</DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      );
-    },
-  },
-];
-
-export default function TeacherDashboardPage() {
-  const router = useRouter();
-
+export default function DashboardPage() {
   return (
-      <div className="space-y-6">
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
-          <Card className="p-4">
-            <div className="flex justify-between">
-              <div>
-                <Typography variant="p" size="sm" className="text-gray-500">
-                  총 학생 수
-                </Typography>
-                <Typography variant="h2" size="xl" weight="bold">
-                  12
-                </Typography>
-                <Typography variant="p" size="sm" className="text-green-500">
-                  +2 지난 달 대비
-                </Typography>
-              </div>
-              <div className="h-6 w-6 text-gray-400">👥</div>
-            </div>
-          </Card>
+    <div className="max-w-5xl mx-auto p-6 space-y-6">
+      <div>
+        <h1 className="text-2xl font-semibold">대시보드</h1>
+        <p className="text-sm text-muted-foreground mt-1">
+          학생들의 학습 현황을 한눈에 확인하세요
+        </p>
+      </div>
 
-          <Card className="p-4">
-            <div className="flex justify-between">
-              <div>
-                <Typography variant="p" size="sm" className="text-gray-500">
-                  생성된 컨텐츠
-                </Typography>
-                <Typography variant="h2" size="xl" weight="bold">
-                  48
-                </Typography>
-                <Typography variant="p" size="sm" className="text-green-500">
-                  +15 지난 달 대비
-                </Typography>
-              </div>
-              <div className="h-6 w-6 text-gray-400">📄</div>
-            </div>
-          </Card>
-
-          <Card className="p-4">
-            <div className="flex justify-between">
-              <div>
-                <Typography variant="p" size="sm" className="text-gray-500">
-                  평균 학습 시간
-                </Typography>
-                <Typography variant="h2" size="xl" weight="bold">
-                  32분
-                </Typography>
-                <Typography variant="p" size="sm" className="text-green-500">
-                  +5 지난 주 대비
-                </Typography>
-              </div>
-              <div className="h-6 w-6 text-gray-400">⏰</div>
-            </div>
-          </Card>
-
-          <Card className="p-4">
-            <div className="flex justify-between">
-              <div>
-                <Typography variant="p" size="sm" className="text-gray-500">
-                  평균 이해도
-                </Typography>
-                <Typography variant="h2" size="xl" weight="bold">
-                  76%
-                </Typography>
-                <Typography variant="p" size="sm" className="text-green-500">
-                  +8% 지난 달 대비
-                </Typography>
-              </div>
-              <div className="h-6 w-6 text-gray-400">📊</div>
-            </div>
-          </Card>
-        </div>
-
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          <Card className="p-4">
-            <Typography variant="h3" size="lg" weight="bold" className="mb-4">
-              최근 학생 활동
-            </Typography>
-            <div className="flex items-center mb-2">
-              <div className="mr-2 h-10 w-10 rounded-full bg-gray-200" />
-              <div>
-                <Typography variant="p" weight="semibold" className="text-gray-800">
-                  김민준
-                </Typography>
-                <Typography variant="p" size="sm" className="text-gray-500">
-                  3학년 - 시각적 처리 어려움 학습 진행 중
-                </Typography>
-              </div>
-              <div className="ml-auto text-sm text-gray-400">2025-03-09</div>
-            </div>
-            <div className="flex items-center mb-2">
-              <div className="mr-2 h-10 w-10 rounded-full bg-gray-200" />
-              <div>
-                <Typography variant="p" weight="semibold" className="text-gray-800">
-                  이서연
-                </Typography>
-                <Typography variant="p" size="sm" className="text-gray-500">
-                  2학년 - 음운적 처리 어려움 학습 진행 중
-                </Typography>
-              </div>
-              <div className="ml-auto text-sm text-gray-400">2025-03-08</div>
-            </div>
-            <div className="flex items-center">
-              <div className="mr-2 h-10 w-10 rounded-full bg-gray-200" />
-              <div>
-                <Typography variant="p" weight="semibold" className="text-gray-800">
-                  박지호
-                </Typography>
-                <Typography variant="p" size="sm" className="text-gray-500">
-                  4학년 - 복합적 어려움 학습 진행 중
-                </Typography>
-              </div>
-              <div className="ml-auto text-sm text-gray-400">2025-03-10</div>
-            </div>
-          </Card>
-
-          <Card className="p-4">
-            <Typography variant="h3" size="lg" weight="bold" className="mb-4">
-              학생 진도 현황
-            </Typography>
-            <div className="mb-2">
-              <div className="mb-1 flex justify-between text-sm">
-                <span>김민준</span>
-                <span>68%</span>
-              </div>
-              <div className="h-2 rounded bg-gray-200">
-                <div className="h-full w-[68%] rounded bg-dyslexia-blue" />
-              </div>
-            </div>
-            <div className="mb-2">
-              <div className="mb-1 flex justify-between text-sm">
-                <span>이서연</span>
-                <span>42%</span>
-              </div>
-              <div className="h-2 rounded bg-gray-200">
-                <div className="h-full w-[42%] rounded bg-dyslexia-blue" />
-              </div>
-            </div>
-            <div className="mb-2">
-              <div className="mb-1 flex justify-between text-sm">
-                <span>박지호</span>
-                <span>75%</span>
-              </div>
-              <div className="h-2 rounded bg-gray-200">
-                <div className="h-full w-[75%] rounded bg-dyslexia-blue" />
-              </div>
-            </div>
-            <div>
-              <div className="mb-1 flex justify-between text-sm">
-                <span>최예린</span>
-                <span>51%</span>
-              </div>
-              <div className="h-2 rounded bg-gray-200">
-                <div className="h-full w-[51%] rounded bg-dyslexia-blue" />
-              </div>
-            </div>
-          </Card>
-        </div>
-
-        <Card className="p-4">
-          <div className="mb-4 flex items-center justify-between">
-            <Typography variant="h3" size="lg" weight="bold">
-              최근 생성된 콘텐츠
-            </Typography>
-            <Button variant="outline" className="px-4" onClick={() => router.navigate({ to: "/teacher/documents" })}>
-              + 새 컨텐츠
-            </Button>
-          </div>
-          <DataTable columns={columns} data={contentData} pageSize={5} />
+      <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center p-4 space-y-2">
+            <p className="text-sm">새 교안 업로드</p>
+            <Button size="sm">업로드</Button>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center p-4 space-y-2">
+            <p className="text-sm">학생 초대</p>
+            <Button size="sm">링크 복사</Button>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center p-4 space-y-2">
+            <p className="text-sm">학습 분석</p>
+            <Button size="sm">분석</Button>
+          </CardContent>
         </Card>
       </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <Card className="lg:col-span-2">
+          <CardContent className="p-4">
+            <h2 className="text-lg font-semibold mb-2">최근 활동</h2>
+            <p className="text-sm text-muted-foreground mb-4">
+              최근 7일간의 학생 활동을 확인해보세요
+            </p>
+            <div className="space-y-2">
+              {[
+                { time: "30분 전", content: "독서 목표 달성", tag: "민지" },
+                { time: "2시간 전", content: "새 교안 배정: 마법의 숲 모험", tag: "준호" },
+                { time: "4시간 전", content: "학습 진도 80% 달성", tag: "민지" },
+              ].map((activity) => (
+                <div
+                  key={`${activity.time}-${activity.content}`}
+                  className="flex items-center justify-between p-2 bg-muted rounded"
+                >
+                  <div className="flex items-center space-x-2">
+                    <Badge>{activity.tag}</Badge>
+                    <p className="text-sm">{activity.content}</p>
+                  </div>
+                  <span className="text-xs text-muted-foreground">{activity.time}</span>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-4 space-y-2">
+            <h2 className="text-lg font-semibold mb-2">빠른 작업</h2>
+            <Button className="w-full" size="sm">
+              + 새 교안 업로드
+            </Button>
+            <Button variant="outline" className="w-full" size="sm">
+              교안 스토어 둘러보기
+            </Button>
+            <Button variant="outline" className="w-full" size="sm">
+              학생 관리
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between mb-2">
+              <h2 className="text-lg font-semibold">학생 현황</h2>
+              <Button variant="link" size="sm">전체 보기</Button>
+            </div>
+            <div className="space-y-3">
+              {[
+                { name: "민지", grade: "초등학교 2학년", book: "우리 동네 동물들", progress: 65, last: "2시간 전" },
+                { name: "준호", grade: "초등학교 1학년", book: "마법의 숲 모험", progress: 30, last: "1일 전" },
+              ].map((student) => (
+                <div key={student.name} className="flex items-center justify-between p-2 bg-muted rounded">
+                  <div className="flex items-center space-x-3">
+                    <div className="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center text-xs font-medium">
+                      {student.name[0]}
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium">{student.name}</p>
+                      <p className="text-xs text-muted-foreground">{student.grade} | 현재 도서: {student.book}</p>
+                    </div>
+                  </div>
+                  <div className="flex flex-col items-end">
+                    <p className="text-xs text-muted-foreground">{student.progress}%</p>
+                    <p className="text-xs text-muted-foreground">마지막 활동: {student.last}</p>
+                    <Button variant="link" size="sm">칭찬하기</Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between mb-2">
+              <h2 className="text-lg font-semibold">최근 교안</h2>
+              <Button variant="link" size="sm">전체 보기</Button>
+            </div>
+            <div className="space-y-3">
+              {[
+                { title: "우리 동네 동물들", type: "자체 제작", date: "2024-01-15", status: "처리중" },
+                { title: "우주 탐험 이야기", type: "스토어 구매", date: "2024-01-10", status: "완료" },
+              ].map((lesson) => (
+                <div key={lesson.title} className="flex items-center justify-between p-2 bg-muted rounded">
+                  <div>
+                    <p className="text-sm font-medium">{lesson.title}</p>
+                    <p className="text-xs text-muted-foreground">{lesson.type} | {lesson.date}</p>
+                  </div>
+                  <Badge>{lesson.status}</Badge>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
   );
 }
