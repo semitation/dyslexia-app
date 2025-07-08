@@ -1,56 +1,40 @@
+import { Link } from "@tanstack/react-router";
 import { Button } from "@/shared/ui/button";
-import { Show, Typography } from "@/shared/ui";
-import { useAuth } from "@/shared/hooks/use-auth";
+import { Typography } from "@/shared/ui/typography";
 
-
-type HeaderProps = {
-  onAuthClick: () => void
-}
-
-export default function Header({ onAuthClick }: HeaderProps) {
-  const { isAuthenticated, my, logout } = useAuth();
-
-  const onClickLogout = () => {
-    logout();
-  }
-
+export default function Header() {
   return (
-    <header className="w-full min-h-[64px] flex justify-center">
-      <section className="max-w-[768px] w-full flex items-center justify-between">
-        <Typography variant="h2" weight="bold" size="2xl" color="primary">
-          리딩브릿지
-          </Typography>
-
-        <Show when={!isAuthenticated}>
-          <nav className="flex gap-2">
-            <Button variant="default" onClick={onAuthClick}>로그인</Button>
-            <Button variant="outline" onClick={onAuthClick}>회원가입</Button>
-          </nav>
-        </Show>
-
-        <Show when={isAuthenticated}>
-        <nav className="flex gap-2 items-center">
-          <Typography variant="p" color="destructive">
-            안녕하세요,
-          </Typography>
-          <Typography variant="p" color="primary">
-            {my?.name}
-          </Typography>
-          <Typography variant="p" color="destructive">
-            님
-          </Typography>
-
-          <Button 
-            variant="default" 
-            onClick={onClickLogout}
-            className="ml-2"
+    <header className="w-full px-4 py-4 border-b border-gray-200 bg-white sticky top-0 z-50">
+      <div className="max-w-6xl mx-auto flex justify-between items-center">
+        <Link to="/">
+          <Typography
+            as="h1"
+            variant="h3"
+            weight="bold"
+            className="text-primary text-lg sm:text-xl"
           >
-              로그아웃
-          </Button>
-        </nav>
-        </Show>
+            리딩브릿지
+          </Typography>
+        </Link>
 
-      </section>
+        <div className="flex gap-2 sm:gap-3 items-center">
+          <Link to="/login">
+            <Button
+              variant="ghost"
+              className="text-sm sm:text-base text-gray-700 border border-gray-200 hover:bg-gray-100 rounded-md px-4 sm:px-6 py-1.5"
+            >
+              로그인
+            </Button>
+          </Link>
+          <Link to="/signup">
+            <Button
+              className="bg-primary hover:bg-primary/90 text-white text-sm sm:text-base rounded-md px-4 sm:px-6 py-1.5"
+            >
+              회원가입
+            </Button>
+          </Link>
+        </div>
+      </div>
     </header>
   );
 }

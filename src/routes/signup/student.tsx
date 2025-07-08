@@ -1,15 +1,20 @@
+import { createFileRoute, useSearch } from '@tanstack/react-router'
 import { SignUpForm } from '@/features/auth/components/signup-form'
-import { createFileRoute } from '@tanstack/react-router'
 
 export const Route = createFileRoute('/signup/student')({
   component: StudentSignUpPage,
 })
 
 function StudentSignUpPage() {
+  const { nickname } = useSearch({ from: '/signup/student' })
+
   return (
-    <div className="container mx-auto max-w-md py-8">
-      <h1 className="text-2xl font-bold text-center mb-8">학생 회원가입</h1>
-      <SignUpForm userType="STUDENT" />
+    <div className="min-h-screen bg-gray-50 py-12">
+      <div className="container mx-auto px-4">
+        <div className="max-w-md mx-auto">
+          <SignUpForm userType="STUDENT" defaultNickname={nickname} />
+        </div>
+      </div>
     </div>
   )
-} 
+}
