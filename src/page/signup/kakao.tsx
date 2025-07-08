@@ -70,7 +70,6 @@ export function KakaoAuthPage() {
         console.log('카카오 userInfo:', userInfo);
 
         if (userInfo.id) {
-          alert(`카카오 회원번호: ${userInfo.id}`);
           localStorage.setItem('clientId', userInfo.id.toString());
           localStorage.setItem('userType', userType);
 
