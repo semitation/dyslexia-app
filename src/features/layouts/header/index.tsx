@@ -5,13 +5,13 @@ import { Typography } from "@/shared/ui/typography";
 export default function Header() {
   return (
     <header className="w-full px-4 py-4 border-b border-gray-200 bg-white sticky top-0 z-50">
-      <div className="max-w-6xl mx-auto flex justify-between items-center">
+      <div className="max-w-7xl mx-auto flex justify-between items-center">
         <Link to="/">
           <Typography
             as="h1"
             variant="h3"
             weight="bold"
-            className="text-primary text-lg sm:text-xl"
+            className="text-[#007AFF] text-lg sm:text-xl"
           >
             리딩브릿지
           </Typography>
@@ -28,7 +28,7 @@ export default function Header() {
           </Link>
           <Link to="/signup">
             <Button
-              className="bg-primary hover:bg-primary/90 text-white text-sm sm:text-base rounded-md px-4 sm:px-6 py-1.5"
+              className="bg-[#007AFF] hover:bg-[#0066d6] text-white text-sm sm:text-base rounded-md px-4 sm:px-6 py-1.5"
             >
               회원가입
             </Button>

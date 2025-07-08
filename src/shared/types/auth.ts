@@ -24,4 +24,5 @@ export type SignUpFormData = {
   name: string
   grade?: Grade
   organization: string
+  interestIds?: number[]
 }

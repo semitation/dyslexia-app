@@ -3,7 +3,7 @@ import Header from "./header"
 
 interface BaseLayoutProps {
   children: ReactNode
-  onAuthClick: () => void
+  onAuthClick?: () => void
 }
 
 export const BaseLayout = ({ children, onAuthClick }: BaseLayoutProps) => {

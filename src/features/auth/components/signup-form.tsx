@@ -1,206 +1,213 @@
+import { useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
-import { useState } from 'react';
-
-import type { SignUpFormData, UserType } from '@/shared/types/auth';
-import { useSignUp } from '@/shared/hooks/useSignUp';
+import { useNavigate } from '@tanstack/react-router';
 import { Button } from '@/shared/ui/button';
 import { Input } from '@/shared/ui/input';
 import { Select } from '@/shared/ui/select';
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/shared/ui/form';
 import { Card } from '@/shared/ui/card';
 import { Typography } from '@/shared/ui/typography';
-import { MessageCircle } from 'lucide-react';
-import { SuccessModal } from './success-modal';
-import { storage } from '@/shared/utils/storage';
 
-const signUpSchema = z.object({
-  name: z.string().min(2, '이름은 2자 이상이어야 합니다.'),
-  grade: z.enum([
-    'GRADE_1',
-    'GRADE_2',
-    'GRADE_3',
-    'GRADE_4',
-    'GRADE_5',
-    'GRADE_6',
-  ]).optional(),
-  organization: z.string().min(1, '소속을 입력해주세요.'),
-});
+const interestOptions = [
+  '동물', '우주', '과학', '음악', '미술', '운동', '요리', '게임', '만화', '영화'
+];
 
-interface SignUpFormProps {
-  userType: UserType;
-  defaultNickname?: string;
+interface StudentForm {
+  name: string;
+  grade: string;
 }
 
-export const SignUpForm = ({
-  userType,
-  defaultNickname = '',
-}: SignUpFormProps) => {
-  const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
-  const [isVerified, setIsVerified] = useState(false);
+interface GuardianForm {
+  name: string;
+  email: string;
+  guardianRole: 'PARENT' | 'TEACHER';
+  organization: string;
+}
 
-  const { mutate: signUp } = useSignUp();
+interface StudentPayload {
+  clientId: string;
+  name: string;
+  grade: string;
+  interests: number[];
+}
 
-  const form = useForm<SignUpFormData>({
-    resolver: zodResolver(signUpSchema),
-    defaultValues: {
-      name: defaultNickname,
-      organization: '',
-      grade: undefined,
-    },
-  });
+interface GuardianPayload {
+  clientId: string;
+  name: string;
+  email: string;
+  guardianRole: 'PARENT' | 'TEACHER';
+  organization: string;
+}
 
-  const onSubmit = (data: SignUpFormData) => {
-    const clientId = storage.getClientId();
+export const SignUpForm = ({ defaultNickname = '' }: { defaultNickname?: string }) => {
+  const navigate = useNavigate();
+  const clientId = localStorage.getItem('clientId');
+  const userType = useMemo(() => localStorage.getItem('userType') as 'student' | 'teacher' | null, []);
+  const [selectedInterests, setSelectedInterests] = useState<number[]>([]);
+  const { register, handleSubmit } = useForm<StudentForm | GuardianForm>();
+
+  useEffect(() => {
+    if (!clientId || !userType) {
+      navigate({
+        to: '/signup/kakao',
+        search: { userType: userType ?? 'student' },
+        replace: true,
+      });
+    }
+  }, [clientId, userType, navigate]);
+
+  const toggleInterest = (index: number) => {
+    setSelectedInterests((prev) => {
+      if (prev.includes(index)) {
+        return prev.filter((i) => i !== index);
+      }
+      if (prev.length >= 3) return prev;
+      return [...prev, index];
+    });
+  };
+
+  const onSubmit = async (data: StudentForm | GuardianForm) => {
     if (!clientId) {
-      console.error('clientId가 없습니다.');
+      alert('카카오 인증을 먼저 진행해주세요.');
       return;
     }
 
-    signUp(
-      {
-        ...data,
-        userType,
-        clientId,
-        type: userType,
-        interestIds: [],
-      },
-      {
-        onSuccess: () => {
-          storage.removeClientId();
-          setIsSuccessModalOpen(true);
-        },
+    try {
+      let endpoint: string;
+      let payload: StudentPayload | GuardianPayload;
+
+      if (userType === 'student') {
+        const studentData = data as StudentForm;
+        endpoint = '/users/signup/student';
+        payload = {
+          clientId,
+          name: studentData.name,
+          grade: studentData.grade,
+          interests: selectedInterests.map(i => i + 1),
+        };
+      } else {
+        const guardianData = data as GuardianForm;
+        endpoint = '/users/signup/guardian';
+        payload = {
+          clientId,
+          name: guardianData.name,
+          email: guardianData.email,
+          guardianRole: guardianData.guardianRole,
+          organization: guardianData.organization,
+        };
       }
-    );
+
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}${endpoint}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      const result = await response.json();
+      console.log('회원가입 완료:', result);
+
+      if (response.ok) {
+        localStorage.setItem('accessToken', result.accessToken);
+        localStorage.setItem('refreshToken', result.refreshToken);
+        alert('회원가입이 완료되었습니다!');
+        navigate({ to: '/' });
+      } else {
+        alert(`회원가입 실패: ${result.message || JSON.stringify(result)}`);
+      }
+    } catch (error) {
+      console.error('회원가입 오류:', error);
+      alert('회원가입 처리 중 오류가 발생했습니다.');
+    }
   };
 
-  if (!isVerified) {
+  if (!userType) {
     return (
-      <div className="flex flex-col items-center justify-center px-4 py-10">
-        <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-md">
-          <div className="text-center mb-4">
-            <Typography variant="h4" className="mb-1">
-              {userType === 'STUDENT' ? '학생' : '보호자'} 회원가입
-            </Typography>
-            <Typography className="text-muted-foreground text-sm">
-              카카오톡으로 간편하게 인증해요
-            </Typography>
-          </div>
-
-          <div className="rounded-md bg-yellow-100 p-4 text-center mb-6">
-            <MessageCircle className="mx-auto mb-2 h-6 w-6 text-yellow-600" />
-            <Typography variant="h5" className="text-yellow-800">
-              카카오톡으로 인증할게요!
-            </Typography>
-            <Typography className="mt-1 text-sm text-muted-foreground">
-              카카오톡 앱이 열리면 본인 인증을 진행해주세요.<br />
-              인증이 완료되면 다시 이 화면으로 돌아와요.
-            </Typography>
-          </div>
-
-          <Button
-            className="w-full bg-yellow-400 hover:bg-yellow-500 text-black font-semibold"
-            onClick={() => setIsVerified(true)}
-          >
-            카카오톡 열어서 인증하기
-          </Button>
-        </div>
+      <div className="text-center mt-10">
+        <p>유저 신분 정보가 없습니다. 다시 시도해주세요.</p>
+        <Button onClick={() => navigate({ to: '/signup/kakao', search: { userType: 'student' } })}>
+          카카오 인증 페이지로 이동
+        </Button>
       </div>
     );
   }
 
   return (
-    <>
-      <Card className="w-full max-w-md mx-auto shadow-md border border-gray-200 p-6">
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-sm font-medium text-gray-700">이름</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="text"
-                      {...field}
-                      placeholder="이름을 입력하세요"
-                      className="h-12 px-4 text-sm"
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+    <div className="min-h-screen bg-gradient-to-br from-[#f0f9ff] to-[#fffaf4] flex justify-center items-center p-4">
+      <Card className="w-full max-w-md p-6 space-y-6">
+        <div className="text-center space-y-1">
+          <Typography variant="h4" className="font-bold">
+            {userType === 'student' ? '학생 정보 입력' : '보호자 회원가입'}
+          </Typography>
+          <Typography variant="p" className="text-gray-600 text-sm">
+            {userType === 'student' ? '나만의 속도로 즐겁게 학습해요' : '아이의 학습을 지원하고 관리하세요'}
+          </Typography>
+        </div>
 
-            {userType === 'STUDENT' && (
-              <FormField
-                control={form.control}
-                name="grade"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-sm font-medium text-gray-700">학년</FormLabel>
-                    <Select
-                      {...field}
-                      className="h-12 px-4 text-sm"
-                      onChange={(e) => field.onChange(e.target.value)}
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          <div>
+            <label htmlFor="name" className="block text-sm font-medium text-gray-700">이름</label>
+            <Input id="name" {...register('name', { required: true })} defaultValue={defaultNickname} />
+          </div>
+
+          {userType === 'student' ? (
+            <>
+              <div>
+                <label htmlFor="grade" className="block text-sm font-medium text-gray-700">학년</label>
+                <Select id="grade" {...register('grade', { required: true })} defaultValue="">
+                  <option value="" disabled>학년을 선택하세요</option>
+                  {Array.from({ length: 6 }).map((_, i) => (
+                    <option key={`grade_${i + 1}`} value={`GRADE_${i + 1}`}>{`${i + 1}학년`}</option>
+                  ))}
+                </Select>
+              </div>
+              <div>
+                <p className="block text-sm font-medium text-gray-700">좋아하는 것들 (3개까지 선택)</p>
+                <div className="grid grid-cols-2 gap-2 mt-1">
+                  {interestOptions.map((interest, index) => (
+                    <button
+                      type="button"
+                      key={interest}
+                      onClick={() => toggleInterest(index)}
+                      className={`border rounded p-2 text-sm ${
+                        selectedInterests.includes(index)
+                          ? 'bg-blue-500 text-white'
+                          : 'bg-white text-gray-700'
+                      }`}
                     >
-                      <option value="">학년을 선택하세요</option>
-                      <option value="GRADE_1">1학년</option>
-                      <option value="GRADE_2">2학년</option>
-                      <option value="GRADE_3">3학년</option>
-                      <option value="GRADE_4">4학년</option>
-                      <option value="GRADE_5">5학년</option>
-                      <option value="GRADE_6">6학년</option>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            )}
+                      {interest}
+                    </button>
+                  ))}
+                </div>
+                <p className="text-xs text-gray-500 mt-1">
+                  선택한 관심사: {selectedInterests.length}/3
+                </p>
+              </div>
+            </>
+          ) : (
+            <>
+              <div>
+                <label htmlFor="email" className="block text-sm font-medium text-gray-700">이메일</label>
+                <Input id="email" {...register('email', { required: true })} />
+              </div>
+              <div>
+                <label htmlFor="guardianRole" className="block text-sm font-medium text-gray-700">역할</label>
+                <Select id="guardianRole" {...register('guardianRole', { required: true })} defaultValue="">
+                  <option value="" disabled>역할을 선택하세요</option>
+                  <option value="PARENT">부모</option>
+                  <option value="TEACHER">교사</option>
+                </Select>
+              </div>
+              <div>
+                <label htmlFor="organization" className="block text-sm font-medium text-gray-700">소속 (선택사항)</label>
+                <Input id="organization" {...register('organization')} placeholder="학교명 또는 기관명" />
+              </div>
+            </>
+          )}
 
-            <FormField
-              control={form.control}
-              name="organization"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-sm font-medium text-gray-700">소속</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="text"
-                      {...field}
-                      placeholder="소속을 입력하세요"
-                      className="h-12 px-4 text-sm"
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <Button
-              type="submit"
-              className="w-full h-12 text-base font-semibold rounded-md"
-            >
-              회원가입
-            </Button>
-          </form>
-        </Form>
+          <Button type="submit" className="w-full">
+            {userType === 'student' ? '읽기 모험 시작하기! 🚀' : '계정 만들기'}
+          </Button>
+        </form>
       </Card>
-
-      <SuccessModal
-        isOpen={isSuccessModalOpen}
-        onOpenChange={setIsSuccessModalOpen}
-        userType={userType}
-      />
-    </>
+    </div>
   );
 };

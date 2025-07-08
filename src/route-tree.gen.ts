@@ -27,6 +27,7 @@ import { Route as TeacherContentImport } from './routes/teacher/content';
 import { Route as StudentLibraryImport } from './routes/student/library';
 import { Route as SignupTeacherImport } from './routes/signup/teacher';
 import { Route as SignupStudentImport } from './routes/signup/student';
+import { Route as SignupKakaoImport } from './routes/signup/kakao';
 import { Route as TeacherViewerDocumentIdImport } from './routes/teacher/viewer/$documentId';
 
 // Create/Update Routes
@@ -127,6 +128,12 @@ const SignupStudentRoute = SignupStudentImport.update({
   getParentRoute: () => rootRoute,
 } as any);
 
+const SignupKakaoRoute = SignupKakaoImport.update({
+  id: '/signup/kakao',
+  path: '/signup/kakao',
+  getParentRoute: () => rootRoute,
+} as any);
+
 const TeacherViewerDocumentIdRoute = TeacherViewerDocumentIdImport.update({
   id: '/viewer/$documentId',
   path: '/viewer/$documentId',
@@ -163,6 +170,13 @@ declare module '@tanstack/react-router' {
       path: '/kakao';
       fullPath: '/kakao';
       preLoaderRoute: typeof KakaoImport;
+      parentRoute: typeof rootRoute;
+    };
+    '/signup/kakao': {
+      id: '/signup/kakao';
+      path: '/signup/kakao';
+      fullPath: '/signup/kakao';
+      preLoaderRoute: typeof SignupKakaoImport;
       parentRoute: typeof rootRoute;
     };
     '/signup/student': {
@@ -302,6 +316,7 @@ export interface FileRoutesByFullPath {
   '/student': typeof StudentRouteRouteWithChildren;
   '/teacher': typeof TeacherRouteRouteWithChildren;
   '/kakao': typeof KakaoRoute;
+  '/signup/kakao': typeof SignupKakaoRoute;
   '/signup/student': typeof SignupStudentRoute;
   '/signup/teacher': typeof SignupTeacherRoute;
   '/student/library': typeof StudentLibraryRoute;
@@ -322,6 +337,7 @@ export interface FileRoutesByTo {
   '/student': typeof StudentRouteRouteWithChildren;
   '/teacher': typeof TeacherRouteRouteWithChildren;
   '/kakao': typeof KakaoRoute;
+  '/signup/kakao': typeof SignupKakaoRoute;
   '/signup/student': typeof SignupStudentRoute;
   '/signup/teacher': typeof SignupTeacherRoute;
   '/student/library': typeof StudentLibraryRoute;
@@ -343,6 +359,7 @@ export interface FileRoutesById {
   '/student': typeof StudentRouteRouteWithChildren;
   '/teacher': typeof TeacherRouteRouteWithChildren;
   '/kakao': typeof KakaoRoute;
+  '/signup/kakao': typeof SignupKakaoRoute;
   '/signup/student': typeof SignupStudentRoute;
   '/signup/teacher': typeof SignupTeacherRoute;
   '/student/library': typeof StudentLibraryRoute;
@@ -365,6 +382,7 @@ export interface FileRouteTypes {
     | '/student'
     | '/teacher'
     | '/kakao'
+    | '/signup/kakao'
     | '/signup/student'
     | '/signup/teacher'
     | '/student/library'
@@ -384,6 +402,7 @@ export interface FileRouteTypes {
     | '/student'
     | '/teacher'
     | '/kakao'
+    | '/signup/kakao'
     | '/signup/student'
     | '/signup/teacher'
     | '/student/library'
@@ -403,6 +422,7 @@ export interface FileRouteTypes {
     | '/student'
     | '/teacher'
     | '/kakao'
+    | '/signup/kakao'
     | '/signup/student'
     | '/signup/teacher'
     | '/student/library'
@@ -424,6 +444,7 @@ export interface RootRouteChildren {
   StudentRouteRoute: typeof StudentRouteRouteWithChildren;
   TeacherRouteRoute: typeof TeacherRouteRouteWithChildren;
   KakaoRoute: typeof KakaoRoute;
+  SignupKakaoRoute: typeof SignupKakaoRoute;
   SignupStudentRoute: typeof SignupStudentRoute;
   SignupTeacherRoute: typeof SignupTeacherRoute;
   AuthIndexRoute: typeof AuthIndexRoute;
@@ -436,6 +457,7 @@ const rootRouteChildren: RootRouteChildren = {
   StudentRouteRoute: StudentRouteRouteWithChildren,
   TeacherRouteRoute: TeacherRouteRouteWithChildren,
   KakaoRoute: KakaoRoute,
+  SignupKakaoRoute: SignupKakaoRoute,
   SignupStudentRoute: SignupStudentRoute,
   SignupTeacherRoute: SignupTeacherRoute,
   AuthIndexRoute: AuthIndexRoute,
@@ -457,6 +479,7 @@ export const routeTree = rootRoute
         "/student",
         "/teacher",
         "/kakao",
+        "/signup/kakao",
         "/signup/student",
         "/signup/teacher",
         "/auth/",
@@ -487,6 +510,9 @@ export const routeTree = rootRoute
     },
     "/kakao": {
       "filePath": "kakao.tsx"
+    },
+    "/signup/kakao": {
+      "filePath": "signup/kakao.tsx"
     },
     "/signup/student": {
       "filePath": "signup/student.tsx"

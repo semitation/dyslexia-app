@@ -1,6 +1,12 @@
-import type { SignUpRequestDto, SignUpResponseDto } from '../types/auth'
-import { axiosClient } from './axios'
+import type { StudentSignUpRequestDto, GuardianSignUpRequestDto, SignUpResponseDto } from './types/';
+import { axiosClient } from './axios';
 
-export const signUp = async (data: SignUpRequestDto): Promise<SignUpResponseDto> => {
-  return axiosClient.post('/users/signup', data)
-} 
+export const studentSignUp = async (data: StudentSignUpRequestDto): Promise<SignUpResponseDto> => {
+  const response = await axiosClient.post('/users/signup/student', data);
+  return response.data;
+};
+
+export const guardianSignUp = async (data: GuardianSignUpRequestDto): Promise<SignUpResponseDto> => {
+  const response = await axiosClient.post('/users/signup/guardian', data);
+  return response.data;
+};

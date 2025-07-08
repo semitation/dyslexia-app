@@ -22,7 +22,7 @@ function TeacherSignUpPage() {
       <div className="container mx-auto px-4">
         <div className="max-w-md mx-auto">
           <SignUpForm
-            userType="TEACHER"
+            userType="teacher"
             defaultNickname={nickname}
           />
         </div>
