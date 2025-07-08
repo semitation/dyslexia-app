@@ -1,23 +1,21 @@
 import { Button } from "@/shared/ui/button";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/shared/ui/card";
-import { Typography } from "@/shared/ui/typography";
+import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card";
+import { Smartphone } from "lucide-react";
 import { ArrowLeft } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 
 export const LoginForm = () => {
   const handleKakaoLogin = () => {
-    console.log("카카오 로그인");
+    const REST_API_KEY = import.meta.env.VITE_KAKAO_CLIENT_ID;
+    const REDIRECT_URI = import.meta.env.VITE_KAKAO_REDIRECT_URI;
+    const kakaoAuthUrl = `https://kauth.kakao.com/oauth/authorize?client_id=${REST_API_KEY}&redirect_uri=${REDIRECT_URI}&response_type=code`;
+    window.location.href = kakaoAuthUrl;
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-[#f1f9ff] to-[#fff9f4] px-4">
-      <div className="w-full max-w-sm mx-auto">
-        {/* ← 홈으로 돌아가기 */}
+    <div className="flex flex-col justify-center items-center min-h-screen bg-gradient-to-br from-[#f1f9ff] to-[#fff9f4] px-4 py-12">
+      <div className="w-full max-w-sm">
+
         <div className="mb-6">
           <Link
             to="/"
@@ -28,54 +26,34 @@ export const LoginForm = () => {
           </Link>
         </div>
 
-        {/* 로고 및 타이틀 */}
-        <div className="flex flex-col items-center text-center mb-6">
-          <img
-            src="/logo.png"
-            alt="리딩브릿지 로고"
-            className="w-12 h-12 mb-2 object-contain"
-          />
-          <Typography
-            variant="h4"
-            className="text-lg font-bold text-[#1f1f1f]"
-          >
-            리딩브릿지
-          </Typography>
-          <Typography
-            variant="p"
-            className="text-sm text-gray-500 mt-1"
-          >
-            다시 만나서 반가워요!
-          </Typography>
+        <div className="flex flex-col items-center text-center mb-8">
+          <div className="flex items-center space-x-2 mb-2">
+            <div className="w-12 h-12 flex items-center justify-center rounded-full bg-[#0078FF]">
+              <Smartphone size={24} className="text-white" />
+            </div>
+            <h1 className="text-xl font-bold text-[#1f1f1f]">리딩브릿지</h1>
+          </div>
+          <p className="text-sm text-gray-500">다시 만나서 반가워요!</p>
         </div>
 
-        {/* 로그인 카드 */}
-        <Card className="w-full shadow-md rounded-xl border border-gray-100">
-          <CardHeader className="text-center space-y-1 pb-2">
-            <CardTitle className="text-xl font-bold">로그인</CardTitle>
+        <Card className="w-full rounded-xl shadow-md border border-gray-200">
+          <CardHeader className="text-center pb-2">
+            <CardTitle className="text-lg font-bold">로그인</CardTitle>
           </CardHeader>
-          <CardContent>
-            <Typography
-              variant="p"
-              className="text-center text-gray-500 text-sm mb-5"
-            >
+          <CardContent className="flex flex-col gap-4 px-6 pb-6">
+            <p className="text-sm text-gray-500 text-center">
               카카오 계정으로 간편하게 로그인하세요
-            </Typography>
+            </p>
 
             <Button
               onClick={handleKakaoLogin}
-              className="w-full h-12 bg-[#FEE500] hover:bg-[#ffeb3b] text-black text-base font-semibold flex items-center justify-center gap-2"
+              className="w-full h-12 bg-[#FEE500] hover:bg-[#FFEB00] text-black text-base font-semibold rounded-md transition-colors"
             >
-              <img
-                src="/kakao-logo.png"
-                alt="카카오 로고"
-                className="w-5 h-5"
-              />
-              카카오로 로그인
+              <span>카카오로 로그인</span>
             </Button>
 
-            <div className="mt-6 text-center text-sm text-gray-500">
-              아직 계정이 없으신가요?{" "}
+            <div className="text-center text-sm text-gray-500">
+              아직 계정이 없으신가요?{' '}
               <Link
                 to="/signup"
                 className="text-[#0052cc] hover:underline font-medium"

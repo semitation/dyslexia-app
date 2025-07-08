@@ -1,4 +1,4 @@
-export const OAUTH_BASE_URL = 'http://localhost:8080/api/oauth2'
+export const OAUTH_BASE_URL = import.meta.env.VITE_API_BASE_URL
 
 const KAKAO_CLIENT_ID = import.meta.env.VITE_KAKAO_CLIENT_ID
 const KAKAO_REDIRECT_URI = import.meta.env.VITE_KAKAO_REDIRECT_URI

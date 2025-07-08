@@ -6,6 +6,14 @@ import { Link, useNavigate } from "@tanstack/react-router";
 const SignUpPage = () => {
   const navigate = useNavigate();
 
+  const handleRoleSelect = (role: "student" | "teacher") => {
+    localStorage.setItem("userType", role);
+    navigate({
+      to: "/signup/kakao",
+      search: { userType: role },
+    });
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#f0f9ff] to-[#fffaf4] flex flex-col items-center px-4 py-10">
       <div className="w-full max-w-3xl">
@@ -42,7 +50,7 @@ const SignUpPage = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <button
               type="button"
-              onClick={() => navigate({ to: "/signup/teacher" })}
+              onClick={() => handleRoleSelect("teacher")}
               className="rounded-lg border hover:shadow-md transition p-6 text-left"
             >
               <div className="flex items-center gap-3 mb-3">
@@ -65,7 +73,7 @@ const SignUpPage = () => {
 
             <button
               type="button"
-              onClick={() => navigate({ to: "/signup/student" })}
+              onClick={() => handleRoleSelect("student")} 
               className="rounded-lg border hover:shadow-md transition p-6 text-left"
             >
               <div className="flex items-center gap-3 mb-3">
