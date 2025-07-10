@@ -8,12 +8,13 @@ import { Card } from '@/shared/ui/card';
 import { Typography } from '@/shared/ui/typography';
 
 const interestOptions = [
-  '동물', '우주', '과학', '음악', '미술', '운동', '요리', '게임', '만화', '영화'
+  '동물', '우주', '과학', '음악', '미술', '운동', '요리', '게임', '만화', '영화',
 ];
 
 interface StudentForm {
   name: string;
   grade: string;
+  guardianCode: string;
 }
 
 interface GuardianForm {
@@ -41,7 +42,7 @@ interface GuardianPayload {
 export const SignUpForm = ({ defaultNickname = '' }: { defaultNickname?: string }) => {
   const navigate = useNavigate();
   const clientId = localStorage.getItem('clientId');
-  const userType = useMemo(() => localStorage.getItem('userType') as 'student' | 'teacher' | null, []);
+  const userType = useMemo(() => localStorage.getItem('userType') as 'STUDENT' | 'GUARDIAN' | null, []);
   const [selectedInterests, setSelectedInterests] = useState<number[]>([]);
   const { register, handleSubmit } = useForm<StudentForm | GuardianForm>();
 
@@ -49,7 +50,7 @@ export const SignUpForm = ({ defaultNickname = '' }: { defaultNickname?: string 
     if (!clientId || !userType) {
       navigate({
         to: '/signup/kakao',
-        search: { userType: userType ?? 'student' },
+        search: { userType: userType ?? 'STUDENT' },
         replace: true,
       });
     }
@@ -75,9 +76,10 @@ export const SignUpForm = ({ defaultNickname = '' }: { defaultNickname?: string 
       let endpoint: string;
       let payload: StudentPayload | GuardianPayload;
 
-      if (userType === 'student') {
+      if (userType === 'STUDENT') {
         const studentData = data as StudentForm;
-        endpoint = '/users/signup/student';
+        const guardianCode = studentData.guardianCode.trim();
+        endpoint = `/users/signup/student${guardianCode ? `?code=${encodeURIComponent(guardianCode)}` : ''}`;
         payload = {
           clientId,
           name: studentData.name,
@@ -123,7 +125,7 @@ export const SignUpForm = ({ defaultNickname = '' }: { defaultNickname?: string 
     return (
       <div className="text-center mt-10">
         <p>유저 신분 정보가 없습니다. 다시 시도해주세요.</p>
-        <Button onClick={() => navigate({ to: '/signup/kakao', search: { userType: 'student' } })}>
+        <Button onClick={() => navigate({ to: '/signup/kakao', search: { userType: 'STUDENT' } })}>
           카카오 인증 페이지로 이동
         </Button>
       </div>
@@ -135,10 +137,10 @@ export const SignUpForm = ({ defaultNickname = '' }: { defaultNickname?: string 
       <Card className="w-full max-w-md p-6 space-y-6">
         <div className="text-center space-y-1">
           <Typography variant="h4" className="font-bold">
-            {userType === 'student' ? '학생 정보 입력' : '보호자 회원가입'}
+            {userType === 'STUDENT' ? '학생 정보 입력' : '보호자 회원가입'}
           </Typography>
           <Typography variant="p" className="text-gray-600 text-sm">
-            {userType === 'student' ? '나만의 속도로 즐겁게 학습해요' : '아이의 학습을 지원하고 관리하세요'}
+            {userType === 'STUDENT' ? '나만의 속도로 즐겁게 학습해요' : '아이의 학습을 지원하고 관리하세요'}
           </Typography>
         </div>
 
@@ -148,7 +150,7 @@ export const SignUpForm = ({ defaultNickname = '' }: { defaultNickname?: string 
             <Input id="name" {...register('name', { required: true })} defaultValue={defaultNickname} />
           </div>
 
-          {userType === 'student' ? (
+          {userType === 'STUDENT' ? (
             <>
               <div>
                 <label htmlFor="grade" className="block text-sm font-medium text-gray-700">학년</label>
@@ -158,6 +160,14 @@ export const SignUpForm = ({ defaultNickname = '' }: { defaultNickname?: string 
                     <option key={`grade_${i + 1}`} value={`GRADE_${i + 1}`}>{`${i + 1}학년`}</option>
                   ))}
                 </Select>
+              </div>
+              <div>
+                <label htmlFor="guardianCode" className="block text-sm font-medium text-gray-700">보호자 코드</label>
+                <Input
+                  id="guardianCode"
+                  {...register('guardianCode', { required: true })}
+                  placeholder="보호자에게 받은 초대 코드를 입력하세요"
+                />
               </div>
               <div>
                 <p className="block text-sm font-medium text-gray-700">좋아하는 것들 (3개까지 선택)</p>
@@ -204,7 +214,7 @@ export const SignUpForm = ({ defaultNickname = '' }: { defaultNickname?: string 
           )}
 
           <Button type="submit" className="w-full">
-            {userType === 'student' ? '읽기 모험 시작하기! 🚀' : '계정 만들기'}
+            {userType === 'STUDENT' ? '읽기 모험 시작하기! 🚀' : '계정 만들기'}
           </Button>
         </form>
       </Card>

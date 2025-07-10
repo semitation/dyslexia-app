@@ -5,7 +5,7 @@ type KakaoCallbackResponse = {
   registered: boolean;
   clientId: string;
   nickname: string;
-  userType: "teacher" | "student" | string;
+  userType: "GUARDIAN" | "STUDENT" | string;
   accessToken: string | null;
   refreshToken: string | null;
 };
@@ -58,21 +58,22 @@ export function KakaoCallback() {
       })
       .then((data) => {
         console.debug("Callback response data:", data);
-        // alert(
-        //   `Callback Response: registered: ${data.registered}\n` +
-        //   `clientId: ${data.clientId}\n` +
-        //   `nickname: ${data.nickname}\n` +
-        //   `userType: ${data.userType}\n` +
-        //   `accessToken: ${data.accessToken}\n` +
-        //   `refreshToken: ${data.refreshToken}`
-        // );
+        alert(
+          `Callback Response: registered: ${data.registered}\n` +
+          `clientId: ${data.clientId}\n` +
+          `nickname: ${data.nickname}\n` +
+          `userType: ${data.userType}\n` //+
+          // `accessToken: ${data.accessToken}\n` +
+          // `refreshToken: ${data.refreshToken}`
+        );
 
         if (data.registered && data.accessToken && data.refreshToken) {
           localStorage.setItem("accessToken", data.accessToken);
           localStorage.setItem("refreshToken", data.refreshToken);
+          localStorage.setItem("clientId", data.clientId);
 
           switch (data.userType) {
-            case "teacher":
+            case "GUARDIAN":
               navigate({ to: "/teacher/dashboard" });
               break;
             case "STUDENT":

@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/shared/ui/button';
 
 const searchSchema = z.object({
-  userType: z.enum(['student', 'teacher']),
+  userType: z.enum(['STUDENT', 'GUARDIAN']),
 });
 
 type SearchType = z.infer<typeof searchSchema>;
@@ -74,7 +74,7 @@ export function KakaoAuthPage() {
           localStorage.setItem('userType', userType);
 
           navigate({
-            to: userType === 'student' ? '/signup/student' : '/signup/teacher',
+            to: userType === 'STUDENT' ? '/signup/student' : '/signup/teacher',
             replace: true,
           });
         } else {

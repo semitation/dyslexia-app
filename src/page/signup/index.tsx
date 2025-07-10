@@ -6,7 +6,7 @@ import { Link, useNavigate } from "@tanstack/react-router";
 const SignUpPage = () => {
   const navigate = useNavigate();
 
-  const handleRoleSelect = (role: "student" | "teacher") => {
+  const handleRoleSelect = (role: "STUDENT" | "GUARDIAN") => {
     localStorage.setItem("userType", role);
     navigate({
       to: "/signup/kakao",
@@ -50,7 +50,7 @@ const SignUpPage = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <button
               type="button"
-              onClick={() => handleRoleSelect("teacher")}
+              onClick={() => handleRoleSelect("GUARDIAN")}
               className="rounded-lg border hover:shadow-md transition p-6 text-left"
             >
               <div className="flex items-center gap-3 mb-3">
@@ -73,7 +73,7 @@ const SignUpPage = () => {
 
             <button
               type="button"
-              onClick={() => handleRoleSelect("student")} 
+              onClick={() => handleRoleSelect("STUDENT")} 
               className="rounded-lg border hover:shadow-md transition p-6 text-left"
             >
               <div className="flex items-center gap-3 mb-3">
