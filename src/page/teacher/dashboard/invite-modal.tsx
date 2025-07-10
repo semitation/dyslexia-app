@@ -1,4 +1,4 @@
-import { useState, type KeyboardEvent } from "react";
+import { useState, useEffect, type KeyboardEvent } from "react";
 import ReactDOM from "react-dom";
 import { Card, CardHeader, CardContent } from "@/shared/ui/card";
 import { Button } from "@/shared/ui/button";
@@ -15,17 +15,57 @@ export default function StudentInviteModal({
   onClose,
 }: StudentInviteModalProps) {
   const [copied, setCopied] = useState(false);
-  const inviteLink = "https://reading-bridge.app/signup/student?code=ABC123";
+  const [matchCode, setMatchCode] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const clientId = localStorage.getItem("clientId");
+    if (!clientId) {
+      console.error("clientId not found in localStorage");
+      return;
+    }
+    setLoading(true);
+    (async () => {
+      try {
+        const resp1 = await fetch(
+          `${import.meta.env.VITE_API_BASE_URL}/guardians?clientId=${clientId}`
+        );
+        if (!resp1.ok) throw new Error("Failed to fetch guardian id");
+        const data1 = (await resp1.json()) as { id: string };
+        const guardianId = data1.id;
+
+        const resp2 = await fetch(
+          `${import.meta.env.VITE_API_BASE_URL}/guardians/code/${guardianId}`
+        );
+        if (!resp2.ok) throw new Error("Failed to fetch invitation code");
+        const data2 = (await resp2.json()) as { matchCode: string };
+        setMatchCode(data2.matchCode);
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
+  const inviteLink = matchCode
+    ? `${matchCode}`
+    : "";
+  const displayLink = loading
+    ? "생성 중..."
+    : inviteLink || "코드 없음";
+
   const handleCopyLink = async () => {
+    if (!inviteLink) return;
     try {
       await navigator.clipboard.writeText(inviteLink);
       setCopied(true);
       setTimeout(() => setCopied(false), 3000);
-    } catch {
-      // 토스트 메시지 예정
+    } catch (e) {
+      console.error(e);
     }
   };
 
@@ -49,7 +89,7 @@ export default function StudentInviteModal({
           <div className="flex items-center space-x-2">
             <Share2 className="w-5 h-5 text-blue-600" />
             <Typography variant="h4" className="font-semibold">
-              학생 초대 링크
+              학생 초대 코드
             </Typography>
           </div>
           <button
@@ -65,33 +105,30 @@ export default function StudentInviteModal({
         <CardContent className="px-6 py-4 space-y-6">
           <div className="text-center">
             <Typography variant="p" className="text-gray-600 mb-4">
-              아래 링크를 복사하여 학생에게 전달하세요
+              아래 코드를 복사하여 학생에게 전달하세요
             </Typography>
             <div className="flex items-center space-x-2 bg-blue-50 border border-blue-200 rounded-lg overflow-hidden">
               <Typography
                 variant="p"
                 className="flex-1 bg-white px-4 py-2 text-sm text-gray-700 break-all"
               >
-                {inviteLink}
+                {displayLink}
               </Typography>
               <Button
                 type="button"
                 size="sm"
                 onClick={handleCopyLink}
+                disabled={!inviteLink}
                 className={copied ? "bg-green-600 hover:bg-green-700" : ""}
               >
-                {copied ? (
-                  <CheckCircle className="w-4 h-4" />
-                ) : (
-                  <Copy className="w-4 h-4" />
-                )}
+                {copied ? <CheckCircle className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
               </Button>
             </div>
           </div>
 
           <div className="space-y-4">
             <Typography variant="p" className="text-center text-gray-700 font-medium">
-              링크 전달 방법
+              코드 전달 방법
             </Typography>
             <div className="space-y-3">
               <div className="flex items-start space-x-3 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
@@ -102,7 +139,7 @@ export default function StudentInviteModal({
                   </Typography>
                   <Typography variant="p" className="text-yellow-700 text-sm mt-1">
                     1. 카톡 열고 학생 채팅방 이동<br />
-                    2. 복사한 링크 붙여넣기 후 전송
+                    2. 복사한 코드 붙여넣기 후 전송
                   </Typography>
                 </div>
               </div>
@@ -114,7 +151,7 @@ export default function StudentInviteModal({
                   </Typography>
                   <Typography variant="p" className="text-green-700 text-sm mt-1">
                     1. 문자 앱 열고 학생 선택<br />
-                    2. 복사한 링크 붙여넣기 후 전송
+                    2. 복사한 코드 붙여넣기 후 전송
                   </Typography>
                 </div>
               </div>

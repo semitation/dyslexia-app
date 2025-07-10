@@ -1,4 +1,3 @@
-// src/shared/layouts/TopHeader.tsx
 import { Typography } from "@/shared/ui/typography";
 import { Button } from "@/shared/ui/button";
 import { useAuth } from "@/shared/hooks/use-auth";
@@ -21,7 +20,6 @@ export function TopHeader() {
   return (
     <header className="bg-white border-b border-gray-200 shadow-sm">
       <div className="max-w-7xl mx-auto flex items-center justify-between px-4 sm:px-6 lg:px-8 py-4">
-        {/* Logo */}
         <div className="flex items-center space-x-6">
           <Link to="/" className="flex items-center space-x-3">
             <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center">
@@ -37,10 +35,8 @@ export function TopHeader() {
             </div>
           </Link>
 
-          {/* Navigation Menu */}
           <nav className="hidden md:flex items-center space-x-8">
             {navItems.map(({ name, href, icon: Icon }) => {
-              // fuzzy: true 로 /teacher/dashboard/* 도 모두 매칭
               const params = matchRoute({ to: href, fuzzy: true });
               const isActive = params !== false;
 
@@ -68,7 +64,6 @@ export function TopHeader() {
           </nav>
         </div>
 
-        {/* User Section */}
         <div className="flex items-center space-x-4">
           <Typography variant="p" size="sm" className="text-gray-700">
             {my?.name ?? "로그인 필요"}
