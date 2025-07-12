@@ -10,6 +10,13 @@ type KakaoCallbackResponse = {
   refreshToken: string | null;
 };
 
+type ServerResponse = {
+  code: number;
+  message: string;
+  timestamp: string;
+  result: KakaoCallbackResponse;
+};
+
 export function KakaoCallback() {
   const navigate = useNavigate();
   const hasRequested = useRef(false);
@@ -37,40 +44,38 @@ export function KakaoCallback() {
     fetch(requestUrl, { method: "GET" })
       .then(async (res) => {
         const text = await res.text();
-        let parsed: unknown;
+        let parsed: ServerResponse;
+
         try {
           parsed = JSON.parse(text);
         } catch {
-          parsed = { message: text || res.statusText };
+          throw new Error(`응답 파싱 실패: ${text || res.statusText}`);
         }
 
         if (!res.ok) {
-          const message =
-            typeof parsed === "object" && parsed !== null && "message" in parsed
-              ? (parsed as { message: string }).message
-              : text;
-          console.error("Callback error:", res.status, message);
-          alert(`서버 에러 ${res.status}: ${message}`);
+          const message = parsed?.message || `HTTP ${res.status}`;
           throw new Error(message);
         }
 
-        return parsed as KakaoCallbackResponse;
+        return parsed.result;
       })
-      .then((data) => {
+      .then((data: KakaoCallbackResponse) => {
         console.debug("Callback response data:", data);
         alert(
           `Callback Response: registered: ${data.registered}\n` +
           `clientId: ${data.clientId}\n` +
           `nickname: ${data.nickname}\n` +
-          `userType: ${data.userType}\n` //+
-          // `accessToken: ${data.accessToken}\n` +
-          // `refreshToken: ${data.refreshToken}`
+          `userType: ${data.userType}\n` +
+          `accessToken: ${data.accessToken}\n` +
+          `refreshToken: ${data.refreshToken}`
         );
 
         if (data.registered && data.accessToken && data.refreshToken) {
           localStorage.setItem("accessToken", data.accessToken);
           localStorage.setItem("refreshToken", data.refreshToken);
           localStorage.setItem("clientId", data.clientId);
+          localStorage.setItem("userType", data.userType);
+
 
           switch (data.userType) {
             case "GUARDIAN":

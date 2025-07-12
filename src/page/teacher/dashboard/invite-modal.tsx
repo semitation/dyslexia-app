@@ -21,26 +21,36 @@ export default function StudentInviteModal({
   useEffect(() => {
     if (!isOpen) return;
     const clientId = localStorage.getItem("clientId");
+    const accessToken = localStorage.getItem("accessToken");
+
     if (!clientId) {
       console.error("clientId not found in localStorage");
       return;
     }
+
+    if (!accessToken) {
+      console.error("accessToken not found in localStorage");
+      return;
+    }
+
     setLoading(true);
     (async () => {
       try {
-        const resp1 = await fetch(
-          `${import.meta.env.VITE_API_BASE_URL}/guardians?clientId=${clientId}`
-        );
-        if (!resp1.ok) throw new Error("Failed to fetch guardian id");
-        const data1 = (await resp1.json()) as { id: string };
-        const guardianId = data1.id;
-
         const resp2 = await fetch(
-          `${import.meta.env.VITE_API_BASE_URL}/guardians/code/${guardianId}`
+          `${import.meta.env.VITE_API_BASE_URL}/guardian/code`,
+          {
+            method: "GET",
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${accessToken}`,
+            },
+          }
         );
+
         if (!resp2.ok) throw new Error("Failed to fetch invitation code");
-        const data2 = (await resp2.json()) as { matchCode: string };
-        setMatchCode(data2.matchCode);
+
+        const data2 = await resp2.json();
+        setMatchCode(data2.result.matchCode);
       } catch (error) {
         console.error(error);
       } finally {
@@ -51,12 +61,8 @@ export default function StudentInviteModal({
 
   if (!isOpen) return null;
 
-  const inviteLink = matchCode
-    ? `${matchCode}`
-    : "";
-  const displayLink = loading
-    ? "생성 중..."
-    : inviteLink || "코드 없음";
+  const inviteLink = matchCode ? `${matchCode}` : "";
+  const displayLink = loading ? "생성 중..." : inviteLink || "코드 없음";
 
   const handleCopyLink = async () => {
     if (!inviteLink) return;
