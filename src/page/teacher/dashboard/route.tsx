@@ -20,6 +20,7 @@ import {
   Users,
 } from "lucide-react";
 
+
 interface Student {
   id: number;
   clientId: string;
@@ -50,15 +51,18 @@ const gradeMap: Record<string, string> = {
 
 export default function DashboardPage() {
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
+
   const [recentActivities] = useState([
     { id: 1, student: "민지", description: "독서 목표 달성", time: "30분 전", icon: Star },
     { id: 2, student: "준호", description: "새 교안 배정: 마법의 숲 모험", time: "2시간 전", icon: BookOpen },
     { id: 3, student: "민지", description: "학습 진도 80% 달성", time: "4시간 전", icon: TrendingUp },
   ]);
+
   const [recentLessons] = useState([
     { id: 1, title: "우리 동네 동물들", type: "자체 제작", date: "2024-01-15", completed: false },
     { id: 2, title: "우주 탐험 이야기", type: "스토어 구매", date: "2024-01-10", completed: true },
   ]);
+
   const [students, setStudents] = useState<Student[]>([]);
 
   useEffect(() => {
@@ -87,6 +91,7 @@ export default function DashboardPage() {
   fetchStudents();
 }, []);
 
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-5xl mx-auto px-6 py-8 space-y-8">
@@ -98,6 +103,7 @@ export default function DashboardPage() {
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
           <Link to="/teacher/content" className="block">
             <Card className="rounded-xl border bg-white shadow-sm hover:shadow-md">
+
               <CardHeader className="px-6 py-4">
                 <div className="flex items-center">
                   <div className="p-2 bg-blue-50 rounded-lg">
@@ -108,12 +114,15 @@ export default function DashboardPage() {
                     <p className="text-xs text-gray-500 mt-1">PDF를 업로드하여 AI 변환</p>
                   </div>
                   <Button size="sm" className="ml-auto bg-blue-600 hover:bg-blue-700 text-white">업로드</Button>
+
                 </div>
               </CardHeader>
             </Card>
           </Link>
 
+
           <Card onClick={() => setIsInviteModalOpen(true)} className="cursor-pointer rounded-xl border bg-white shadow-sm hover:shadow-md">
+
             <CardHeader className="px-6 py-4 flex items-center">
               <div className="p-2 bg-green-50 rounded-lg">
                 <UserPlus className="w-6 h-6 text-green-600" />
@@ -284,7 +293,6 @@ export default function DashboardPage() {
           </Card>
         </div>
       </div>
-
       <StudentInviteModal
         isOpen={isInviteModalOpen}
         onClose={() => setIsInviteModalOpen(false)}
