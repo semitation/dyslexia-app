@@ -16,7 +16,8 @@ export const Route = createFileRoute("/signup/")({
 function SignupRoleSelect() {
   const navigate = useNavigate();
 
-  const handleRoleSelect = (role: "GUARDIAN" | "STUDENT") => {
+  const handleRoleSelect = (role: "STUDENT" | "GUARDIAN") => {
+    localStorage.setItem("userType", role);
     navigate({
       to: "/signup/kakao",
       search: { userType: role },
