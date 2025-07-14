@@ -1,302 +1,280 @@
-import { useState, useEffect } from "react";
-import { Link } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import clsx from "clsx";
 import {
-  Card, CardHeader, CardTitle, CardContent,
-} from "@/shared/ui/card";
-import { Button } from "@/shared/ui/button";
-import { Badge } from "@/shared/ui/badge";
+  Card, CardContent, CardHeader, CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
 import StudentInviteModal from "./invite-modal";
+import PraiseModal from "@/components/PraiseModal";
+import { useToast } from "@/hooks/use-toast";
 import {
-  Upload,
-  UserPlus,
-  BarChart3,
-  Clock,
-  Star,
-  BookOpen,
-  TrendingUp,
-  Plus,
-  Store,
-  Users,
+  Upload, UserPlus, BarChart3, Clock, Star, BookOpen,
+  TrendingUp, Plus, Store, Users
 } from "lucide-react";
-
 
 interface Student {
   id: number;
-  clientId: string;
   name: string;
-  guardianId: number;
-  grade: string;
-  type: string;
-  state: boolean;
-  profileImageUrl: string;
-  interests: string[];
+  grade: keyof typeof gradeMap | string;
+  currentBook: string;
+  progress: number;
+  status: "active" | "needs_attention";
+  lastActivity: string;
 }
 
-interface ServerResponse<T> {
-  code: number;
-  message: string;
-  timestamp: string;
-  result: T;
-}
-
-const gradeMap: Record<string, string> = {
+const gradeMap = {
   GRADE_1: "초등학교 1학년",
   GRADE_2: "초등학교 2학년",
   GRADE_3: "초등학교 3학년",
   GRADE_4: "초등학교 4학년",
   GRADE_5: "초등학교 5학년",
   GRADE_6: "초등학교 6학년",
-};
+} as const;
 
-export default function DashboardPage() {
-  const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
+export const Route = createFileRoute("/teacher/dashboard")({
+  component: GuardianDashboardPage
+});
 
+function GuardianDashboardPage() {
+  const navigate = useNavigate();
+  const { toast } = useToast();
+
+  const [students, setStudents] = useState<Student[]>([]);
   const [recentActivities] = useState([
     { id: 1, student: "민지", description: "독서 목표 달성", time: "30분 전", icon: Star },
     { id: 2, student: "준호", description: "새 교안 배정: 마법의 숲 모험", time: "2시간 전", icon: BookOpen },
     { id: 3, student: "민지", description: "학습 진도 80% 달성", time: "4시간 전", icon: TrendingUp },
   ]);
-
-  const [recentLessons] = useState([
-    { id: 1, title: "우리 동네 동물들", type: "자체 제작", date: "2024-01-15", completed: false },
-    { id: 2, title: "우주 탐험 이야기", type: "스토어 구매", date: "2024-01-10", completed: true },
+  const [recentDocuments] = useState([
+    { id: 1, title: "우리 동네 동물들", type: "자체 제작", uploadDate: "2024-01-15", status: "processing" },
+    { id: 2, title: "우주 탐험 이야기", type: "스토어 구매", uploadDate: "2024-01-10", status: "completed" },
   ]);
 
-  const [students, setStudents] = useState<Student[]>([]);
+  const [isPraiseModalOpen, setIsPraiseModalOpen] = useState(false);
+  const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
+  const [selectedStudent, setSelectedStudent] = useState<{ id: number; name: string } | null>(null);
 
   useEffect(() => {
-  async function fetchStudents() {
-    const accessToken = localStorage.getItem("accessToken");
-    if (!accessToken) {
-      console.error("accessToken not found in localStorage");
-      return;
+    async function fetchStudents() {
+      const token = localStorage.getItem("accessToken");
+      if (!token) return;
+
+      try {
+        const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/guardian/students`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        const json = await res.json();
+        setStudents(json.result);
+      } catch (e) {
+        console.error(e);
+      }
     }
+    fetchStudents();
+  }, []);
 
-    try {
-      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/guardian/students`, {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${accessToken}`,
-        },
-      });
-      if (!res.ok) throw new Error("Failed to fetch students");
+  const handlePraiseStudent = (id: number, name: string) => {
+    setSelectedStudent({ id, name });
+    setIsPraiseModalOpen(true);
+  };
 
-      const json: ServerResponse<Student[]> = await res.json();
-      setStudents(json.result);
-    } catch (err) {
-      console.error("학생 정보 불러오기 실패:", err);
-    }
-  }
-  fetchStudents();
-}, []);
-
+  const handleSavePraise = (_: string, stickers: number) => {
+    toast({
+      title: "칭찬이 전달되었습니다! ⭐",
+      description: `${selectedStudent?.name}에게 ${stickers}개의 스티커와 함께 칭찬을 보냈습니다.`
+    });
+  };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-5xl mx-auto px-6 py-8 space-y-8">
-        <div>
-          <h1 className="text-2xl font-semibold text-gray-900">대시보드</h1>
-          <p className="text-sm text-gray-500 mt-1">학생들의 학습 현황을 한눈에 확인하세요</p>
+    <div className="min-h-screen bg-gradient-to-br from-blue-25 via-indigo-25 to-purple-25">
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">대시보드</h1>
+          <p className="text-gray-600">학생들의 학습 현황을 한눈에 확인하세요</p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-          <Link to="/teacher/content" className="block">
-            <Card className="rounded-xl border bg-white shadow-sm hover:shadow-md">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate({ to: "/teacher/content" })}>
+            <CardContent className="p-6 flex items-center">
+              <div className="p-3 bg-blue-100 rounded-lg">
+                <Upload className="w-6 h-6 text-blue-600" />
+              </div>
+              <div className="ml-4 flex-1">
+                <h3 className="font-semibold text-gray-900">새 교안 업로드</h3>
+                <p className="text-sm text-gray-600">PDF를 업로드하여 AI 변환</p>
+              </div>
+              <Button size="sm" className="ml-auto">업로드</Button>
+            </CardContent>
+          </Card>
 
-              <CardHeader className="px-6 py-4">
-                <div className="flex items-center">
-                  <div className="p-2 bg-blue-50 rounded-lg">
-                    <Upload className="w-6 h-6 text-blue-600" />
-                  </div>
-                  <div className="ml-4">
-                    <CardTitle className="text-base font-medium text-gray-900">새 교안 업로드</CardTitle>
-                    <p className="text-xs text-gray-500 mt-1">PDF를 업로드하여 AI 변환</p>
-                  </div>
-                  <Button size="sm" className="ml-auto bg-blue-600 hover:bg-blue-700 text-white">업로드</Button>
-
-                </div>
-              </CardHeader>
-            </Card>
-          </Link>
-
-
-          <Card onClick={() => setIsInviteModalOpen(true)} className="cursor-pointer rounded-xl border bg-white shadow-sm hover:shadow-md">
-
-            <CardHeader className="px-6 py-4 flex items-center">
-              <div className="p-2 bg-green-50 rounded-lg">
+          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => setIsInviteModalOpen(true)}>
+            <CardContent className="p-6 flex items-center">
+              <div className="p-3 bg-green-100 rounded-lg">
                 <UserPlus className="w-6 h-6 text-green-600" />
               </div>
               <div className="ml-4 flex-1">
-                <CardTitle className="text-base font-medium text-gray-900">학생 초대</CardTitle>
-                <p className="text-xs text-gray-500 mt-1">새로운 학생을 초대</p>
+                <h3 className="font-semibold text-gray-900">학생 초대</h3>
+                <p className="text-sm text-gray-600">새로운 학생을 초대</p>
               </div>
               <Button size="sm" variant="outline" className="ml-auto">링크 복사</Button>
-            </CardHeader>
+            </CardContent>
           </Card>
 
-          <Link to="/teacher/student" className="block">
-            <Card className="rounded-xl border bg-white shadow-sm hover:shadow-md">
-              <CardHeader className="px-6 py-4">
-                <div className="flex items-center">
-                  <div className="p-2 bg-orange-50 rounded-lg">
-                    <BarChart3 className="w-6 h-6 text-orange-600" />
-                  </div>
-                  <div className="ml-4">
-                    <CardTitle className="text-base font-medium text-gray-900">학습 분석</CardTitle>
-                    <p className="text-xs text-gray-500 mt-1">상세 학습 데이터 확인</p>
-                  </div>
-                  <Button size="sm" variant="outline" className="ml-auto">분석</Button>
-                </div>
+          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate({ to: "/teacher/student" })}>
+            <CardContent className="p-6 flex items-center">
+              <div className="p-3 bg-orange-100 rounded-lg">
+                <BarChart3 className="w-6 h-6 text-orange-600" />
+              </div>
+              <div className="ml-4 flex-1">
+                <h3 className="font-semibold text-gray-900">학습 분석</h3>
+                <p className="text-sm text-gray-600">상세 학습 데이터 확인</p>
+              </div>
+              <Button size="sm" variant="outline" className="ml-auto">분석</Button>
+            </CardContent>
+          </Card>
+        </div>
+        <div className="grid lg:grid-cols-3 gap-8">
+          <div className="lg:col-span-2 space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <Clock className="w-5 h-5" />
+                  <span>최근 활동</span>
+                </CardTitle>
               </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {recentActivities.map(({ id, student, description, time, icon: Icon }) => (
+                    <div key={id} className="flex items-start space-x-3 p-3 bg-gray-50 rounded-lg">
+                      <div className="p-2 bg-white rounded-lg shadow-sm">
+                        <Icon className="w-4 h-4 text-gray-600" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center space-x-2">
+                          <Badge className="text-xs bg-green-100 text-green-800 px-2 py-0.5">{student}</Badge>
+                          <span className="text-xs text-gray-500">{time}</span>
+                        </div>
+                        <p className="text-sm text-gray-900 mt-1">{description}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
             </Card>
-          </Link>
-        </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <Card className="lg:col-span-2 rounded-xl border bg-white shadow-sm">
-            <CardHeader className="px-6 py-4">
-              <div className="flex items-center space-x-2">
-                <Clock className="w-5 h-5 text-gray-600" />
-                <CardTitle className="text-lg font-semibold text-gray-900">최근 활동</CardTitle>
-              </div>
-              <p className="text-sm text-gray-500 mt-1">최근 7일간의 학습 활동을 확인해보세요</p>
-            </CardHeader>
-            <CardContent className="px-6 pb-6 pt-4 space-y-3">
-              {recentActivities.map(({ id, student, description, time, icon: Icon }) => (
-                <div key={id} className="flex items-center bg-gray-50 rounded-lg px-4 py-3">
-                  <div className="p-2 bg-white rounded-lg shadow">
-                    <Icon className="w-4 h-4 text-gray-600" />
-                  </div>
-                  <div className="flex-1 ml-4 min-w-0">
-                    <div className="flex items-center space-x-2">
-                      <Badge variant="blue" className="px-2 py-0.5 text-xs">{student}</Badge>
-                      <span className="text-xs text-gray-500">{time}</span>
-                    </div>
-                    <p className="text-sm text-gray-900 mt-1">{description}</p>
-                  </div>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-
-          <Card className="rounded-xl border bg-white shadow-sm">
-            <CardHeader className="px-6 py-4">
-              <CardTitle className="text-lg font-semibold text-gray-900">빠른 작업</CardTitle>
-            </CardHeader>
-            <CardContent className="px-6 pb-6 pt-4 space-y-2">
-              <Link to="/teacher/content">
-                <Button size="sm" className="w-full justify-start bg-blue-600 hover:bg-blue-700 text-white">
-                  <Plus className="w-4 h-4 mr-2" />
-                  새 교안 업로드
-                </Button>
-              </Link>
-              <Link to="/teacher/store">
-                <Button size="sm" variant="outline" className="w-full justify-start">
-                  <Store className="w-4 h-4 mr-2" />
-                  교안 스토어 둘러보기
-                </Button>
-              </Link>
-              <Link to="/teacher/student">
-                <Button size="sm" variant="outline" className="w-full justify-start">
-                  <Users className="w-4 h-4 mr-2" />
-                  학생 관리
-                </Button>
-              </Link>
-            </CardContent>
-          </Card>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-          <Card className="rounded-xl border bg-white shadow-sm">
-            <CardHeader className="px-6 py-4 flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                <Users className="w-5 h-5 text-gray-600" />
-                <CardTitle className="text-lg font-semibold text-gray-900">학생 현황</CardTitle>
-              </div>
-              <Link to="/teacher/student">
-                <Button variant="link" size="sm">전체 보기</Button>
-              </Link>
-            </CardHeader>
-
-            <CardContent className="px-6 pb-6 pt-4 space-y-4">
-              {students.length === 0 ? (
-                <p className="text-sm text-gray-500 text-center">학생이 연결되지 않았습니다</p>
-              ) : (
-                students.map((stu) => (
-                  <div key={stu.id} className="flex items-center justify-between bg-gray-50 rounded-lg px-4 py-3">
-                    <div className="flex items-center space-x-3">
-                      <img src={stu.profileImageUrl} alt={stu.name} className="w-10 h-10 rounded-full object-cover" />
-                      <div>
-                        <h3 className="text-sm font-medium text-gray-900 truncate">{stu.name}</h3>
-                        <p className="text-xs text-gray-500">{gradeMap[stu.grade] ?? stu.grade}</p>
-                        <p className="text-xs text-gray-500 capitalize">타입: {stu.type}</p>
+            <Card>
+              <CardHeader className="flex justify-between items-center">
+                <CardTitle className="flex items-center space-x-2">
+                  <Users className="w-5 h-5" />
+                  <span>학생 현황</span>
+                </CardTitle>
+                <Button variant="outline" size="sm" onClick={() => navigate({ to: "/teacher/student" })}>전체 보기</Button>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {students.length === 0 ? (
+                  <p className="text-sm text-gray-500">연결된 학생이 없습니다</p>
+                ) : (
+                  students.map((stu) => (
+                    <div key={stu.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                      <div className="flex items-center space-x-4">
+                        <div className="w-12 h-12 bg-primary rounded-full flex items-center justify-center">
+                          <span className="text-white font-semibold">{stu.name.charAt(0)}</span>
+                        </div>
+                        <div>
+                          <h3 className="font-semibold text-gray-900">{stu.name}</h3>
+                          <p className="text-sm text-gray-600">
+                            {(gradeMap as Record<string, string>)[stu.grade] ?? stu.grade}
+                          </p>
+                          <p className="text-sm text-gray-500">현재 도서: {stu.currentBook}</p>
+                        </div>
                       </div>
-                    </div>
-                    <div className="flex flex-col items-end space-y-2">
-                      <Badge
-                        className={clsx(
-                          stu.state ? "bg-blue-50 text-blue-600" : "bg-gray-100 text-gray-500",
-                          "px-2 py-0.5 text-xs rounded"
-                        )}
-                      >
-                        {stu.state ? "활성" : "비활성"}
-                      </Badge>
-                      <div className="flex space-x-1">
-                        {stu.interests.map((intr) => (
-                          <Badge
-                            key={intr}
-                            className="bg-green-50 text-green-600 px-2 py-0.5 text-xs rounded"
-                          >
-                            {intr}
+                      <div className="text-right space-y-2">
+                        <div className="flex items-center space-x-2">
+                          <Badge className={clsx(stu.status === 'active' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-600', 'text-xs px-2 py-0.5')}>
+                            {stu.status === 'active' ? '활발' : '관심 필요'}
                           </Badge>
-                        ))}
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handlePraiseStudent(stu.id, stu.name)}
+                            className="border-yellow-400 text-yellow-600 hover:bg-yellow-50"
+                          >
+                            <Star className="w-4 h-4 mr-1" /> 칭찬하기
+                          </Button>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <div className="w-24">
+                            <Progress value={stu.progress} className="h-2" />
+                          </div>
+                          <span className="text-sm font-medium">{stu.progress}%</span>
+                        </div>
+                        <p className="text-xs text-gray-500">마지막 활동: {stu.lastActivity}</p>
                       </div>
                     </div>
-                  </div>
-                ))
-              )}
-            </CardContent>
-          </Card>
+                  ))
+                )}
+              </CardContent>
+            </Card>
+          </div>
 
-          <Card className="rounded-xl border bg-white shadow-sm">
-            <CardHeader className="px-6 py-4 flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                <BookOpen className="w-5 h-5 text-gray-600" />
-                <CardTitle className="text-lg font-semibold text-gray-900">최근 교안</CardTitle>
-              </div>
-              <Link to="/teacher/content">
-                <Button variant="link" size="sm">전체 보기</Button>
-              </Link>
-            </CardHeader>
-            <CardContent className="px-6 pb-6 pt-4 space-y-4">
-              {recentLessons.map(({ id, title, type, date, completed }) => (
-                <div key={id} className="flex items-center justify-between bg-gray-50 rounded-lg px-4 py-3">
-                  <div>
-                    <p className="text-sm font-medium text-gray-900">{title}</p>
-                    <div className="flex items-center space-x-2 mt-1">
-                      <Badge className="bg-gray-100 text-gray-700 px-2 py-0.5 text-xs rounded">{type}</Badge>
-                      <span className="text-xs text-gray-500">{date}</span>
+          <div className="space-y-6">
+            <Card>
+              <CardHeader><CardTitle>빠른 작업</CardTitle></CardHeader>
+              <CardContent className="space-y-3">
+                <Button className="w-full justify-start" onClick={() => navigate({ to: "/teacher/content" })}>
+                  <Plus className="w-4 h-4 mr-2" /> 새 교안 업로드
+                </Button>
+                <Button variant="outline" className="w-full justify-start" onClick={() => navigate({ to: "/teacher/store" })}>
+                  <Store className="w-4 h-4 mr-2" /> 교안 스토어 둘러보기
+                </Button>
+                <Button variant="outline" className="w-full justify-start" onClick={() => navigate({ to: "/teacher/student" })}>
+                  <Users className="w-4 h-4 mr-2" /> 학생 관리
+                </Button>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="flex justify-between items-center">
+                <CardTitle className="flex items-center space-x-2">
+                  <BookOpen className="w-5 h-5" /> <span>최근 교안</span>
+                </CardTitle>
+                <Button variant="outline" size="sm" onClick={() => navigate({ to: "/teacher/content" })}>전체 보기</Button>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {recentDocuments.map((doc) => (
+                  <div key={doc.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <div>
+                      <p className="font-medium text-sm">{doc.title}</p>
+                      <div className="flex items-center space-x-2 mt-1">
+                        <Badge variant="outline" className="text-xs">{doc.type}</Badge>
+                        <span className="text-xs text-gray-500">{doc.uploadDate}</span>
+                      </div>
                     </div>
+                    <Badge className={clsx(
+                      doc.status === 'completed' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-700',
+                      'text-xs'
+                    )}>
+                      {doc.status === 'completed' ? '완료' : '처리중'}
+                    </Badge>
                   </div>
-                  <Badge
-                    className={clsx(
-                      completed ? "bg-blue-50 text-blue-600" : "bg-gray-100 text-gray-700",
-                      "px-2 py-0.5 text-xs rounded"
-                    )}
-                  >
-                    {completed ? "완료" : "처리중"}
-                  </Badge>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
+                ))}
+              </CardContent>
+            </Card>
+          </div>
         </div>
+
       </div>
-      <StudentInviteModal
-        isOpen={isInviteModalOpen}
-        onClose={() => setIsInviteModalOpen(false)}
-      />
+
+      <PraiseModal isOpen={isPraiseModalOpen} onClose={() => setIsPraiseModalOpen(false)} onSavePraise={handleSavePraise} studentName={selectedStudent?.name} />
+      <StudentInviteModal isOpen={isInviteModalOpen} onClose={() => setIsInviteModalOpen(false)} />
     </div>
   );
 }
+
+export default GuardianDashboardPage;

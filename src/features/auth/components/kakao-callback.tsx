@@ -76,7 +76,6 @@ export function KakaoCallback() {
           localStorage.setItem("clientId", data.clientId);
           localStorage.setItem("userType", data.userType);
 
-
           switch (data.userType) {
             case "GUARDIAN":
               navigate({ to: "/teacher/dashboard" });
