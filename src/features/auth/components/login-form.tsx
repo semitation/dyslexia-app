@@ -1,10 +1,13 @@
-import { Button } from "@/shared/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card";
-import { Smartphone } from "lucide-react";
-import { ArrowLeft } from "lucide-react";
-import { Link } from "@tanstack/react-router";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Book, ArrowLeft } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { useNavigate } from "@tanstack/react-router";
 
-export const LoginForm = () => {
+const Login = () => {
+  const navigate = useNavigate();
+  const { toast } = useToast();
+
   const handleKakaoLogin = () => {
     const REST_API_KEY = import.meta.env.VITE_KAKAO_CLIENT_ID;
     const REDIRECT_URI = import.meta.env.VITE_KAKAO_REDIRECT_URI;
@@ -13,53 +16,54 @@ export const LoginForm = () => {
   };
 
   return (
-    <div className="flex flex-col justify-center items-center min-h-screen bg-gradient-to-br from-[#f1f9ff] to-[#fff9f4] px-4 py-12">
-      <div className="w-full max-w-sm">
-
-        <div className="mb-6">
-          <Link
-            to="/"
-            className="flex items-center gap-1 text-sm text-gray-500 hover:underline"
+    <div className="min-h-screen bg-gradient-to-br from-soft-50 via-white to-warm-50 font-dyslexic flex items-center justify-center p-4">
+      <div className="w-full max-w-md">
+        <div className="text-center mb-8">
+          <button
+            onClick={() => navigate({ to: "/" })}
+            className="inline-flex items-center space-x-2 text-gray-600 hover:text-primary mb-6 transition-colors"
           >
-            <ArrowLeft size={16} />
-            홈으로 돌아가기
-          </Link>
-        </div>
+            <ArrowLeft className="w-4 h-4" />
+            <span>홈으로 돌아가기</span>
+          </button>
 
-        <div className="flex flex-col items-center text-center mb-8">
-          <div className="flex items-center space-x-2 mb-2">
-            <div className="w-12 h-12 flex items-center justify-center rounded-full bg-[#0078FF]">
-              <Smartphone size={24} className="text-white" />
+          <div className="flex items-center justify-center space-x-3 mb-4">
+            <div className="w-12 h-12 bg-primary rounded-full flex items-center justify-center">
+              <Book className="w-7 h-7 text-white" />
             </div>
-            <h1 className="text-xl font-bold text-[#1f1f1f]">리딩브릿지</h1>
+            <h1 className="text-3xl font-bold text-gray-800">리딩브릿지</h1>
           </div>
-          <p className="text-sm text-gray-500">다시 만나서 반가워요!</p>
+          <p className="text-gray-600 leading-dyslexic tracking-dyslexic">
+            다시 만나서 반가워요!
+          </p>
         </div>
 
-        <Card className="w-full rounded-xl shadow-md border border-gray-200">
-          <CardHeader className="text-center pb-2">
-            <CardTitle className="text-lg font-bold">로그인</CardTitle>
-          </CardHeader>
-          <CardContent className="flex flex-col gap-4 px-6 pb-6">
-            <p className="text-sm text-gray-500 text-center">
+        <Card className="border-gray-200 shadow-lg">
+          <CardHeader className="text-center pb-4">
+            <CardTitle className="text-2xl font-bold text-gray-800">로그인</CardTitle>
+            <CardDescription className="text-gray-600 leading-dyslexic tracking-dyslexic">
               카카오 계정으로 간편하게 로그인하세요
-            </p>
+            </CardDescription>
+          </CardHeader>
 
+          <CardContent className="space-y-6">
             <Button
               onClick={handleKakaoLogin}
-              className="w-full h-12 bg-[#FEE500] hover:bg-[#FFEB00] text-black text-base font-semibold rounded-md transition-colors"
+              className="w-full h-12 bg-yellow-400 hover:bg-yellow-500 text-yellow-900 text-base font-medium"
             >
-              <span>카카오로 로그인</span>
+              카카오로 로그인
             </Button>
 
-            <div className="text-center text-sm text-gray-500">
-              아직 계정이 없으신가요?{' '}
-              <Link
-                to="/signup"
-                className="text-[#0052cc] hover:underline font-medium"
-              >
-                회원가입하기
-              </Link>
+            <div className="text-center">
+              <p className="text-gray-600 leading-dyslexic tracking-dyslexic">
+                아직 계정이 없으신가요?{' '}
+                <button
+                  onClick={() => navigate({ to: "/signup" })}
+                  className="text-primary hover:underline font-medium"
+                >
+                  회원가입하기
+                </button>
+              </p>
             </div>
           </CardContent>
         </Card>
@@ -67,3 +71,5 @@ export const LoginForm = () => {
     </div>
   );
 };
+
+export default Login;

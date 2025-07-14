@@ -1,205 +1,220 @@
-import { useState } from "react"
-import { createFileRoute } from "@tanstack/react-router"
-import { useQuery } from "@tanstack/react-query"
-import { Typography, Button, Select, Card, CardContent } from "@/shared/ui"
-import { ChevronLeft, ChevronRight, ZoomIn, ZoomOut, Maximize, Loader2, Info } from "lucide-react"
-import { viewerApi } from "@/features/viewer/api/viewer-api"
-import { PageTips } from "@/features/viewer/ui/page-tips"
-import { PageImages } from "@/features/viewer/ui/page-images"
-import { ProcessedContent } from "@/features/viewer/ui/processed-content"
+import { useEffect, useState } from 'react';
+import { createFileRoute } from '@tanstack/react-router';
+import { useQuery } from '@tanstack/react-query';
+import {
+  ChevronLeft,
+  ChevronRight,
+  Settings,
+  Type,
+  Bookmark,
+  Eye,
+  Volume2,
+  VolumeX,
+  Star
+} from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Slider } from '@/components/ui/slider';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { ProcessedContent } from '@/features/viewer/ui/processed-content';
+import { viewerApi } from '@/features/viewer/api/viewer-api';
 
 export const Route = createFileRoute('/teacher/viewer/$documentId')({
   component: DocumentViewerPage,
-})
+});
 
-function DocumentViewerPage() {
-  const { documentId } = Route.useParams()
-  const docId = Number.parseInt(documentId)
+const fontMap = {
+  dyslexic: 'font-dyslexic',
+  sans: 'font-sans',
+  serif: 'font-serif',
+} as const satisfies Record<string, string>;
+
+const bgMap = {
+  white: 'bg-white',
+  cream: 'bg-orange-50',
+  light: 'bg-blue-50',
+  dark: 'bg-gray-800 text-white',
+} as const satisfies Record<string, string>;
+
+export default function DocumentViewerPage() {
+  const { documentId } = Route.useParams();
+  const docId = Number.parseInt(documentId ?? '', 10);
+  const totalPages = 20;
 
   const [currentPage, setCurrentPage] = useState(1);
-  const [fontSize, setFontSize] = useState(18);
-  const [fontFamily, setFontFamily] = useState("PeachMarket");
-  const [lineSpacing, setLineSpacing] = useState(1.5);
-  const [isFullscreen, setIsFullscreen] = useState(false);
-  const [showTips, setShowTips] = useState(false);
+  const [fontSize, setFontSize] = useState([18]);
+  const [lineSpacing, setLineSpacing] = useState([1.6]);
+  const [letterSpacing, setLetterSpacing] = useState([0.05]);
+  const [fontFamily, setFontFamily] = useState<'dyslexic' | 'sans' | 'serif'>('dyslexic');
+  const [backgroundColor, setBackgroundColor] = useState<'white' | 'cream' | 'light' | 'dark'>('white');
+  const [isVocabHighlightOn, setIsVocabHighlightOn] = useState(true);
+  const [isReading, setIsReading] = useState(false);
+  const [readingFocusMode, setReadingFocusMode] = useState(false);
+  const [showPageList, setShowPageList] = useState(false);
 
-  const { data: pageContents = [], isLoading: isLoadingPageContent } = useQuery({
-    queryKey: ["document", docId, "page-content", currentPage],
+  const { data: pages = [] } = useQuery({
+    queryKey: ['document', docId, 'page-content', currentPage],
     queryFn: () => viewerApi.getPageContent(docId, currentPage),
-    enabled: !!docId
-  })
+    enabled: !!docId,
+  });
 
-  const currentPageContent = pageContents.length > 0 ? pageContents[0] : null
+  const page = pages[0];
 
-  const { data: pageTips = [] } = useQuery({
-    queryKey: ["page", currentPageContent?.id, "tips"],
-    queryFn: () => viewerApi.getPageTips(currentPageContent?.id as number),
-    enabled: !!currentPageContent?.id && showTips
-  })
-
-  const { data: pageImages = [] } = useQuery({
-    queryKey: ["page", currentPageContent?.id, "images"],
-    queryFn: () => viewerApi.getPageImages(currentPageContent?.id as number),
-    enabled: !!currentPageContent?.id
-  })
-
-  const documentTitle = currentPageContent?.sectionTitle || '문서 제목'
-  const blocks = currentPageContent?.processedContent || []
-
-  const toggleFullscreen = () => {
-    if (!window.document.fullscreenElement) {
-      window.document.documentElement.requestFullscreen().then(() => {
-        setIsFullscreen(true)
-      }).catch(() => {})
-    } else {
-      window.document.exitFullscreen().then(() => {
-        setIsFullscreen(false)
-      }).catch(() => {})
+  const handleTTS = () => {
+    if (!page?.processedContent) return;
+    if (isReading) {
+      speechSynthesis.cancel();
+      setIsReading(false);
+      return;
     }
-  }
+    const blocks = page.processedContent.filter((b) => 'text' in b) as { text: string }[];
+    const utterance = new SpeechSynthesisUtterance(blocks.map((b) => b.text).join('\n'));
+    utterance.rate = 0.8;
+    utterance.pitch = 1.1;
+    utterance.lang = 'ko-KR';
+    utterance.onstart = () => setIsReading(true);
+    utterance.onend = () => setIsReading(false);
+    utterance.onerror = () => setIsReading(false);
+    speechSynthesis.speak(utterance);
+  };
 
-  const handlePageChange = (newPage: number) => {
-    if (newPage > 0) {
-      setCurrentPage(newPage)
-    }
-  }
+  const handlePageChange = (direction: 'prev' | 'next') => {
+    const newPage = direction === 'next' ? currentPage + 1 : currentPage - 1;
+    if (newPage >= 1 && newPage <= totalPages) setCurrentPage(newPage);
+  };
 
-  const handleFontSizeChange = (increment: boolean) => {
-    setFontSize(prev => {
-      const newSize = increment ? prev + 1 : prev - 1
-      return Math.min(Math.max(newSize, 12), 24)
-    })
-  }
+  const handleJumpToPage = (page: number) => {
+    setCurrentPage(page);
+    setShowPageList(false);
+  };
+
+  useEffect(() => {
+    return () => speechSynthesis.cancel();
+  }, []);
 
   return (
-    <div className="container mx-auto py-4 px-4">
-      <div className="bg-white shadow-md rounded-lg p-4 mb-6 sticky top-0 z-10">
-        <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-          <div className="flex items-center gap-2">
-            <div className="flex items-center gap-1">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => handlePageChange(currentPage - 1)}
-                disabled={currentPage <= 1}
-              >
-                <ChevronLeft className="w-4 h-4" />
-              </Button>
-              <Typography variant="p" className="mx-2 text-slate-400">
-                {currentPage} 페이지
-              </Typography>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => handlePageChange(currentPage + 1)}
-                disabled={pageContents.length === 0}
-              >
-                <ChevronRight className="w-4 h-4" />
-              </Button>
-            </div>
-          </div>
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2">
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={() => handleFontSizeChange(false)}
-                disabled={fontSize <= 12}
-              >
-                <ZoomOut className="w-4 h-4" />
-              </Button>
-              <Typography variant="p" className="text-slate-600 font-bold">{fontSize}px</Typography>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={() => handleFontSizeChange(true)}
-                disabled={fontSize >= 24}
-              >
-                <ZoomIn className="w-4 h-4" />
-              </Button>
-            </div>
-            <Select
-              value={fontFamily}
-              onChange={(e) => setFontFamily(e.target.value)}
-              className="w-40"
-            >
-              <option value="PeachMarket" style={{ fontFamily: 'PeachMarket' }}>피치마켓</option>
-              <option value="Noto Sans KR" style={{ fontFamily: 'Noto Sans KR' }}>Noto Sans</option>
-              <option value="Lexend" style={{ fontFamily: 'Lexend' }}>Lexend</option>
-              <option value="Arial" style={{ fontFamily: 'Arial, sans-serif' }}>Arial</option>
-            </Select>
-            <Button 
-              variant={showTips ? "default" : "outline"}
-              size="sm"
-              onClick={() => setShowTips(!showTips)}
-              className="flex items-center gap-1"
-            >
-              <Info className="w-4 h-4" />
-              <span>핵심 어휘 {showTips ? '숨기기' : '보기'}</span>
-            </Button>
-            <Button variant="outline" onClick={toggleFullscreen}>
-              <Maximize className="w-4 h-4" />
-            </Button>
-          </div>
-        </div>
-      </div>
+    <div className={["min-h-screen", "flex", "flex-col", bgMap[backgroundColor], readingFocusMode ? "reading-focus" : ""].join(" ")}>
+      <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-gray-200 shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex justify-between items-center">
+          <Popover open={showPageList} onOpenChange={setShowPageList}>
+            <PopoverTrigger asChild>
+              <Button variant="outline" size="sm">{currentPage} / {totalPages} 페이지</Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-80 p-4">
+              <h4 className="font-medium mb-3" id="page-jump-label">페이지 이동</h4>
+              <ScrollArea className="h-40" aria-labelledby="page-jump-label">
+                <div className="grid grid-cols-5 gap-2">
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                    <Button
+                      key={page}
+                      variant={page === currentPage ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => handleJumpToPage(page)}
+                    >
+                      {page}
+                    </Button>
+                  ))}
+                </div>
+              </ScrollArea>
+            </PopoverContent>
+          </Popover>
 
-      <Card className="w-full">
-        <CardContent className="px-8 py-2">
-        <div className="w-full flex justify-end">
-        <Typography variant="h3" className="my-2 text-slate-400">
-              {documentTitle}
-        </Typography>       
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" onClick={() => setFontSize(prev => [Math.max(14, prev[0] - 2)])}>A-</Button>
+            <Button variant="outline" size="sm" onClick={() => setFontSize(prev => [Math.min(28, prev[0] + 2)])}>A+</Button>
+            <Select value={fontFamily} onValueChange={(value: 'dyslexic' | 'sans' | 'serif') => setFontFamily(value)}>
+              <SelectTrigger className="w-20"><Type className="w-4 h-4" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="dyslexic">난독증</SelectItem>
+                <SelectItem value="sans">고딕</SelectItem>
+                <SelectItem value="serif">명조</SelectItem>
+              </SelectContent>
+            </Select>
+            <Button variant={isVocabHighlightOn ? 'default' : 'outline'} size="sm" onClick={() => setIsVocabHighlightOn(!isVocabHighlightOn)}><Bookmark className="w-4 h-4" /></Button>
+            <Button variant={readingFocusMode ? 'default' : 'outline'} size="sm" onClick={() => setReadingFocusMode(!readingFocusMode)}><Eye className="w-4 h-4" /></Button>
+            <Button variant={isReading ? 'destructive' : 'outline'} size="sm" onClick={handleTTS}>{isReading ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}</Button>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" size="sm"><Settings className="w-4 h-4" /></Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-80 p-4">
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium" htmlFor="line-spacing-slider">줄 간격</label>
+                    <Slider id="line-spacing-slider" value={lineSpacing} onValueChange={setLineSpacing} min={1.2} max={2.4} step={0.2} />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium" htmlFor="letter-spacing-slider">자간</label>
+                    <Slider id="letter-spacing-slider" value={letterSpacing} onValueChange={setLetterSpacing} min={0} max={0.15} step={0.01} />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium" htmlFor="background-color-select">배경색</label>
+                    <Select value={backgroundColor} onValueChange={(value: 'white' | 'cream' | 'light' | 'dark') => setBackgroundColor(value)}>
+                      <SelectTrigger id="background-color-select"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="white">밝은 테마</SelectItem>
+                        <SelectItem value="cream">세피아</SelectItem>
+                        <SelectItem value="light">연한 파랑</SelectItem>
+                        <SelectItem value="dark">어두운 테마</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </PopoverContent>
+            </Popover>
+          </div>
         </div>
-   
-          {isLoadingPageContent ? (
-            <div className="flex justify-center items-center py-20">
-              <Loader2 className="w-8 h-8 animate-spin" />
-              <Typography variant="p" className="ml-2">페이지를 불러오는 중...</Typography>
-            </div>
-          ) : currentPageContent ? (
-            <>
-              {blocks.length > 0 && (
-                <div className="mb-8">
+      </header>
+
+      <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <Card className={`relative shadow-lg ${fontMap[fontFamily]} ${bgMap[backgroundColor]}`}>
+          <CardContent className="p-8">
+            {page ? (
+              <>
+                <div className="absolute top-4 right-4">
+                  <Star className="w-8 h-8 text-yellow-400 fill-current animate-pulse" />
+                </div>
+                <div className="grid md:grid-cols-2 gap-8" style={{ fontSize: `${fontSize[0]}px`, lineHeight: lineSpacing[0], letterSpacing: `${letterSpacing[0]}em` }}>
                   <ProcessedContent
-                    blocks={blocks}
-                    fontSize={fontSize}
+                    blocks={page.processedContent}
+                    fontSize={fontSize[0]}
                     fontFamily={fontFamily}
-                    lineSpacing={lineSpacing}
+                    lineSpacing={lineSpacing[0]}
                     documentId={docId}
                     pageNumber={currentPage}
                   />
                 </div>
-              )}
-              {showTips && <PageTips tips={pageTips} fontSize={fontSize} />}
-            </>
-          ) : (
-            <Typography variant="p" className="text-center text-gray-500 py-10">
-              페이지 내용이 없거나 로드하지 못했습니다.
-            </Typography>
-          )}
-        </CardContent>
-      </Card>
-      <div className="flex justify-between mt-6 w-full">
-        <Button
-          variant="outline"
-          onClick={() => handlePageChange(currentPage - 1)}
-          disabled={currentPage <= 1}
-          size="lg"
-        >
-          <ChevronLeft className="w-4 h-4 mr-2" />
-          이전 페이지
-        </Button>
-        <Button
-          variant="outline"
-          onClick={() => handlePageChange(currentPage + 1)}
-          disabled={pageContents.length === 0}
-          size="lg"
-        >
-          다음 페이지
-          <ChevronRight className="w-4 h-4 ml-2" />
-        </Button>
-      </div>
+              </>
+            ) : (
+              <div className="text-center text-gray-400 py-10">페이지를 불러올 수 없습니다.</div>
+            )}
+          </CardContent>
+        </Card>
+      </main>
+
+      <footer className="sticky bottom-0 z-50 bg-white/95 backdrop-blur-sm border-t border-gray-200 shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
+          <Button variant="outline" size="lg" onClick={() => handlePageChange('prev')} disabled={currentPage <= 1}>
+            <ChevronLeft className="w-5 h-5 mr-2" /> 이전
+          </Button>
+          <div className="flex-1 mx-8">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm text-gray-600">읽기 진행률</span>
+              <span className="text-sm font-medium text-primary">{Math.round((currentPage / totalPages) * 100)}%</span>
+            </div>
+            <div className="w-full bg-gray-200 rounded-full h-3 relative overflow-hidden">
+              <div className="bg-gradient-to-r from-primary to-primary/80 rounded-full h-3 transition-all duration-500 relative" style={{ width: `${(currentPage / totalPages) * 100}%` }}>
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer" />
+              </div>
+            </div>
+          </div>
+          <Button variant="outline" size="lg" onClick={() => handlePageChange('next')} disabled={currentPage >= totalPages}>
+            다음 <ChevronRight className="w-5 h-5 ml-2" />
+          </Button>
+        </div>
+      </footer>
     </div>
-  )
-} 
+  );
+}
