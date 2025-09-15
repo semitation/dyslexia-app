@@ -1,10 +1,10 @@
-import type { PageTipResponse } from '../model/types';
-import { fetchSpeechAudio } from '../api/speech-api';
 import { Typography } from '@/shared/ui';
-import { Volume2, Info } from 'lucide-react';
-import { toast } from 'sonner';
+import { Info, Volume2 } from 'lucide-react';
 import type React from 'react';
-import { useState, useRef } from 'react';
+import { useRef, useState } from 'react';
+import { toast } from 'sonner';
+import { fetchSpeechAudio } from '../api/speech-api';
+import type { PageTipResponse } from '../model/types';
 
 interface PageTipsProps {
 	tips: PageTipResponse[];
@@ -26,7 +26,11 @@ export const PageTips: React.FC<PageTipsProps> = ({ tips, fontSize }) => {
 		setLoadingId(id);
 		const toastId = toast.loading('오디오를 불러오는 중...');
 		try {
-			const blob = await fetchSpeechAudio({ text, voice: 'echo', model: 'tts-1' });
+			const blob = await fetchSpeechAudio({
+				text,
+				voice: 'echo',
+				model: 'tts-1',
+			});
 			toast.dismiss(toastId);
 			const url = URL.createObjectURL(blob);
 			const audio = new Audio(url);
@@ -64,7 +68,12 @@ export const PageTips: React.FC<PageTipsProps> = ({ tips, fontSize }) => {
 							</Typography>
 							<button
 								type="button"
-								onClick={() => handleSpeak(tip.id.toString(), tip.readAloudText || tip.simplifiedExplanation)}
+								onClick={() =>
+									handleSpeak(
+										tip.id.toString(),
+										tip.readAloudText || tip.simplifiedExplanation,
+									)
+								}
 								className="text-blue-600 hover:text-blue-800"
 								disabled={loadingId === tip.id.toString()}
 							>

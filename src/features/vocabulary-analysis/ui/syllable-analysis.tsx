@@ -1,20 +1,37 @@
-import type { PhonemeComponent, SyllableComponents, SyllableInfo } from '@/shared/api/types';
+import type {
+	PhonemeComponent,
+	SyllableComponents,
+	SyllableInfo,
+} from '@/shared/api/types';
 import { useTextToSpeech } from '@/shared/hooks/use-text-to-speech';
 import { Badge } from '@/shared/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card';
 import { SoundButton } from '@/shared/ui/sound-button';
 
-function PhonemeCard({ component, type }: { component: PhonemeComponent | SyllableComponents['medial'] | null; type: 'initial' | 'medial' | 'final' }) {
+function PhonemeCard({
+	component,
+	type,
+}: {
+	component: PhonemeComponent | SyllableComponents['medial'] | null;
+	type: 'initial' | 'medial' | 'final';
+}) {
 	const { speak } = useTextToSpeech();
 
-  if (!component) return null;
+	if (!component) return null;
 	return (
 		<div className="relative flex flex-col items-center gap-2 rounded-lg border p-3 text-center">
-			<div className="text-2xl font-bold">{type === 'medial' ? (component as SyllableComponents['medial']).vowel : (component as PhonemeComponent).consonant}</div>
+			<div className="text-2xl font-bold">
+				{type === 'medial'
+					? (component as SyllableComponents['medial']).vowel
+					: (component as PhonemeComponent).consonant}
+			</div>
 			<div className="text-sm text-gray-500">{component.pronunciation}</div>
 			<div className="text-xs text-gray-400">{component.sound}</div>
 			<div className="absolute top-2 right-2">
-				<SoundButton text={component.sound} onSpeak={() => speak(component.pronunciation)} />
+				<SoundButton
+					text={component.sound}
+					onSpeak={() => speak(component.pronunciation)}
+				/>
 			</div>
 		</div>
 	);
@@ -30,9 +47,14 @@ export function SyllableAnalysis({ syllable }: { syllable: SyllableInfo }) {
 				<CardTitle className="flex items-center justify-between">
 					<div className="flex items-center gap-2">
 						<span className="text-2xl">{syllable.syllable}</span>
-						<SoundButton text={syllable.combinedSound} onSpeak={() => speak(syllable.syllable)} />
+						<SoundButton
+							text={syllable.combinedSound}
+							onSpeak={() => speak(syllable.syllable)}
+						/>
 					</div>
-					<span className="text-sm text-gray-500">{syllable.combinedSound}</span>
+					<span className="text-sm text-gray-500">
+						{syllable.combinedSound}
+					</span>
 				</CardTitle>
 			</CardHeader>
 			<CardContent>
@@ -59,8 +81,8 @@ const getDifficultyText = (level: string): string | null => {
 			return '보통';
 		case 'hard':
 			return '어려움';
-    default:
-      return null;
+		default:
+			return null;
 	}
 };
 
@@ -73,4 +95,4 @@ const getDifficultyStyle = (level: string) => {
 		default:
 			return 'bg-red-100 text-red-800';
 	}
-}; 
+};

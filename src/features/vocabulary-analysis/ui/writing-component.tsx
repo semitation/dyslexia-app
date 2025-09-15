@@ -1,7 +1,7 @@
-import { Typography } from '@/shared/ui';
-import { WritingCanvas } from './writing-canvas';
-import { SoundButton } from '@/shared/ui/sound-button';
 import { useTextToSpeech } from '@/shared/hooks/use-text-to-speech';
+import { Typography } from '@/shared/ui';
+import { SoundButton } from '@/shared/ui/sound-button';
+import { WritingCanvas } from './writing-canvas';
 
 interface WritingComponentProps {
 	title: string;
@@ -30,12 +30,14 @@ export function WritingComponent({
 		<div className="flex flex-col gap-2">
 			<div className="flex items-center justify-between">
 				<div>
-					<Typography variant="h4" className="mb-1">{title}</Typography>
-					<Typography variant="p" className="text-muted-foreground">{description}</Typography>
+					<Typography variant="h4" className="mb-1">
+						{title}
+					</Typography>
+					<Typography variant="p" className="text-muted-foreground">
+						{description}
+					</Typography>
 				</div>
-				{guideText && (
-					<SoundButton text={guideText} onSpeak={speak} />
-				)}
+				{guideText && <SoundButton text={guideText} onSpeak={speak} />}
 			</div>
 			<WritingCanvas
 				width={width}
@@ -48,4 +50,4 @@ export function WritingComponent({
 			/>
 		</div>
 	);
-} 
+}

@@ -1,16 +1,16 @@
-import React from 'react';
-import type { VocabularyAnalysis, PhonemeAnalysis } from '@/shared/api/types';
-import { Button } from '@/shared/ui/button';
+import type { PhonemeAnalysis, VocabularyAnalysis } from '@/shared/api/types';
 import { Badge } from '@/shared/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs';
-import { Pencil, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Button } from '@/shared/ui/button';
 import { SoundButton } from '@/shared/ui/sound-button';
-import { QuoteCard } from './quote-card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs';
+import { ChevronLeft, ChevronRight, Pencil } from 'lucide-react';
+import React from 'react';
+import { toast } from 'sonner';
 import { DefinitionSection } from './definition-section';
+import { LearningTipsSection } from './learning-tips-section';
+import { QuoteCard } from './quote-card';
 import { SyllableAnalysis } from './syllable-analysis';
 import { WritingSteps } from './writing-steps';
-import { LearningTipsSection } from './learning-tips-section';
-import { toast } from 'sonner';
 
 interface VocaAnalysisProps {
 	currentVocabulary: VocabularyAnalysis;
@@ -45,7 +45,7 @@ export function VocaAnalysis({
 		}
 	};
 
-	if (!phonemeAnalysis || ((phonemeAnalysis as any)?.error)) {
+	if (!phonemeAnalysis || (phonemeAnalysis as any)?.error) {
 		return null;
 	}
 
@@ -54,7 +54,9 @@ export function VocaAnalysis({
 			<div className="flex items-center justify-between">
 				<div className="flex items-center gap-4">
 					<h3 className="text-2xl font-bold">{currentVocabulary.word}</h3>
-					<Badge className={getDifficultyStyle(currentVocabulary.difficultyLevel)}>
+					<Badge
+						className={getDifficultyStyle(currentVocabulary.difficultyLevel)}
+					>
 						{getDifficultyText(currentVocabulary.difficultyLevel)}
 					</Badge>
 					<SoundButton text={currentVocabulary.word} onSpeak={onSpeak} />
@@ -68,9 +70,11 @@ export function VocaAnalysis({
 				</Button>
 			</div>
 
-			<QuoteCard text={currentVocabulary.originalSentence || "문장이 없습니다."} />
+			<QuoteCard
+				text={currentVocabulary.originalSentence || '문장이 없습니다.'}
+			/>
 
-			<DefinitionSection 
+			<DefinitionSection
 				word={currentVocabulary.word}
 				definition={currentVocabulary.definition}
 				simplifiedDefinition={currentVocabulary.simplifiedDefinition}
@@ -79,19 +83,27 @@ export function VocaAnalysis({
 				onOpenChange={setIsDefinitionOpen}
 			/>
 
-			<Tabs defaultValue="phoneme" className="w-full flex-1 overflow-y-scroll" onClick={handleTabClick}>
+			<Tabs
+				defaultValue="phoneme"
+				className="w-full flex-1 overflow-y-scroll"
+				onClick={handleTabClick}
+			>
 				<TabsList className="w-full">
-					<TabsTrigger value="phoneme" className="flex-1">음소 분석</TabsTrigger>
+					<TabsTrigger value="phoneme" className="flex-1">
+						음소 분석
+					</TabsTrigger>
 				</TabsList>
 
 				<div className="overflow-y-auto pr-4">
 					<TabsContent value="phoneme" className="mt-4">
 						<div className="space-y-6">
 							{phonemeAnalysis.syllables.map((syllable, index) => (
-								<SyllableAnalysis 
-									key={`syllable-${// biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
-index}`} 
-									syllable={syllable} 
+								<SyllableAnalysis
+									key={`syllable-${
+										// biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
+										index
+									}`}
+									syllable={syllable}
 								/>
 							))}
 						</div>
@@ -152,4 +164,4 @@ const getDifficultyStyle = (level: string) => {
 		default:
 			return 'bg-red-100 text-red-800';
 	}
-}; 
+};

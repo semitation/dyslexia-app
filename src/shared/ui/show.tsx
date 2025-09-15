@@ -1,11 +1,11 @@
-import type { FC, ReactNode } from 'react'
+import type { FC, ReactNode } from 'react';
 
 interface ShowProps {
-  when: boolean
-  children: ReactNode
+	when: boolean;
+	children: ReactNode;
 }
 
 export const Show: FC<ShowProps> = ({ when, children }) => {
-  if (!when) return null;
-  return <>{children}</>
+	if (!when) return null;
+	return <>{children}</>;
 };

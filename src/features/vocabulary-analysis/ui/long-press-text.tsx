@@ -1,12 +1,12 @@
-import { useState, useRef } from 'react';
 import { useLongPress } from '@/shared/hooks/use-long-press';
 import { useTextToSpeech } from '@/shared/hooks/use-text-to-speech';
-import { VocabularyModal } from './vocabulary-modal';
-import { useVocabularyAnalysis } from '../model/use-vocabulary-analysis';
-import { Button } from '@/shared/ui/button';
-import { Volume, Loader2 } from 'lucide-react';
 import { cn } from '@/shared/lib/utils';
+import { Button } from '@/shared/ui/button';
+import { Loader2, Volume } from 'lucide-react';
+import { useRef, useState } from 'react';
 import { toast } from 'sonner';
+import { useVocabularyAnalysis } from '../model/use-vocabulary-analysis';
+import { VocabularyModal } from './vocabulary-modal';
 
 interface LongPressTextProps {
 	text: string;
@@ -49,10 +49,10 @@ export function LongPressText({
 
 		const rect = textRef.current.getBoundingClientRect();
 		const bottomY = rect.bottom;
-		
-		toast("계속 누르면 어휘 학습을 할 수 있어요!", {
-			className: "text-[16px] py-3 px-4",
-			position: "top-center",
+
+		toast('계속 누르면 어휘 학습을 할 수 있어요!', {
+			className: 'text-[16px] py-3 px-4',
+			position: 'top-center',
 			duration: 500,
 			style: {
 				top: `${bottomY - 26}px`,

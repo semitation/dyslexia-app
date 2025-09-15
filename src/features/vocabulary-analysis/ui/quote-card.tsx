@@ -1,5 +1,5 @@
-import { Quote } from 'lucide-react';
 import { Card, CardContent } from '@/shared/ui/card';
+import { Quote } from 'lucide-react';
 
 interface QuoteCardProps {
 	text: string;
@@ -16,4 +16,4 @@ export function QuoteCard({ text }: QuoteCardProps) {
 			</CardContent>
 		</Card>
 	);
-} 
+}

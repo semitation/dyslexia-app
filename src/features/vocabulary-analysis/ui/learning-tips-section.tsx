@@ -1,7 +1,7 @@
 import type { LearningTips } from '@/shared/api/types';
+import { Badge } from '@/shared/ui/badge';
 import { Card, CardContent } from '@/shared/ui/card';
 import { AlertCircle, BookOpen, Repeat } from 'lucide-react';
-import { Badge } from '@/shared/ui/badge';
 
 interface LearningTipsSectionProps {
 	tips: LearningTips;
@@ -20,8 +20,8 @@ export function LearningTipsSection({ tips }: LearningTipsSectionProps) {
 						<h4 className="mb-3 text-lg font-bold">자주하는 실수</h4>
 						<ul className="list-inside list-disc space-y-2">
 							{tips.commonMistakes.map((mistake, index) => (
-								<li 
-									key={`mistake-${index}`} 
+								<li
+									key={`mistake-${index}`}
 									className="text-sm text-muted-foreground"
 								>
 									{mistake}
@@ -42,11 +42,7 @@ export function LearningTipsSection({ tips }: LearningTipsSectionProps) {
 						<h4 className="mb-3 text-lg font-bold">연습할 단어</h4>
 						<div className="flex flex-wrap gap-2">
 							{tips.practiceWords.map((word) => (
-								<Badge 
-									key={word} 
-									variant="blue"
-									className="text-sm"
-								>
+								<Badge key={word} variant="blue" className="text-sm">
 									{word}
 								</Badge>
 							))}
@@ -65,8 +61,8 @@ export function LearningTipsSection({ tips }: LearningTipsSectionProps) {
 						<h4 className="mb-3 text-lg font-bold">비슷한 발음의 단어</h4>
 						<div className="flex flex-wrap gap-2">
 							{tips.rhymingWords.map((word) => (
-								<Badge 
-									key={word} 
+								<Badge
+									key={word}
 									variant="white"
 									className="border border-gray-200 text-sm"
 								>
@@ -79,4 +75,4 @@ export function LearningTipsSection({ tips }: LearningTipsSectionProps) {
 			</Card>
 		</div>
 	);
-} 
+}

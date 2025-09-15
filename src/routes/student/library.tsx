@@ -1,14 +1,14 @@
-import  StudentDashboardPage  from '@/page/student';
+import StudentDashboardPage from '@/page/student';
 import { createFileRoute } from '@tanstack/react-router';
 
 export const Route = createFileRoute('/student/library')({
-  component: RouteComponent,
+	component: RouteComponent,
 });
 
 function RouteComponent() {
-  return (
-    <div>
-      <StudentDashboardPage />
-    </div>
-  );
+	return (
+		<div>
+			<StudentDashboardPage />
+		</div>
+	);
 }

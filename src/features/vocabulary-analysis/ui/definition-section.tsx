@@ -1,12 +1,12 @@
-import { ChevronDown } from 'lucide-react';
+import { useTextToSpeech } from '@/shared/hooks/use-text-to-speech';
 import { Button } from '@/shared/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card';
 import {
 	Collapsible,
 	CollapsibleContent,
 	CollapsibleTrigger,
-} from "@/shared/ui/collapsible"
-import { useTextToSpeech } from '@/shared/hooks/use-text-to-speech';
+} from '@/shared/ui/collapsible';
+import { ChevronDown } from 'lucide-react';
 
 interface DefinitionSectionProps {
 	word: string;
@@ -26,7 +26,10 @@ export function DefinitionSection({
 	onOpenChange,
 }: DefinitionSectionProps) {
 	const { speak } = useTextToSpeech();
-	const exampleList = examples?.replace(/[\[\]"]/g, '').split(',').map(example => example.trim());
+	const exampleList = examples
+		?.replace(/[\[\]"]/g, '')
+		.split(',')
+		.map((example) => example.trim());
 
 	return (
 		<div className="space-y-4">
@@ -37,7 +40,9 @@ export function DefinitionSection({
 							<CardTitle className="text-lg">쉽게 풀어보는 "{word}"</CardTitle>
 							<CollapsibleTrigger asChild>
 								<Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-									<ChevronDown className={`h-4 w-4 transition-transform duration-200 ${isOpen ? "" : "-rotate-90"}`} />
+									<ChevronDown
+										className={`h-4 w-4 transition-transform duration-200 ${isOpen ? '' : '-rotate-90'}`}
+									/>
 								</Button>
 							</CollapsibleTrigger>
 						</div>
@@ -52,12 +57,11 @@ export function DefinitionSection({
 								<h4 className="mb-2 font-semibold">자세한 설명</h4>
 								<p className="text-sm text-muted-foreground">{definition}</p>
 							</div>
-							<div>
-							</div>
+							<div></div>
 						</CardContent>
 					</CollapsibleContent>
 				</Collapsible>
 			</Card>
 		</div>
 	);
-} 
+}

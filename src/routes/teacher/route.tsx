@@ -1,14 +1,14 @@
-import { TeacherLayout } from "@/features/layouts";
-import { Outlet, createFileRoute } from "@tanstack/react-router";
+import { TeacherLayout } from '@/features/layouts';
+import { Outlet, createFileRoute } from '@tanstack/react-router';
 
-export const Route = createFileRoute("/teacher")({
-  component: TeacherDashboard,
+export const Route = createFileRoute('/teacher')({
+	component: TeacherDashboard,
 });
 
 export default function TeacherDashboard() {
-  return (
-    <TeacherLayout>
-      <Outlet />
-    </TeacherLayout>
-  );
+	return (
+		<TeacherLayout>
+			<Outlet />
+		</TeacherLayout>
+	);
 }

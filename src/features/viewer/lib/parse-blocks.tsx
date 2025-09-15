@@ -1,7 +1,7 @@
+import { LongPressText } from '@/features/vocabulary-analysis';
+import { cn } from '@/lib/utils';
 import type { ReactNode } from 'react';
 import type { Block } from '../model/types';
-import { cn } from '@/lib/utils';
-import { LongPressText } from '@/features/vocabulary-analysis';
 
 interface ParseBlocksOptions {
 	fontSize?: number;
@@ -14,9 +14,9 @@ interface ParseBlocksOptions {
 }
 
 function extractUploadPath(url: string): string | null {
-  const idx = url.indexOf("uploads/");
-  if (idx === -1) return null;
-  return url.slice(idx + "uploads/".length);
+	const idx = url.indexOf('uploads/');
+	if (idx === -1) return null;
+	return url.slice(idx + 'uploads/'.length);
 }
 
 export function parseBlocks(
@@ -52,10 +52,7 @@ export function parseBlocks(
 					<div
 						key={key}
 						style={baseStyle}
-						className={cn(
-							'cursor-pointer',
-							block.blank && 'mb-4',
-						)}
+						className={cn('cursor-pointer', block.blank && 'mb-4')}
 					>
 						<LongPressText
 							text={block.text}
@@ -72,7 +69,13 @@ export function parseBlocks(
 						style={{ ...baseStyle, fontSize: fontSize + 8 }}
 						className="font-bold mb-2"
 						onClick={onBlockClick ? () => onBlockClick(block) : undefined}
-						onKeyDown={onBlockClick ? (e) => { if (e.key === 'Enter' || e.key === ' ') onBlockClick(block) } : undefined}
+						onKeyDown={
+							onBlockClick
+								? (e) => {
+										if (e.key === 'Enter' || e.key === ' ') onBlockClick(block);
+									}
+								: undefined
+						}
 						tabIndex={onBlockClick ? 0 : undefined}
 					>
 						{block.text}
@@ -85,7 +88,13 @@ export function parseBlocks(
 						style={{ ...baseStyle, fontSize: fontSize + 4 }}
 						className="font-bold mb-2"
 						onClick={onBlockClick ? () => onBlockClick(block) : undefined}
-						onKeyDown={onBlockClick ? (e) => { if (e.key === 'Enter' || e.key === ' ') onBlockClick(block) } : undefined}
+						onKeyDown={
+							onBlockClick
+								? (e) => {
+										if (e.key === 'Enter' || e.key === ' ') onBlockClick(block);
+									}
+								: undefined
+						}
 						tabIndex={onBlockClick ? 0 : undefined}
 					>
 						{block.text}
@@ -98,7 +107,13 @@ export function parseBlocks(
 						style={{ ...baseStyle, fontSize: fontSize + 2 }}
 						className="font-bold mb-2"
 						onClick={onBlockClick ? () => onBlockClick(block) : undefined}
-						onKeyDown={onBlockClick ? (e) => { if (e.key === 'Enter' || e.key === ' ') onBlockClick(block) } : undefined}
+						onKeyDown={
+							onBlockClick
+								? (e) => {
+										if (e.key === 'Enter' || e.key === ' ') onBlockClick(block);
+									}
+								: undefined
+						}
 						tabIndex={onBlockClick ? 0 : undefined}
 					>
 						{block.text}
@@ -107,17 +122,20 @@ export function parseBlocks(
 			case 'LIST':
 			case 'DOTTED':
 				return (
-					<ul
-						key={key}
-						className="list-disc pl-8 mb-4"
-						style={baseStyle}
-					>
+					<ul key={key} className="list-disc pl-8 mb-4" style={baseStyle}>
 						{block.items.map((item, idx) => (
 							<li
 								key={block.id ? `${block.id}-item-${idx}` : `${i}-item-${idx}`}
 								className="mb-1 group relative"
 								onClick={onBlockClick ? () => onBlockClick(block) : undefined}
-								onKeyDown={onBlockClick ? (e) => { if (e.key === 'Enter' || e.key === ' ') onBlockClick(block) } : undefined}
+								onKeyDown={
+									onBlockClick
+										? (e) => {
+												if (e.key === 'Enter' || e.key === ' ')
+													onBlockClick(block);
+											}
+										: undefined
+								}
 								tabIndex={onBlockClick ? 0 : undefined}
 								style={isActive ? { background: '#fffbe6' } : undefined}
 							>
@@ -130,32 +148,33 @@ export function parseBlocks(
 				return (
 					<figure key={key} className="mb-8 mt-4 flex flex-col">
 						<div className="w-[420px] flex justify-center flex-col">
-						<img
-							src={`${import.meta.env.VITE_API_BASE_URL.replace('api', '')}api/pageImage/${block.url}`}
-							alt={block.alt}
-							style={{ width: '420px', height: 'auto' }}
-							className="rounded-md max-w-full h-auto"
-						/>
-						{block.concept && (
-							<figcaption className="text-center mt-2 text-sm text-gray-600">
-								{block.concept}
-							</figcaption>
-						)}
+							<img
+								src={`${import.meta.env.VITE_API_BASE_URL.replace('api', '')}api/pageImage/${block.url}`}
+								alt={block.alt}
+								style={{ width: '420px', height: 'auto' }}
+								className="rounded-md max-w-full h-auto"
+							/>
+							{block.concept && (
+								<figcaption className="text-center mt-2 text-sm text-gray-600">
+									{block.concept}
+								</figcaption>
+							)}
 						</div>
 					</figure>
 				);
 			case 'TABLE':
 				return (
 					<div key={key} className="overflow-x-auto mb-4">
-						<table
-							className="min-w-full border text-sm"
-							style={baseStyle}
-						>
+						<table className="min-w-full border text-sm" style={baseStyle}>
 							<thead>
 								<tr>
 									{block.headers.map((header, idx) => (
 										<th
-											key={block.id ? `${block.id}-header-${idx}` : `${i}-header-${idx}`}
+											key={
+												block.id
+													? `${block.id}-header-${idx}`
+													: `${i}-header-${idx}`
+											}
 											className="border px-2 py-1 bg-gray-100"
 										>
 											{header}
@@ -166,11 +185,19 @@ export function parseBlocks(
 							<tbody>
 								{block.rows.map((row, rowIdx) => (
 									<tr
-										key={block.id ? `${block.id}-row-${rowIdx}` : `${i}-row-${rowIdx}`}
+										key={
+											block.id
+												? `${block.id}-row-${rowIdx}`
+												: `${i}-row-${rowIdx}`
+										}
 									>
 										{row.map((cell, cellIdx) => (
 											<td
-												key={block.id ? `${block.id}-cell-${rowIdx}-${cellIdx}` : `${i}-cell-${rowIdx}-${cellIdx}`}
+												key={
+													block.id
+														? `${block.id}-cell-${rowIdx}-${cellIdx}`
+														: `${i}-cell-${rowIdx}-${cellIdx}`
+												}
 												className="border px-2 py-1"
 											>
 												{cell}

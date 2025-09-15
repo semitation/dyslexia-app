@@ -1,7 +1,7 @@
-import type { Block } from '../model/types';
+import type React from 'react';
 import { parseBlocks } from '../lib/parse-blocks';
 import { useBlockSpeech } from '../lib/use-block-speech';
-import type React from 'react';
+import type { Block } from '../model/types';
 
 function splitBlocksIntoColumns(blocks: Block[]): [Block[], Block[]] {
 	const midpoint = Math.ceil(blocks.length / 2);
@@ -29,7 +29,7 @@ export const ProcessedContent: React.FC<ProcessedContentProps> = ({
 	const [leftBlocks, rightBlocks] = splitBlocksIntoColumns(blocks);
 
 	const handleBlockClick = (block: Block) => {
-		console.log({ block })
+		console.log({ block });
 		if ('text' in block && block.text) {
 			speak(block.id, block.text);
 		}
@@ -47,13 +47,9 @@ export const ProcessedContent: React.FC<ProcessedContentProps> = ({
 
 	return (
 		<div className="flex flex-row gap-x-4 items-stretch">
-			<div className="flex-1">
-				{parseBlocks(leftBlocks, blockOptions)}
-			</div>
+			<div className="flex-1">{parseBlocks(leftBlocks, blockOptions)}</div>
 			<div className="w-[2px] bg-slate-100 mx-2 self-stretch" />
-			<div className="flex-1">
-				{parseBlocks(rightBlocks, blockOptions)}
-			</div>
+			<div className="flex-1">{parseBlocks(rightBlocks, blockOptions)}</div>
 		</div>
 	);
 };

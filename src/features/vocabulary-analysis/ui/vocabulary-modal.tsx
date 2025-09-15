@@ -1,26 +1,33 @@
-import { useState, useRef } from 'react';
-import type { VocabularyAnalysis, PhonemeComponent, SyllableComponents, SyllableInfo, WritingStep, LearningTips } from '@/shared/api/types';
-import {
-	Dialog,
-	DialogContent,
-	DialogHeader,
-	DialogTitle,
-	DialogFooter,
-} from '@/shared/ui/dialog';
-import { Button } from '@/shared/ui/button';
-import { Quote, ChevronDown } from 'lucide-react';
-import { Badge } from '@/shared/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card';
+import { cn } from '@/lib/utils';
+import type {
+	LearningTips,
+	PhonemeComponent,
+	SyllableComponents,
+	SyllableInfo,
+	VocabularyAnalysis,
+	WritingStep,
+} from '@/shared/api/types';
 import { useTextToSpeech } from '@/shared/hooks/use-text-to-speech';
+import { Badge } from '@/shared/ui/badge';
+import { Button } from '@/shared/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card';
 import {
 	Collapsible,
 	CollapsibleContent,
 	CollapsibleTrigger,
-} from "@/shared/ui/collapsible"
+} from '@/shared/ui/collapsible';
+import {
+	Dialog,
+	DialogContent,
+	DialogFooter,
+	DialogHeader,
+	DialogTitle,
+} from '@/shared/ui/dialog';
+import { ChevronDown, Quote } from 'lucide-react';
+import { useRef, useState } from 'react';
+import { toast } from 'sonner';
 import { VocaAnalysis } from './voca-analysis';
 import { WritingPractice } from './writing-practice';
-import { cn } from '@/lib/utils';
-import { toast } from 'sonner';
 
 interface VocabularyModalProps {
 	isOpen: boolean;
@@ -28,19 +35,32 @@ interface VocabularyModalProps {
 	vocabularyList?: VocabularyAnalysis[];
 }
 
-function PhonemeCard({ component, type }: { component: PhonemeComponent | SyllableComponents['medial'] | null; type: 'initial' | 'medial' | 'final' }) {
+function PhonemeCard({
+	component,
+	type,
+}: {
+	component: PhonemeComponent | SyllableComponents['medial'] | null;
+	type: 'initial' | 'medial' | 'final';
+}) {
 	if (!component) {
 		return (
 			<div className="flex flex-col items-center gap-2 rounded-lg border border-dashed p-3 text-center">
 				<div className="text-2xl font-bold text-muted-foreground">-</div>
-				<div className="text-sm text-muted-foreground">{type === 'final' ? '받침' : type === 'medial' ? '모음' : '자음'}이 없어요</div>
+				<div className="text-sm text-muted-foreground">
+					{type === 'final' ? '받침' : type === 'medial' ? '모음' : '자음'}이
+					없어요
+				</div>
 			</div>
 		);
 	}
 
 	return (
 		<div className="flex flex-col items-center gap-2 rounded-lg border p-3 text-center">
-			<div className="text-2xl font-bold">{type === 'medial' ? (component as SyllableComponents['medial']).vowel : (component as PhonemeComponent).consonant}</div>
+			<div className="text-2xl font-bold">
+				{type === 'medial'
+					? (component as SyllableComponents['medial']).vowel
+					: (component as PhonemeComponent).consonant}
+			</div>
 			<div className="text-sm text-gray-500">{component.pronunciation}</div>
 			<div className="text-xs text-gray-400">{component.sound}</div>
 			<Badge className={getDifficultyStyle(component.difficulty)}>
@@ -49,7 +69,6 @@ function PhonemeCard({ component, type }: { component: PhonemeComponent | Syllab
 		</div>
 	);
 }
-
 
 function LearningTipsSection({ tips }: { tips: LearningTips }) {
 	return (
@@ -66,7 +85,9 @@ function LearningTipsSection({ tips }: { tips: LearningTips }) {
 				<h4 className="mb-2 font-semibold">연습할 단어</h4>
 				<div className="flex flex-wrap gap-2">
 					{tips.practiceWords.map((word) => (
-						<Badge key={word} className="bg-blue-100 text-blue-800">{word}</Badge>
+						<Badge key={word} className="bg-blue-100 text-blue-800">
+							{word}
+						</Badge>
 					))}
 				</div>
 			</div>
@@ -74,7 +95,12 @@ function LearningTipsSection({ tips }: { tips: LearningTips }) {
 				<h4 className="mb-2 font-semibold">비슷한 발음의 단어</h4>
 				<div className="flex flex-wrap gap-2">
 					{tips.rhymingWords.map((word) => (
-						<Badge key={word} className="border border-gray-200 bg-white text-gray-800">{word}</Badge>
+						<Badge
+							key={word}
+							className="border border-gray-200 bg-white text-gray-800"
+						>
+							{word}
+						</Badge>
 					))}
 				</div>
 			</div>
@@ -95,14 +121,14 @@ function QuoteCard({ text }: { text: string }) {
 	);
 }
 
-function DefinitionSection({ 
-	word, 
-	definition, 
-	simplifiedDefinition, 
-	examples, 
+function DefinitionSection({
+	word,
+	definition,
+	simplifiedDefinition,
+	examples,
 	isOpen,
-	onOpenChange
-}: { 
+	onOpenChange,
+}: {
 	word: string;
 	definition: string;
 	simplifiedDefinition: string;
@@ -110,7 +136,10 @@ function DefinitionSection({
 	isOpen: boolean;
 	onOpenChange: (open: boolean) => void;
 }) {
-	const exampleList = examples?.replace(/[\[\]"]/g, '').split(',').map(example => example.trim());
+	const exampleList = examples
+		?.replace(/[\[\]"]/g, '')
+		.split(',')
+		.map((example) => example.trim());
 
 	return (
 		<div className="space-y-4">
@@ -121,7 +150,9 @@ function DefinitionSection({
 							<CardTitle className="text-lg">쉽게 풀어보는 "{word}"</CardTitle>
 							<CollapsibleTrigger asChild>
 								<Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-									<ChevronDown className={`h-4 w-4 transition-transform duration-200 ${isOpen ? "" : "-rotate-90"}`} />
+									<ChevronDown
+										className={`h-4 w-4 transition-transform duration-200 ${isOpen ? '' : '-rotate-90'}`}
+									/>
 								</Button>
 							</CollapsibleTrigger>
 						</div>
@@ -140,9 +171,9 @@ function DefinitionSection({
 								<h4 className="mb-2 font-semibold">이렇게 사용해요!</h4>
 								<div className="space-y-2">
 									{exampleList?.map((example, index) => (
-										<div 
+										<div
 											// biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
-											key={index} 
+											key={index}
 											className="rounded-lg bg-amber-50 p-4"
 										>
 											<p className="text-orange-700">{example}</p>
@@ -189,7 +220,7 @@ export function VocabularyModal({
 	const { speak } = useTextToSpeech();
 	const [isWritingMode, setIsWritingMode] = useState(false);
 	const toastTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-	
+
 	if (!vocabularyList.length) return null;
 
 	const currentVocabulary = vocabularyList[currentIndex];
@@ -197,14 +228,18 @@ export function VocabularyModal({
 		? JSON.parse(currentVocabulary.phonemeAnalysisJson)
 		: null;
 
-    console.log({ phonemeAnalysis, currentVocabulary });
+	console.log({ phonemeAnalysis, currentVocabulary });
 
 	const handlePrevious = () => {
-		setCurrentIndex((prev) => (prev > 0 ? prev - 1 : vocabularyList.length - 1));
+		setCurrentIndex((prev) =>
+			prev > 0 ? prev - 1 : vocabularyList.length - 1,
+		);
 	};
 
 	const handleNext = () => {
-		setCurrentIndex((prev) => (prev < vocabularyList.length - 1 ? prev + 1 : 0));
+		setCurrentIndex((prev) =>
+			prev < vocabularyList.length - 1 ? prev + 1 : 0,
+		);
 	};
 
 	const handleWritingStart = () => {
@@ -227,22 +262,22 @@ export function VocabularyModal({
 		}, 1000);
 	};
 
-	if (!phonemeAnalysis || (typeof phonemeAnalysis === 'object' && 'error' in phonemeAnalysis)) {
+	if (
+		!phonemeAnalysis ||
+		(typeof phonemeAnalysis === 'object' && 'error' in phonemeAnalysis)
+	) {
 		showDebouncedToast();
 		return null;
 	}
 
 	return (
-		<Dialog
-      open={isOpen}
-      onOpenChange={onClose}
-    >
-			<DialogContent 
-        className={cn([
-          'max-w-screen-xl h-[95vh] max-h-[95vh] w-[95vw]',
-          'gap-0'
-        ])}
-      >
+		<Dialog open={isOpen} onOpenChange={onClose}>
+			<DialogContent
+				className={cn([
+					'max-w-screen-xl h-[95vh] max-h-[95vh] w-[95vw]',
+					'gap-0',
+				])}
+			>
 				<DialogHeader className="pb-0">
 					<DialogTitle className="flex items-center justify-between">
 						<div className="flex items-center gap-4">
@@ -280,10 +315,10 @@ export function VocabularyModal({
 				</div>
 
 				<DialogFooter className="w-full pt-6">
-					<Button 
-						variant="default" 
+					<Button
+						variant="default"
 						size="xl"
-						onClick={onClose} 
+						onClick={onClose}
 						className="w-full text-[18px] h-[52px]"
 					>
 						{isWritingMode ? '연습 종료하기' : '그만볼게요'}

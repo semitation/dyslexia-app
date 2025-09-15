@@ -1,6 +1,6 @@
-import type { PageImageResponse } from '../model/types';
 import { Typography } from '@/shared/ui';
 import type React from 'react';
+import type { PageImageResponse } from '../model/types';
 
 interface PageImagesProps {
 	images: PageImageResponse[];

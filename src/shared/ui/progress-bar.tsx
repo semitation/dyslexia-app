@@ -1,6 +1,6 @@
-import * as React from "react"
-import * as ProgressPrimitive from "@radix-ui/react-progress"
-import { cn } from "@/lib/utils"
+import { cn } from '@/lib/utils';
+import * as ProgressPrimitive from '@radix-ui/react-progress';
+import * as React from 'react';
 
 interface ProgressBarProps {
 	progress: number;
@@ -19,8 +19,8 @@ export const ProgressBar = React.forwardRef<
 	<ProgressPrimitive.Root
 		ref={ref}
 		className={cn(
-			"relative h-2 w-full overflow-hidden rounded-full bg-gray-200",
-			className
+			'relative h-2 w-full overflow-hidden rounded-full bg-gray-200',
+			className,
 		)}
 		{...props}
 	>
@@ -29,8 +29,8 @@ export const ProgressBar = React.forwardRef<
 			style={{ transform: `translateX(-${100 - progress}%)` }}
 		/>
 	</ProgressPrimitive.Root>
-))
-ProgressBar.displayName = "ProgressBar"
+));
+ProgressBar.displayName = 'ProgressBar';
 
 export function LabeledProgressBar({
 	label,

@@ -1,10 +1,10 @@
+import { axiosClient } from '@/shared/api/axios';
 import type {
 	Document,
 	PageContentResponse,
-	PageTipResponse,
 	PageImageResponse,
+	PageTipResponse,
 } from '../model/types';
-import { axiosClient } from '@/shared/api/axios';
 
 export const viewerApi = {
 	getDocument: async (documentId: number): Promise<Document> => {

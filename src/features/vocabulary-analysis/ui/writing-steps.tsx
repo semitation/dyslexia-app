@@ -33,7 +33,7 @@ export function WritingSteps({ steps }: WritingStepsProps) {
 		<div className="space-y-6">
 			<ul className="space-y-4">
 				{steps.map((step) => (
-					<li 
+					<li
 						key={`${step.syllable}-${step.phoneme}-${step.step}`}
 						className="flex items-center gap-4 border-b pb-4 last:border-b-0"
 					>
@@ -48,12 +48,21 @@ export function WritingSteps({ steps }: WritingStepsProps) {
 								</span>
 							</div>
 							<div className="flex items-center gap-2">
-								<Badge variant="white" className="text-xs border border-gray-200">
-									{step.phoneme === 'ㅏ' || step.phoneme === 'ㅜ' || step.phoneme === 'ㅕ' ? '모음' : '자음'}
+								<Badge
+									variant="white"
+									className="text-xs border border-gray-200"
+								>
+									{step.phoneme === 'ㅏ' ||
+									step.phoneme === 'ㅜ' ||
+									step.phoneme === 'ㅕ'
+										? '모음'
+										: '자음'}
 								</Badge>
 								<span className="text-sm text-muted-foreground">
-									{step.phoneme === 'ㅏ' || step.phoneme === 'ㅜ' || step.phoneme === 'ㅕ' 
-										? '세로선 먼저, 가로선 나중에' 
+									{step.phoneme === 'ㅏ' ||
+									step.phoneme === 'ㅜ' ||
+									step.phoneme === 'ㅕ'
+										? '세로선 먼저, 가로선 나중에'
 										: '획순을 지켜서 써주세요'}
 								</span>
 							</div>
@@ -63,4 +72,4 @@ export function WritingSteps({ steps }: WritingStepsProps) {
 			</ul>
 		</div>
 	);
-} 
+}

@@ -1,8 +1,8 @@
-import type React from 'react';
-import { useRef, useEffect, useState, forwardRef, useCallback } from 'react';
+import { cn } from '@/lib/utils';
 import { Button } from '@/shared/ui/button';
 import { Eraser } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import type React from 'react';
+import { forwardRef, useCallback, useEffect, useRef, useState } from 'react';
 
 interface WritingCanvasProps extends React.HTMLAttributes<HTMLCanvasElement> {
 	height?: number;
@@ -14,7 +14,19 @@ interface WritingCanvasProps extends React.HTMLAttributes<HTMLCanvasElement> {
 }
 
 export const WritingCanvas = forwardRef<HTMLCanvasElement, WritingCanvasProps>(
-	({ className, height = 300, width, onSave, initialImage, guideText, guideTextScale = 1, ...props }, ref) => {
+	(
+		{
+			className,
+			height = 300,
+			width,
+			onSave,
+			initialImage,
+			guideText,
+			guideTextScale = 1,
+			...props
+		},
+		ref,
+	) => {
 		const canvasRef = useRef<HTMLCanvasElement | null>(null);
 		const guideCanvasRef = useRef<HTMLCanvasElement | null>(null);
 		const contextRef = useRef<CanvasRenderingContext2D | null>(null);
@@ -22,7 +34,11 @@ export const WritingCanvas = forwardRef<HTMLCanvasElement, WritingCanvasProps>(
 		const containerRef = useRef<HTMLDivElement>(null);
 		const [isDrawing, setIsDrawing] = useState(false);
 		const [containerWidth, setContainerWidth] = useState(0);
-		const lastPointRef = useRef<{ x: number; y: number; pressure: number } | null>(null);
+		const lastPointRef = useRef<{
+			x: number;
+			y: number;
+			pressure: number;
+		} | null>(null);
 		const pointsRef = useRef<{ x: number; y: number; pressure: number }[]>([]);
 		const saveTimeoutRef = useRef<number | null>(null);
 
@@ -57,25 +73,28 @@ export const WritingCanvas = forwardRef<HTMLCanvasElement, WritingCanvasProps>(
 
 			// 캔버스 초기화
 			guideContext.clearRect(0, 0, containerWidth, height);
-			
+
 			if (guideText) {
 				// 가이드 텍스트 스타일 설정
 				guideContext.fillStyle = '#64748b';
 				guideContext.globalAlpha = 0.3;
-				
+
 				// 텍스트 크기 조정
-				const fontSize = Math.min(height * 0.8, containerWidth * 0.8) * guideTextScale;
+				const fontSize =
+					Math.min(height * 0.8, containerWidth * 0.8) * guideTextScale;
 				guideContext.font = `${fontSize}px "Noto Sans KR"`;
 				guideContext.textAlign = 'center';
 				guideContext.textBaseline = 'middle';
-				
+
 				// 텍스트 렌더링
 				guideContext.fillText(guideText, containerWidth / 2, height / 2);
 			}
 		}, [guideText, containerWidth, height, guideTextScale]);
 
 		useEffect(() => {
-			const canvas = ref ? (ref as React.RefObject<HTMLCanvasElement>).current : canvasRef.current;
+			const canvas = ref
+				? (ref as React.RefObject<HTMLCanvasElement>).current
+				: canvasRef.current;
 			const guideCanvas = guideCanvasRef.current;
 			if (!canvas || !guideCanvas || containerWidth === 0) return;
 
@@ -133,7 +152,9 @@ export const WritingCanvas = forwardRef<HTMLCanvasElement, WritingCanvasProps>(
 			return minWidth + (maxWidth - minWidth) * pressure;
 		};
 
-		const drawPoints = (points: { x: number; y: number; pressure: number }[]) => {
+		const drawPoints = (
+			points: { x: number; y: number; pressure: number }[],
+		) => {
 			const context = contextRef.current;
 			if (!context || points.length < 2) return;
 
@@ -251,16 +272,16 @@ export const WritingCanvas = forwardRef<HTMLCanvasElement, WritingCanvasProps>(
 		}, [initialImage]);
 
 		return (
-			<div 
-				className="flex flex-col gap-4" 
+			<div
+				className="flex flex-col gap-4"
 				ref={containerRef}
 				style={width ? { width: `${width}px` } : undefined}
 			>
-				<div 
+				<div
 					className="relative rounded-lg border-2 border-dyslexia-blue shadow-sm w-full overflow-hidden"
-					style={{ 
+					style={{
 						height: `${height}px`,
-						padding: '2px'
+						padding: '2px',
 					}}
 				>
 					<canvas

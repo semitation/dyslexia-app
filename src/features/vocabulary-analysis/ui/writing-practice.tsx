@@ -1,14 +1,14 @@
-import { useEffect, useState, useRef } from 'react';
 import type { PhonemeAnalysis } from '@/shared/api/types';
+import { Show, Typography } from '@/shared/ui';
 import { Button } from '@/shared/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card';
 import { ProgressBar } from '@/shared/ui/progress-bar';
 import { SoundButton } from '@/shared/ui/sound-button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { useWritingStore } from '../model/writing-store';
 import { WritingComponent } from './writing-component';
-import { Show, Typography } from '@/shared/ui';
 
 interface WritingPracticeProps {
 	word: string;
@@ -17,13 +17,18 @@ interface WritingPracticeProps {
 	onSpeak: (text: string) => void;
 }
 
-export function WritingPractice({ word, phonemeAnalysis, onBack, onSpeak }: WritingPracticeProps) {
+export function WritingPractice({
+	word,
+	phonemeAnalysis,
+	onBack,
+	onSpeak,
+}: WritingPracticeProps) {
 	const {
 		writingData,
 		currentSyllableIndex,
 		setWritingData,
 		setCurrentSyllable,
-		reset
+		reset,
 	} = useWritingStore();
 
 	const [showResult, setShowResult] = useState(false);
@@ -39,13 +44,16 @@ export function WritingPractice({ word, phonemeAnalysis, onBack, onSpeak }: Writ
 		syllabelLength: phonemeAnalysis.syllables.length,
 	});
 
-	const handleSave = (component: 'initial' | 'medial' | 'final' | 'syllable', imageData: string) => {
+	const handleSave = (
+		component: 'initial' | 'medial' | 'final' | 'syllable',
+		imageData: string,
+	) => {
 		const prev = writingData[currentSyllableIndex] || {};
 		setWritingData(currentSyllableIndex, { ...prev, [component]: imageData });
-		
+
 		const currentData = { ...prev, [component]: imageData };
 		const requiredComponents: ('initial' | 'medial' | 'final')[] = [];
-		
+
 		if (syllable.components.initial?.consonant) {
 			requiredComponents.push('initial');
 		}
@@ -56,9 +64,10 @@ export function WritingPractice({ word, phonemeAnalysis, onBack, onSpeak }: Writ
 			requiredComponents.push('final');
 		}
 
-		// TODO: 이거 나중에 활용해요.  
-		const isAllComponentsWritten = requiredComponents.length > 0 && 
-			requiredComponents.every(comp => currentData[comp]);
+		// TODO: 이거 나중에 활용해요.
+		const isAllComponentsWritten =
+			requiredComponents.length > 0 &&
+			requiredComponents.every((comp) => currentData[comp]);
 	};
 
 	const moveToNextSyllable = () => {
@@ -66,13 +75,10 @@ export function WritingPractice({ word, phonemeAnalysis, onBack, onSpeak }: Writ
 			if (currentSyllableIndex === phonemeAnalysis.syllables.length - 1) {
 				// 마지막 음절에서 다음을 누르면 결과 화면 표시
 				setShowResult(true);
-				toast.success(
-					`정말 잘했어요! '${word}' 쓰기를 완성했어요!`,
-					{
-						duration: 2000,
-						position: 'top-center',
-					}
-				);
+				toast.success(`정말 잘했어요! '${word}' 쓰기를 완성했어요!`, {
+					duration: 2000,
+					position: 'top-center',
+				});
 			} else {
 				setCurrentSyllable(currentSyllableIndex + 1);
 			}
@@ -85,7 +91,8 @@ export function WritingPractice({ word, phonemeAnalysis, onBack, onSpeak }: Writ
 		}
 	};
 
-	const progress = ((currentSyllableIndex + 1) / phonemeAnalysis.syllables.length) * 100;
+	const progress =
+		((currentSyllableIndex + 1) / phonemeAnalysis.syllables.length) * 100;
 
 	if (!syllable && !showResult) return null;
 
@@ -109,33 +116,78 @@ export function WritingPractice({ word, phonemeAnalysis, onBack, onSpeak }: Writ
 										<div className="grid grid-cols-3 gap-2">
 											{data.initial && (
 												<div>
-													<Typography variant="p" className="text-sm text-muted-foreground mb-1">초성</Typography>
-													<img src={data.initial} alt="초성" className="border rounded" />
+													<Typography
+														variant="p"
+														className="text-sm text-muted-foreground mb-1"
+													>
+														초성
+													</Typography>
+													<img
+														src={data.initial}
+														alt="초성"
+														className="border rounded"
+													/>
 												</div>
 											)}
 											{data.medial && (
 												<div>
-													<Typography variant="p" className="text-sm text-muted-foreground mb-1">중성</Typography>
-													<img src={data.medial} alt="중성" className="border rounded" />
+													<Typography
+														variant="p"
+														className="text-sm text-muted-foreground mb-1"
+													>
+														중성
+													</Typography>
+													<img
+														src={data.medial}
+														alt="중성"
+														className="border rounded"
+													/>
 												</div>
 											)}
 											{data.final && (
 												<div>
-													<Typography variant="p" className="text-sm text-muted-foreground mb-1">종성</Typography>
-													<img src={data.final} alt="종성" className="border rounded" />
+													<Typography
+														variant="p"
+														className="text-sm text-muted-foreground mb-1"
+													>
+														종성
+													</Typography>
+													<img
+														src={data.final}
+														alt="종성"
+														className="border rounded"
+													/>
 												</div>
 											)}
 										</div>
 										{data.syllable && (
 											<div>
-												<Typography variant="p" className="text-sm text-muted-foreground mb-1">음절</Typography>
-												<img src={data.syllable} alt="음절" className="border rounded" />
+												<Typography
+													variant="p"
+													className="text-sm text-muted-foreground mb-1"
+												>
+													음절
+												</Typography>
+												<img
+													src={data.syllable}
+													alt="음절"
+													className="border rounded"
+												/>
 											</div>
 										)}
 										{data.word && (
 											<div>
-												<Typography variant="p" className="text-sm text-muted-foreground mb-1">단어</Typography>
-												<img src={data.word} alt="단어" className="border rounded" />
+												<Typography
+													variant="p"
+													className="text-sm text-muted-foreground mb-1"
+												>
+													단어
+												</Typography>
+												<img
+													src={data.word}
+													alt="단어"
+													className="border rounded"
+												/>
 											</div>
 										)}
 									</CardContent>
@@ -146,11 +198,7 @@ export function WritingPractice({ word, phonemeAnalysis, onBack, onSpeak }: Writ
 				</div>
 
 				<div className="mt-6">
-					<Button 
-						className="w-full" 
-						size="xl" 
-						onClick={onBack}
-					>
+					<Button className="w-full" size="xl" onClick={onBack}>
 						어휘 분석으로 돌아가기
 					</Button>
 				</div>
@@ -229,19 +277,19 @@ export function WritingPractice({ word, phonemeAnalysis, onBack, onSpeak }: Writ
 				</div>
 
 				{currentSyllableIndex !== phonemeAnalysis.syllables.length && (
-        <section className="w-full flex flex-col gap-y-4 items-center">
-				<WritingComponent
-					key={`syllable-${currentSyllableIndex}`}
-					title="한번에 써보기"
-					description={`${syllable.syllable}를 한 번에 써보세요`}
-					width={400}
-					height={280}
-					onSave={(imageData) => handleSave('syllable', imageData)}
-					initialImage={writingData[currentSyllableIndex]?.syllable}
-					guideText={syllable.syllable}
-				/>
-			</section>			
-			)}
+					<section className="w-full flex flex-col gap-y-4 items-center">
+						<WritingComponent
+							key={`syllable-${currentSyllableIndex}`}
+							title="한번에 써보기"
+							description={`${syllable.syllable}를 한 번에 써보세요`}
+							width={400}
+							height={280}
+							onSave={(imageData) => handleSave('syllable', imageData)}
+							initialImage={writingData[currentSyllableIndex]?.syllable}
+							guideText={syllable.syllable}
+						/>
+					</section>
+				)}
 				{currentSyllableIndex === phonemeAnalysis.syllables.length - 1 && (
 					<section className="w-full flex flex-col gap-y-4 items-center pt-8 border-t">
 						<WritingComponent
@@ -281,4 +329,4 @@ export function WritingPractice({ word, phonemeAnalysis, onBack, onSpeak }: Writ
 			</div>
 		</div>
 	);
-} 
+}

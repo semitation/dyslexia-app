@@ -1,11 +1,11 @@
+import { cn } from '@/lib/utils';
+import { Button } from '@/shared/ui/button';
+import { Eraser } from 'lucide-react';
 import React, { useRef } from 'react';
 import {
 	ReactSketchCanvas,
 	type ReactSketchCanvasRef,
 } from 'react-sketch-canvas';
-import { Button } from '@/shared/ui/button';
-import { Eraser } from 'lucide-react';
-import { cn } from '@/lib/utils';
 
 interface WritingCanvasSketchProps {
 	height?: number;
@@ -36,7 +36,9 @@ export const WritingCanvasSketch = React.forwardRef<
 		ref,
 	) => {
 		const canvasRef = useRef<ReactSketchCanvasRef>(null);
-		const [backgroundImage, setBackgroundImage] = React.useState<string | undefined>(undefined);
+		const [backgroundImage, setBackgroundImage] = React.useState<
+			string | undefined
+		>(undefined);
 
 		const handleClear = () => {
 			canvasRef.current?.clearCanvas();
