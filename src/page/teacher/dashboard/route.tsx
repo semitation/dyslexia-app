@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
+import { useQuery } from '@tanstack/react-query';
 import clsx from 'clsx';
 import {
 	BarChart3,
@@ -18,7 +19,7 @@ import {
 	UserPlus,
 	Users,
 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import StudentInviteModal from './invite-modal';
 
 interface Student {
@@ -44,11 +45,44 @@ export const Route = createFileRoute('/teacher/dashboard')({
 	component: GuardianDashboardPage,
 });
 
+async function fetchStudents(): Promise<Student[]> {
+	const token = localStorage.getItem('accessToken');
+	if (!token) {
+		throw new Error('토큰이 없습니다');
+	}
+
+	const res = await fetch(
+		`${import.meta.env.VITE_API_BASE_URL}/guardian/students`,
+		{
+			headers: {
+				Authorization: `Bearer ${token}`,
+				'Content-Type': 'application/json',
+			},
+		},
+	);
+
+	if (!res.ok) {
+		throw new Error(`API 오류: ${res.status}`);
+	}
+
+	const json = await res.json();
+	return json.result || [];
+}
+
 function GuardianDashboardPage() {
 	const navigate = useNavigate();
 	const { toast } = useToast();
 
-	const [students, setStudents] = useState<Student[]>([]);
+	const {
+		data: students = [],
+		error,
+		isLoading,
+	} = useQuery({
+		queryKey: ['guardian-students'],
+		queryFn: fetchStudents,
+		retry: 0, // 재시도 하지 않음
+		refetchOnWindowFocus: false, // 윈도우 포커스 시 재요청 방지
+	});
 	const [recentActivities] = useState([
 		{
 			id: 1,
@@ -96,29 +130,10 @@ function GuardianDashboardPage() {
 		name: string;
 	} | null>(null);
 
-	useEffect(() => {
-		async function fetchStudents() {
-			const token = localStorage.getItem('accessToken');
-			if (!token) return;
-
-			try {
-				const res = await fetch(
-					`${import.meta.env.VITE_API_BASE_URL}/guardian/students`,
-					{
-						headers: {
-							Authorization: `Bearer ${token}`,
-							'Content-Type': 'application/json',
-						},
-					},
-				);
-				const json = await res.json();
-				setStudents(json.result);
-			} catch (e) {
-				console.error(e);
-			}
-		}
-		fetchStudents();
-	}, []);
+	// 에러가 발생한 경우 콘솔에 로그 출력
+	if (error) {
+		console.error('학생 목록 조회 오류:', error);
+	}
 
 	const handlePraiseStudent = (id: number, name: string) => {
 		setSelectedStudent({ id, name });
@@ -254,7 +269,13 @@ function GuardianDashboardPage() {
 								</Button>
 							</CardHeader>
 							<CardContent className="space-y-6">
-								{students.length === 0 ? (
+								{isLoading ? (
+									<p className="text-sm text-gray-500">로딩 중...</p>
+								) : error ? (
+									<p className="text-sm text-red-500">
+										학생 목록을 불러올 수 없습니다
+									</p>
+								) : students.length === 0 ? (
 									<p className="text-sm text-gray-500">
 										연결된 학생이 없습니다
 									</p>

@@ -13,13 +13,20 @@ interface KakaoSearch {
 	code?: string;
 }
 
-interface AuthResponse {
+interface AuthResult {
 	registered: boolean;
 	clientId: string;
 	nickname: string;
 	userType: 'STUDENT' | 'TEACHER' | 'GUARDIAN' | 'UNREGISTERED';
 	accessToken?: string;
 	refreshToken?: string;
+}
+
+interface AuthResponse {
+	timestamp: string;
+	code: number;
+	message: string;
+	result: AuthResult;
 }
 
 export const Route = createFileRoute('/kakao')({
@@ -49,13 +56,16 @@ function KakaoCallback() {
 					throw new Error('인증 코드가 없습니다.');
 				}
 
-				const data = (await axiosClient.get('/kakao/callback', {
+				const response = (await axiosClient.get('/kakao/callback', {
 					params: {
 						code,
 					},
 				})) as unknown as AuthResponse;
 
-				console.log('카카오 콜백 응답:', data);
+				console.log('카카오 콜백 전체 응답:', response);
+
+				const data = response.result;
+				console.log('카카오 콜백 결과:', data);
 
 				if (data.registered) {
 					// 이미 가입된 사용자
