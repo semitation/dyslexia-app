@@ -1,4 +1,4 @@
-import { ContentManagePage } from '@/page/teacher';
+import ContentManagePage from '@/page/teacher/content';
 import { createFileRoute } from '@tanstack/react-router';
 
 export const Route = createFileRoute('/teacher/content')({
@@ -6,9 +6,5 @@ export const Route = createFileRoute('/teacher/content')({
 });
 
 function RouteComponent() {
-	return (
-		<div>
-			<ContentManagePage />
-		</div>
-	);
+	return <ContentManagePage />;
 }

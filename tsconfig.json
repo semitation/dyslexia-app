@@ -7,8 +7,8 @@
       "@hooks/*": ["src/shared/hooks/*"],
       "@lib/*": ["src/shared/lib/*"],
       "@features/*": ["src/features/*"],
-      "@page/*": ["src/page/*"],
-    },
+      "@page/*": ["src/page/*"]
+    }
   },
   "files": [],
   "references": [

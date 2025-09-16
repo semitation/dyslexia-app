@@ -15,10 +15,9 @@
     ],
     "rules": {
       "recommended": true,
-      "complexity":{
+      "complexity": {
         "noStaticOnlyClass": "off"
       }
-        
     }
   },
   "formatter": {
@@ -65,7 +64,14 @@
       "./tsconfig.json",
       "./vite.config.ts"
     ],
-    "ignore": ["node_modules", "**/node_modules/**", "dist", "bin", "vite.config.ts", "route-tree.gen.ts"],
+    "ignore": [
+      "node_modules",
+      "**/node_modules/**",
+      "dist",
+      "bin",
+      "vite.config.ts",
+      "route-tree.gen.ts"
+    ],
     "ignoreUnknown": true
   }
 }
