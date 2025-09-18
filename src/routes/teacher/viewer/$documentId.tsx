@@ -15,7 +15,9 @@ import {
 } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
 import { viewerApi } from '@/features/viewer/api/viewer-api';
-import { ProcessedContent } from '@/features/viewer/ui/processed-content';
+import { guardianTextbookApi } from '@/features/textbooks/api/guardian-textbook-api';
+import { DocumentRenderer } from '@/features/viewer/ui/document-renderer';
+import { PageTips } from '@/features/viewer/ui/page-tips';
 import { useQuery } from '@tanstack/react-query';
 import { createFileRoute } from '@tanstack/react-router';
 import {
@@ -49,11 +51,10 @@ const bgMap = {
 } as const satisfies Record<string, string>;
 
 export default function DocumentViewerPage() {
-	const { documentId } = Route.useParams();
-	const docId = Number.parseInt(documentId ?? '', 10);
-	const totalPages = 20;
+    const { documentId } = Route.useParams();
+    const docId = Number.parseInt(documentId ?? '', 10);
 
-	const [currentPage, setCurrentPage] = useState(1);
+    const [currentPage, setCurrentPage] = useState(1);
 	const [fontSize, setFontSize] = useState([18]);
 	const [lineSpacing, setLineSpacing] = useState([1.6]);
 	const [letterSpacing, setLetterSpacing] = useState([0.05]);
@@ -68,27 +69,45 @@ export default function DocumentViewerPage() {
 	const [readingFocusMode, setReadingFocusMode] = useState(false);
 	const [showPageList, setShowPageList] = useState(false);
 
-	const { data: pages = [] } = useQuery({
-		queryKey: ['document', docId, 'page-content', currentPage],
-		queryFn: () => viewerApi.getPageContent(docId, currentPage),
-		enabled: !!docId,
-	});
+    // Current page content
+    const { data: pages = [], isLoading: isLoadingPage } = useQuery({
+        queryKey: ['document', docId, 'page-content', currentPage],
+        queryFn: () => viewerApi.getPageContent(docId, currentPage),
+        enabled: !!docId,
+    });
+		console.log({ pages });
 
-	const page = pages[0];
+    const page = pages[0];
 
-	const handleTTS = () => {
-		if (!page?.processedContent) return;
-		if (isReading) {
-			speechSynthesis.cancel();
-			setIsReading(false);
-			return;
-		}
-		const blocks = page.processedContent.filter((b) => 'text' in b) as {
-			text: string;
-		}[];
-		const utterance = new SpeechSynthesisUtterance(
-			blocks.map((b) => b.text).join('\n'),
-		);
+    // Page tips for current page (special handling of PAGE_TIP)
+    const { data: tips = [], isLoading: isLoadingTips } = useQuery({
+        queryKey: ['document', docId, 'page', page?.id, 'tips'],
+        queryFn: () => viewerApi.getPageTips(page!.id),
+        enabled: !!docId && !!page?.id,
+        staleTime: 60_000,
+    });
+
+    // Fetch textbook metadata to determine total page count (single API, no page-less pages fetch)
+    const { data: textbooks = [], isLoading: isLoadingTextbooks } = useQuery({
+        queryKey: ['guardian', 'textbooks'],
+        queryFn: () => guardianTextbookApi.listMyTextbooks(),
+        staleTime: 60_000,
+    });
+    const totalPages = (textbooks.find((t) => t.id === docId)?.pageCount ?? 0) || 0;
+
+    const handleTTS = () => {
+        if (!page?.processedContent?.blocks) return;
+        if (isReading) {
+            speechSynthesis.cancel();
+            setIsReading(false);
+            return;
+        }
+        const blocks = page.processedContent.blocks.filter((b) => 'text' in b) as {
+            text: string;
+        }[];
+        const utterance = new SpeechSynthesisUtterance(
+            blocks.map((b) => b.text).join('\n'),
+        );
 		utterance.rate = 0.8;
 		utterance.pitch = 1.1;
 		utterance.lang = 'ko-KR';
@@ -279,42 +298,49 @@ export default function DocumentViewerPage() {
 				</div>
 			</header>
 
-			<main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-				<Card
-					className={`relative shadow-lg ${fontMap[fontFamily]} ${bgMap[backgroundColor]}`}
-				>
-					<CardContent className="p-8">
-						{page ? (
-							<>
-								<div className="absolute top-4 right-4">
-									<Star className="w-8 h-8 text-yellow-400 fill-current animate-pulse" />
-								</div>
-								<div
-									className="grid md:grid-cols-2 gap-8"
-									style={{
-										fontSize: `${fontSize[0]}px`,
-										lineHeight: lineSpacing[0],
-										letterSpacing: `${letterSpacing[0]}em`,
-									}}
-								>
-									<ProcessedContent
-										blocks={page.processedContent}
-										fontSize={fontSize[0]}
-										fontFamily={fontFamily}
-										lineSpacing={lineSpacing[0]}
-										documentId={docId}
-										pageNumber={currentPage}
-									/>
-								</div>
-							</>
-						) : (
-							<div className="text-center text-gray-400 py-10">
-								페이지를 불러올 수 없습니다.
-							</div>
-						)}
-					</CardContent>
-				</Card>
-			</main>
+            <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+                <Card
+                    className={`relative shadow-lg ${fontMap[fontFamily]} ${bgMap[backgroundColor]}`}
+                >
+                    <CardContent className="p-8">
+                        {isLoadingPage || isLoadingTextbooks ? (
+                            <div className="text-center text-gray-400 py-10">
+                                불러오는 중...
+                            </div>
+                        ) : page ? (
+                            <>
+                                <div className="absolute top-4 right-4">
+                                    <Star className="w-8 h-8 text-yellow-400 fill-current animate-pulse" />
+                                </div>
+                                <div
+                                    className="grid gap-8"
+                                    style={{
+                                        fontSize: `${fontSize[0]}px`,
+                                        lineHeight: lineSpacing[0],
+                                        letterSpacing: `${letterSpacing[0]}em`,
+                                    }}
+                                >
+                                    <DocumentRenderer
+                                        blocks={page.processedContent?.blocks ?? []}
+                                        fontSize={fontSize[0]}
+                                        fontFamily={fontFamily}
+                                        lineSpacing={lineSpacing[0]}
+                                        documentId={docId}
+                                        pageNumber={currentPage}
+                                    />
+                                    {!isLoadingTips && tips?.length > 0 && (
+                                        <PageTips tips={tips} fontSize={fontSize[0]} />
+                                    )}
+                                </div>
+                            </>
+                        ) : (
+                            <div className="text-center text-gray-400 py-10">
+                                페이지를 불러올 수 없습니다.
+                            </div>
+                        )}
+                    </CardContent>
+                </Card>
+            </main>
 
 			<footer className="sticky bottom-0 z-50 bg-white/95 backdrop-blur-sm border-t border-gray-200 shadow-sm">
 				<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
@@ -326,32 +352,32 @@ export default function DocumentViewerPage() {
 					>
 						<ChevronLeft className="w-5 h-5 mr-2" /> 이전
 					</Button>
-					<div className="flex-1 mx-8">
-						<div className="flex items-center justify-between mb-2">
-							<span className="text-sm text-gray-600">읽기 진행률</span>
-							<span className="text-sm font-medium text-primary">
-								{Math.round((currentPage / totalPages) * 100)}%
-							</span>
-						</div>
-						<div className="w-full bg-gray-200 rounded-full h-3 relative overflow-hidden">
-							<div
-								className="bg-gradient-to-r from-primary to-primary/80 rounded-full h-3 transition-all duration-500 relative"
-								style={{ width: `${(currentPage / totalPages) * 100}%` }}
-							>
-								<div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer" />
-							</div>
-						</div>
-					</div>
-					<Button
-						variant="outline"
-						size="lg"
-						onClick={() => handlePageChange('next')}
-						disabled={currentPage >= totalPages}
-					>
-						다음 <ChevronRight className="w-5 h-5 ml-2" />
-					</Button>
-				</div>
-			</footer>
-		</div>
-	);
+                    <div className="flex-1 mx-8">
+                        <div className="flex items-center justify-between mb-2">
+                            <span className="text-sm text-gray-600">읽기 진행률</span>
+                            <span className="text-sm font-medium text-primary">
+                                {totalPages > 0 ? Math.round((currentPage / totalPages) * 100) : 0}%
+                            </span>
+                        </div>
+                        <div className="w-full bg-gray-200 rounded-full h-3 relative overflow-hidden">
+                            <div
+                                className="bg-gradient-to-r from-primary to-primary/80 rounded-full h-3 transition-all duration-500 relative"
+                                style={{ width: `${totalPages > 0 ? (currentPage / totalPages) * 100 : 0}%` }}
+                            >
+                                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer" />
+                            </div>
+                        </div>
+                    </div>
+                    <Button
+                        variant="outline"
+                        size="lg"
+                        onClick={() => handlePageChange('next')}
+                        disabled={totalPages === 0 || currentPage >= totalPages}
+                    >
+                        다음 <ChevronRight className="w-5 h-5 ml-2" />
+                    </Button>
+                </div>
+            </footer>
+        </div>
+    );
 }

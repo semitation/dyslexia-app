@@ -60,19 +60,27 @@ export interface Document {
 	subjectPath?: string;
 }
 
-export interface PageContentResponse {
-	id: number;
-	documentId: number;
-	pageNumber: number;
-	originalContent: string;
-	processedContent: Block[];
-	processingStatus: 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'FAILED';
-	sectionTitle: string;
-	readingLevel: number;
-	wordCount: number;
-	complexityScore: number;
-	createdAt: string;
-	updatedAt: string;
+export interface ProcessedContentDto {
+    blocks: Block[];
+    page_number?: number;
+    original_content?: string;
+}
+
+export interface PageContentDto {
+    id: number;
+    textbookId: number;
+    pageNumber: number;
+    originalContent: string;
+    processedContent: ProcessedContentDto;
+    processingStatus: 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'FAILED';
+    // Optional/extra fields possibly present from backend
+    sectionTitle?: string;
+    readingLevel?: number;
+    wordCount?: number;
+    complexityScore?: number;
+    blocks?: Block[];
+    createdAt: string | number[];
+    updatedAt: string | number[];
 }
 
 export interface PageTipResponse {

@@ -23,7 +23,7 @@ export const documentApi = {
 	uploadDocument: async (
 		formData: FormData,
 	): Promise<DocumentUploadResponse> => {
-		const { data } = await axiosClient.post<DocumentUploadResponse>(
+		const res = await axiosClient.post<DocumentUploadResponse>(
 			'/v1/documents',
 			formData,
 			{
@@ -32,13 +32,13 @@ export const documentApi = {
 				},
 			},
 		);
-		return data;
+		return res;
 	},
 
 	getDocumentStatus: async (jobId: string): Promise<DocumentStatusResponse> => {
-		const { data } = await axiosClient.get<DocumentStatusResponse>(
+		const res = await axiosClient.get<DocumentStatusResponse>(
 			`/v1/documents/${jobId}/status`,
 		);
-		return data;
+		return res;
 	},
 };

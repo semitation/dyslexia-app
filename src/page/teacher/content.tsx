@@ -15,74 +15,109 @@ import {
 	Trash2,
 	Upload,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { useDocumentStatus } from '@/features/document/hooks/use-document-upload';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { guardianTextbookApi } from '@/features/textbooks/api/guardian-textbook-api';
+import { useNavigate } from '@tanstack/react-router';
 
 interface Document {
-	id: number;
-	title: string;
-	uploadDate: string;
-	status: 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'FAILED';
-	assignedStudents: number;
-	totalPages: number;
-	grade: string;
-	thumbnailColor: string;
-	progress: number;
+    id: number;
+    title: string;
+    uploadDate: string;
+    status: 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'FAILED';
+    totalPages: number;
+    // Optional: only for locally-tracked uploading job
+    progress?: number;
 }
 
-const mockDocuments: Document[] = [
-	{
-		id: 1,
-		title: '초등 국어 3학년 1단원',
-		uploadDate: '2024-03-15',
-		status: 'COMPLETED',
-		assignedStudents: 3,
-		totalPages: 12,
-		grade: '3학년',
-		thumbnailColor: 'bg-blue-400',
-		progress: 100,
-	},
-	{
-		id: 2,
-		title: '수학 연산 워크북',
-		uploadDate: '2024-03-14',
-		status: 'PROCESSING',
-		assignedStudents: 0,
-		totalPages: 0,
-		grade: '미정',
-		thumbnailColor: 'bg-green-400',
-		progress: 65,
-	},
-	{
-		id: 3,
-		title: '과학 실험 가이드',
-		uploadDate: '2024-03-13',
-		status: 'FAILED',
-		assignedStudents: 0,
-		totalPages: 0,
-		grade: '미정',
-		thumbnailColor: 'bg-red-400',
-		progress: 0,
-	},
-];
-
 const ContentManagePage = () => {
-	const [documents, setDocuments] = useState<Document[]>(mockDocuments);
+    const queryClient = useQueryClient();
+    const navigate = useNavigate();
+    const [activeJobDoc, setActiveJobDoc] = useState<Document | null>(null);
+    const { data: textbooks = [], isLoading } = useQuery({
+        queryKey: ['guardian', 'textbooks'],
+        queryFn: () => guardianTextbookApi.listMyTextbooks(),
+        staleTime: 30_000,
+    });
 	const [searchTerm, setSearchTerm] = useState('');
 	const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
 	const { toast } = useToast();
 
-	const filteredDocuments = documents.filter((doc) =>
-		doc.title.toLowerCase().includes(searchTerm.toLowerCase()),
+	// 모달 외부에서도 진행률을 추적하기 위한 상태
+	const [activeJob, setActiveJob] = useState<{ jobId: string; fileName?: string } | null>(
+		null,
 	);
 
-	const handleUploadComplete = (newDocument: Document) => {
-		setDocuments((prev) => [newDocument, ...prev]);
-		toast({
-			title: '교안 변환 완료',
-			description:
-				'교안이 성공적으로 변환되었습니다. 이제 학생에게 배정할 수 있습니다.',
-		});
-	};
+	const { data: extStatus } = useDocumentStatus(
+		activeJob?.jobId || '',
+		!!activeJob?.jobId,
+	);
+
+	// 리스트 상에서 진행 중 항목을 위한 임시 문서 ID
+	const [activeJobDocId, setActiveJobDocId] = useState<number | null>(null);
+
+    useEffect(() => {
+        if (!extStatus) return;
+        if (activeJobDocId && activeJobDoc) {
+            setActiveJobDoc({
+                ...activeJobDoc,
+                title: extStatus.fileName || activeJobDoc.title,
+                status: extStatus.status as Document['status'],
+                progress: Math.max(0, Math.min(100, extStatus.progress ?? 0)),
+            });
+        }
+
+		if (extStatus.status === 'COMPLETED') {
+			toast({
+				title: '교안 변환 완료',
+				description: `${extStatus.fileName || activeJob?.fileName || '교안'} 변환이 완료되었습니다.`,
+			});
+            setActiveJob(null);
+            setActiveJobDocId(null);
+            setActiveJobDoc(null);
+            queryClient.invalidateQueries({ queryKey: ['guardian', 'textbooks'] }).catch(() => {});
+        }
+        if (extStatus.status === 'FAILED') {
+			toast({
+				title: '변환 실패',
+				description: extStatus.errorMessage || '교안 변환 중 오류가 발생했습니다.',
+				variant: 'destructive',
+			});
+            setActiveJob(null);
+            setActiveJobDocId(null);
+            setActiveJobDoc(null);
+        }
+    }, [extStatus, toast, activeJobDocId, activeJob, activeJobDoc, queryClient]);
+
+    const apiDocuments: Document[] = useMemo(
+        () =>
+            (textbooks || []).map((t) => ({
+                id: t.id,
+                title: t.title,
+                uploadDate: t.createdAt,
+                status: t.convertProcessStatus,
+                totalPages: t.pageCount ?? 0,
+            })),
+        [textbooks],
+    );
+
+    const combinedDocuments = useMemo(() => {
+        return activeJobDoc ? [activeJobDoc, ...apiDocuments] : apiDocuments;
+    }, [activeJobDoc, apiDocuments]);
+
+    const filteredDocuments = combinedDocuments.filter((doc) =>
+        doc.title.toLowerCase().includes(searchTerm.toLowerCase()),
+    );
+
+    const handleUploadComplete = (_newDocument: Document) => {
+        // After completion, the polling will refetch the list
+        toast({
+            title: '교안 변환 완료',
+            description:
+                '교안이 성공적으로 변환되었습니다. 이제 학생에게 배정할 수 있습니다.',
+        });
+    };
 
 	const getStatusBadge = (status: Document['status']) => {
 		switch (status) {
@@ -129,6 +164,21 @@ const ContentManagePage = () => {
 	return (
 		<div className="min-h-screen bg-gray-50 p-6">
 			<div className="max-w-7xl mx-auto">
+				{/* 업로드 진행 배너 */}
+				{activeJob && extStatus &&
+					(extStatus.status === 'PENDING' || extStatus.status === 'PROCESSING') && (
+						<div className="mb-4 rounded-lg border border-blue-200 bg-blue-50 p-4">
+							<div className="flex items-center justify-between">
+								<div className="text-sm text-blue-800">
+									<strong>{activeJob.fileName || '교안'}</strong> 변환 진행 중...
+								</div>
+								<div className="text-sm text-blue-700">{extStatus.progress}%</div>
+							</div>
+							<div className="mt-2">
+								<Progress value={extStatus.progress} className="h-2" />
+							</div>
+						</div>
+					)}
 				{/* 헤더 */}
 				<div className="mb-8">
 					<h1 className="text-3xl font-bold text-gray-900 mb-2">교안 보관함</h1>
@@ -165,34 +215,32 @@ const ContentManagePage = () => {
 				</div>
 
 				{/* 통계 카드 */}
-				<div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-					<Card>
-						<CardContent className="p-4">
-							<div className="flex items-center">
-								<FileText className="h-8 w-8 text-blue-500" />
-								<div className="ml-4">
-									<p className="text-sm font-medium text-gray-600">전체 교안</p>
-									<p className="text-2xl font-bold">{documents.length}</p>
-								</div>
-							</div>
-						</CardContent>
-					</Card>
-					<Card>
-						<CardContent className="p-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+                    <Card>
+                        <CardContent className="p-4">
+                            <div className="flex items-center">
+                                <FileText className="h-8 w-8 text-blue-500" />
+                                <div className="ml-4">
+                                    <p className="text-sm font-medium text-gray-600">전체 교안</p>
+                                    <p className="text-2xl font-bold">{combinedDocuments.length}</p>
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+                    <Card>
+                        <CardContent className="p-4">
 							<div className="flex items-center">
 								<div className="h-8 w-8 bg-green-100 rounded-full flex items-center justify-center">
 									<div className="h-4 w-4 bg-green-500 rounded-full"></div>
 								</div>
 								<div className="ml-4">
 									<p className="text-sm font-medium text-gray-600">변환 완료</p>
-									<p className="text-2xl font-bold">
-										{documents.filter((d) => d.status === 'COMPLETED').length}
-									</p>
-								</div>
-							</div>
-						</CardContent>
-					</Card>
-					<Card>
+                                    <p className="text-2xl font-bold">{combinedDocuments.filter((d) => d.status === 'COMPLETED').length}</p>
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+                    <Card>
 						<CardContent className="p-4">
 							<div className="flex items-center">
 								<div className="h-8 w-8 bg-blue-100 rounded-full flex items-center justify-center">
@@ -200,36 +248,12 @@ const ContentManagePage = () => {
 								</div>
 								<div className="ml-4">
 									<p className="text-sm font-medium text-gray-600">변환 중</p>
-									<p className="text-2xl font-bold">
-										{
-											documents.filter(
-												(d) =>
-													d.status === 'PROCESSING' || d.status === 'PENDING',
-											).length
-										}
-									</p>
-								</div>
-							</div>
-						</CardContent>
-					</Card>
-					<Card>
-						<CardContent className="p-4">
-							<div className="flex items-center">
-								<div className="h-8 w-8 bg-orange-100 rounded-full flex items-center justify-center">
-									<div className="h-4 w-4 bg-orange-500 rounded-full"></div>
-								</div>
-								<div className="ml-4">
-									<p className="text-sm font-medium text-gray-600">
-										배정된 학생
-									</p>
-									<p className="text-2xl font-bold">
-										{documents.reduce((sum, d) => sum + d.assignedStudents, 0)}
-									</p>
-								</div>
-							</div>
-						</CardContent>
-					</Card>
-				</div>
+                                    <p className="text-2xl font-bold">{combinedDocuments.filter((d) => d.status === 'PROCESSING' || d.status === 'PENDING').length}</p>
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+                </div>
 
 				{/* 교안 목록 */}
 				<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -244,35 +268,30 @@ const ContentManagePage = () => {
 										<h3 className="font-semibold text-gray-900 mb-1">
 											{document.title}
 										</h3>
-										<p className="text-sm text-gray-500 mb-2">
-											{new Date(document.uploadDate).toLocaleDateString()}
-										</p>
-										{getStatusBadge(document.status)}
-									</div>
-									<Button variant="ghost" size="sm">
-										<MoreVertical className="h-4 w-4" />
-									</Button>
-								</div>
-							</CardHeader>
-							<CardContent>
-								{/* 썸네일 */}
-								<div
-									className={`w-full h-32 ${document.thumbnailColor} rounded-lg mb-4 flex items-center justify-center`}
-								>
-									<FileText className="h-12 w-12 text-white" />
-								</div>
+                                <p className="text-sm text-gray-500 mb-2">{new Date(document.uploadDate).toLocaleDateString()}</p>
+                                {getStatusBadge(document.status)}
+                            </div>
+                            <Button variant="ghost" size="sm">
+                                <MoreVertical className="h-4 w-4" />
+                            </Button>
+                        </div>
+                    </CardHeader>
+                    <CardContent>
+                        {/* 썸네일 */}
+                        <div className={`w-full h-32 bg-slate-200 rounded-lg mb-4 flex items-center justify-center`}>
+                            <FileText className="h-12 w-12 text-white" />
+                        </div>
 
 								{/* 진행률 (변환 중일 때만) */}
-								{(document.status === 'PROCESSING' ||
-									document.status === 'PENDING') && (
-									<div className="mb-4">
-										<div className="flex justify-between text-sm text-gray-600 mb-2">
-											<span>변환 진행률</span>
-											<span>{document.progress}%</span>
-										</div>
-										<Progress value={document.progress} className="h-2" />
-									</div>
-								)}
+                        {document.progress !== undefined && (document.status === 'PROCESSING' || document.status === 'PENDING') && (
+                            <div className="mb-4">
+                                <div className="flex justify-between text-sm text-gray-600 mb-2">
+                                    <span>변환 진행률</span>
+                                    <span>{document.progress}%</span>
+                                </div>
+                                <Progress value={document.progress} className="h-2" />
+                            </div>
+                        )}
 
 								{/* 상태 메시지 */}
 								<p className="text-sm text-gray-600 mb-4">
@@ -280,28 +299,33 @@ const ContentManagePage = () => {
 								</p>
 
 								{/* 메타 정보 */}
-								<div className="flex justify-between text-sm text-gray-500 mb-4">
-									<span>{document.grade}</span>
-									<span>
-										{document.totalPages > 0
-											? `${document.totalPages}페이지`
-											: '-'}
-									</span>
-								</div>
+                        <div className="flex justify-end text-sm text-gray-500 mb-4">
+                            <span>{document.totalPages > 0 ? `${document.totalPages}페이지` : '-'}</span>
+                        </div>
 
 								{/* 액션 버튼 */}
-								<div className="flex gap-2">
-									{document.status === 'COMPLETED' && (
-										<>
-											<Button variant="outline" size="sm" className="flex-1">
-												<Eye className="h-4 w-4 mr-1" />
-												미리보기
-											</Button>
-											<Button variant="outline" size="sm">
-												<Download className="h-4 w-4" />
-											</Button>
-										</>
-									)}
+                                <div className="flex gap-2">
+                                    {document.status === 'COMPLETED' && (
+                                        <>
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                className="flex-1"
+                                                onClick={() =>
+                                                    navigate({
+                                                        to: '/teacher/viewer/$documentId',
+                                                        params: { documentId: String(document.id) },
+                                                    })
+                                                }
+                                            >
+                                                <Eye className="h-4 w-4 mr-1" />
+                                                미리보기
+                                            </Button>
+                                            <Button variant="outline" size="sm">
+                                                <Download className="h-4 w-4" />
+                                            </Button>
+                                        </>
+                                    )}
 									{document.status === 'FAILED' && (
 										<Button variant="outline" size="sm" className="flex-1">
 											다시 시도
@@ -313,17 +337,11 @@ const ContentManagePage = () => {
 								</div>
 
 								{/* 배정 정보 */}
-								{document.assignedStudents > 0 && (
-									<div className="mt-3 pt-3 border-t">
-										<p className="text-sm text-gray-600">
-											{document.assignedStudents}명의 학생에게 배정됨
-										</p>
-									</div>
-								)}
-							</CardContent>
-						</Card>
-					))}
-				</div>
+                        {/* 배정 정보: 현재 스키마에 없어 비표시 */}
+                    </CardContent>
+                </Card>
+            ))}
+        </div>
 
 				{/* 빈 상태 */}
 				{filteredDocuments.length === 0 && (
@@ -352,11 +370,24 @@ const ContentManagePage = () => {
 			</div>
 
 			{/* 업로드 모달 */}
-			<DocumentUploadModal
-				open={isUploadModalOpen}
-				onOpenChange={setIsUploadModalOpen}
-				onUploadComplete={handleUploadComplete}
-			/>
+				<DocumentUploadModal
+					open={isUploadModalOpen}
+					onOpenChange={setIsUploadModalOpen}
+					onUploadComplete={handleUploadComplete}
+                onJobStarted={(jobId, fileName) => {
+                    setActiveJob({ jobId, fileName });
+                    const tempId = Date.now();
+                    setActiveJobDocId(tempId);
+                    setActiveJobDoc({
+                        id: tempId,
+                        title: fileName || '새 교안',
+                        uploadDate: new Date().toISOString(),
+                        status: 'PROCESSING',
+                        totalPages: 0,
+                        progress: 0,
+                    });
+                }}
+            />
 		</div>
 	);
 };

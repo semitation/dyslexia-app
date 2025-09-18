@@ -97,7 +97,7 @@ const documentApi = {
 		teacherId: number,
 		formData: FormData,
 	): Promise<DocumentResponseDto> => {
-		const { data } = await axiosClient.post<DocumentResponseDto>(
+		const data = await axiosClient.post<DocumentResponseDto>(
 			'/documents/upload',
 			formData,
 			{
@@ -109,7 +109,7 @@ const documentApi = {
 				},
 			},
 		);
-		return data;
+		return data as unknown as DocumentResponseDto;
 	},
 
 	getTeacherDocuments: async (teacherId: number): Promise<Document[]> => {

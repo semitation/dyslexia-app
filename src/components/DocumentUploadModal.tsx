@@ -28,6 +28,8 @@ interface DocumentUploadModalProps {
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
 	onUploadComplete?: (documentData: unknown) => void;
+	onJobStarted?: (jobId: string, fileName?: string) => void;
+	allowCloseWhileProcessing?: boolean;
 }
 
 type UploadPhase = 'idle' | 'uploading' | 'processing' | 'completed' | 'failed';
@@ -44,6 +46,8 @@ const DocumentUploadModal = ({
 	open,
 	onOpenChange,
 	onUploadComplete,
+	onJobStarted,
+	allowCloseWhileProcessing = false,
 }: DocumentUploadModalProps) => {
 	const [file, setFile] = useState<File | null>(null);
 	const [isDragActive, setIsDragActive] = useState(false);
@@ -165,6 +169,11 @@ const DocumentUploadModal = ({
 				fileName: file.name,
 			});
 
+			// 상위에 작업 시작 이벤트 전달
+			if (response.jobId && onJobStarted) {
+				onJobStarted(response.jobId, file.name);
+			}
+
 			toast({
 				title: '업로드 시작',
 				description: response.message || '교안 변환이 시작되었습니다.',
@@ -250,11 +259,13 @@ const DocumentUploadModal = ({
 
 	// 모달 닫기 핸들러
 	const handleClose = useCallback(() => {
-		if (
-			uploadState.phase === 'uploading' ||
-			uploadState.phase === 'processing'
-		) {
-			return; // 진행 중일 때는 닫을 수 없음
+		if (!allowCloseWhileProcessing) {
+			if (
+				uploadState.phase === 'uploading' ||
+				uploadState.phase === 'processing'
+			) {
+				return; // 진행 중일 때는 닫을 수 없음
+			}
 		}
 
 		// 상태 초기화
@@ -264,7 +275,7 @@ const DocumentUploadModal = ({
 			progress: 0,
 		});
 		onOpenChange(false);
-	}, [uploadState.phase, onOpenChange]);
+	}, [uploadState.phase, onOpenChange, allowCloseWhileProcessing]);
 
 	// 파일 입력 클릭 핸들러
 	const handleFileInputClick = useCallback(() => {
@@ -281,14 +292,14 @@ const DocumentUploadModal = ({
 	}, []);
 
 	return (
-		<Dialog open={open} onOpenChange={handleClose}>
-			<DialogContent className="max-w-md">
-				<DialogHeader>
-					<DialogTitle className="flex items-center space-x-2">
-						<FileText className="w-5 h-5" />
-						<span>새 교안 업로드</span>
-					</DialogTitle>
-				</DialogHeader>
+    <Dialog open={open} onOpenChange={handleClose}>
+        <DialogContent className="max-w-md sm:max-w-lg max-h-[85vh] overflow-y-auto">
+            <DialogHeader>
+                <DialogTitle className="flex items-center space-x-2">
+                    <FileText className="w-5 h-5" />
+                    <span>새 교안 업로드</span>
+                </DialogTitle>
+            </DialogHeader>
 
 				{uploadState.phase === 'idle' ? (
 					<div className="space-y-6">

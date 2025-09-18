@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { TokenManager } from '@/shared/utils/token';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -11,9 +12,9 @@ export const axiosClient = axios.create({
 
 axiosClient.interceptors.request.use(
 	(config) => {
-		const token = localStorage.getItem('access_token');
+		const token = TokenManager.getAccessToken();
 		if (token) {
-			config.headers.Authorization = `${token}`;
+			config.headers.Authorization = `Bearer ${token}`;
 		}
 		return config;
 	},
@@ -34,19 +35,19 @@ axiosClient.interceptors.response.use(
 			originalRequest._retry = true;
 
 			try {
-				const refreshToken = localStorage.getItem('refreshToken');
+				const refreshToken = TokenManager.getRefreshToken();
 				const response = await axios.post(`${API_BASE_URL}/auth/refresh`, {
 					refreshToken,
 				});
 
-				const { accessToken } = response.data;
-				localStorage.setItem('accessToken', accessToken);
-
-				originalRequest.headers.Authorization = `Bearer ${accessToken}`;
+				const { accessToken, refreshToken: newRefreshToken } = response.data;
+				if (accessToken) {
+					TokenManager.setTokens(accessToken, newRefreshToken ?? refreshToken ?? '');
+					originalRequest.headers.Authorization = `Bearer ${accessToken}`;
+				}
 				return axiosClient(originalRequest);
 			} catch (refreshError) {
-				localStorage.removeItem('accessToken');
-				localStorage.removeItem('refreshToken');
+				TokenManager.removeTokens();
 				window.location.href = '/auth';
 				return Promise.reject(refreshError);
 			}

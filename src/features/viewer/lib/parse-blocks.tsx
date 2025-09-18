@@ -2,6 +2,7 @@ import { LongPressText } from '@/features/vocabulary-analysis';
 import { cn } from '@/lib/utils';
 import type { ReactNode } from 'react';
 import type { Block } from '../model/types';
+import { Lightbulb } from 'lucide-react';
 
 interface ParseBlocksOptions {
 	fontSize?: number;
@@ -149,7 +150,11 @@ export function parseBlocks(
 					<figure key={key} className="mb-8 mt-4 flex flex-col">
 						<div className="w-[420px] flex justify-center flex-col">
 							<img
-								src={`${import.meta.env.VITE_API_BASE_URL.replace('api', '')}api/pageImage/${block.url}`}
+								src={
+									/^https?:\/\//.test(block.url)
+										? block.url
+										: `${import.meta.env.VITE_API_BASE_URL.replace('api', '')}api/pageImage/${block.url}`
+								}
 								alt={block.alt}
 								style={{ width: '420px', height: 'auto' }}
 								className="rounded-md max-w-full h-auto"
@@ -209,7 +214,35 @@ export function parseBlocks(
 						</table>
 					</div>
 				);
-			// PAGE_TIP, PAGE_IMAGE는 뷰어에서 별도 처리
+			case 'PAGE_TIP':
+				return (
+					<div
+						key={key}
+						style={baseStyle}
+						className={cn(
+							'p-4 my-4 rounded-lg bg-yellow-50 border-l-4 border-yellow-400 text-yellow-800 flex items-start space-x-2',
+							block.blank && 'mb-4',
+						)}
+						onClick={onBlockClick ? () => onBlockClick(block) : undefined}
+						onKeyDown={
+							onBlockClick
+								? (e) => {
+										if (e.key === 'Enter' || e.key === ' ') onBlockClick(block);
+									}
+								: undefined
+						}
+						tabIndex={onBlockClick ? 0 : undefined}
+					>
+						<Lightbulb className="w-5 h-5 text-yellow-600 mt-0.5 flex-shrink-0" />
+						<LongPressText
+							text={block.text}
+							documentId={documentId}
+							pageNumber={pageNumber}
+							blockId={block.id}
+						/>
+					</div>
+				);
+			// PAGE_IMAGE는 뷰어에서 별도 처리
 			default:
 				console.log('switch default', block.type, block);
 				return null;
