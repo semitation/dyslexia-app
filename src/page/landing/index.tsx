@@ -1,5 +1,9 @@
 import { Button } from "@/shared/ui/button";
 import { Typography } from "@/shared/ui/typography";
+import { useRouter } from "@tanstack/react-router";
+import Footer from "./footer";
+import News from "./news";
+import Mission from "./mission";
 
 type CardProps = {
   icon?: string;
@@ -8,6 +12,8 @@ type CardProps = {
 };
 
 export default function LandingPage() {
+  const router = useRouter();
+
   return (
     <div className="flex flex-col items-center w-full bg-white">
       <main className="flex flex-col items-center w-full px-4 pt-12 pb-20">
@@ -94,29 +100,8 @@ export default function LandingPage() {
           </div>
         </section>
 
-        <section className="w-full max-w-5xl mb-20">
-          <Typography variant="h3" className="text-center font-semibold mb-8">
-            모든 학생은 배울 권리가 있습니다.
-          </Typography>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <ValueCard
-              title="AI 맞춤 변환"
-              description="PDF를 난독증 친화적인 디지털 교안으로 자동 변환해요"
-            />
-            <ValueCard
-              title="읽기 자신감"
-              description="TTS, 폰트 조절 등으로 아이만의 속도로 학습할 수 있어요"
-            />
-            <ValueCard
-              title="AI 학습 친구"
-              description="그림을 그리면 AI 친구가 살아 움직이며 반응해요"
-            />
-            <ValueCard
-              title="학습 관리"
-              description="보호자에게 상세한 학습 분석 리포트를 제공해요"
-            />
-          </div>
-        </section>
+        <Mission />
+        <News />
 
         <section className="w-full bg-[#007AFF] text-white py-12 text-center">
           <Typography
@@ -132,10 +117,12 @@ export default function LandingPage() {
             variant="outline"
             size="lg"
             className="bg-white text-[#007AFF] hover:bg-gray-100"
+            onClick={() => router.navigate({ to: "/signup" })}
           >
             무료 체험 시작하기
           </Button>
         </section>
+        <Footer />
       </main>
     </div>
   );
@@ -158,19 +145,6 @@ function FeatureCard({ icon, title, description }: CardProps) {
 function CoreFeature({ title, description }: Omit<CardProps, "icon">) {
   return (
     <div className="p-4 bg-white rounded-lg border">
-      <Typography variant="p" className="font-medium mb-0.5">
-        {title}
-      </Typography>
-      <Typography variant="p" className="text-gray-600 text-sm">
-        {description}
-      </Typography>
-    </div>
-  );
-}
-
-function ValueCard({ title, description }: Omit<CardProps, "icon">) {
-  return (
-    <div className="p-4 bg-white rounded-lg border text-center">
       <Typography variant="p" className="font-medium mb-0.5">
         {title}
       </Typography>
