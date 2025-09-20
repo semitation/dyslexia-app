@@ -69,31 +69,39 @@ export default function DocumentViewerPage() {
   const [readingFocusMode, setReadingFocusMode] = useState(false);
   const [showPageList, setShowPageList] = useState(false);
 
-  // Current page content
-  const { data: pages = [], isLoading: isLoadingPage } = useQuery({
-    queryKey: ["document", docId, "page-content", currentPage],
-    queryFn: () => viewerApi.getPageContent(docId, currentPage),
+  // textbook detail (title, total pages, etc.)
+  const { data: detail, isLoading: isLoadingDetail } = useQuery({
+    queryKey: ["guardian", "textbooks", docId, "detail"],
+    queryFn: () => guardianTextbookApi.getTextbookDetail(docId),
     enabled: !!docId,
+    staleTime: 60_000,
+  });
+  const activeTextbookId = detail?.textbook_id ?? docId;
+  if (detail && detail.textbook_id !== docId) {
+    console.warn(
+      "Route param documentId differs from backend textbook_id",
+      { routeDocumentId: docId, backendTextbookId: detail.textbook_id },
+    );
+  }
+
+  // Current page content (use normalized active id when available)
+  const { data: pages = [], isLoading: isLoadingPage } = useQuery({
+    queryKey: ["document", activeTextbookId, "page-content", currentPage],
+    queryFn: () => viewerApi.getPageContent(activeTextbookId, currentPage),
+    enabled: !!activeTextbookId,
   });
 
   const page = pages[0];
 
   // Page tips for current page
   const { data: tips = [], isLoading: isLoadingTips } = useQuery({
-    queryKey: ["document", docId, "page", page?.id, "tips"],
+    queryKey: ["document", activeTextbookId, "page", page?.id, "tips"],
     queryFn: () => viewerApi.getPageTips(page!.id),
-    enabled: !!docId && !!page?.id,
+    enabled: !!activeTextbookId && !!page?.id,
     staleTime: 60_000,
   });
 
-  // textbook metadata (for totalPages)
-  const { data: textbooks = [], isLoading: isLoadingTextbooks } = useQuery({
-    queryKey: ["guardian", "textbooks"],
-    queryFn: () => guardianTextbookApi.listMyTextbooks(),
-    staleTime: 60_000,
-  });
-  const totalPages =
-    (textbooks.find((t) => t.id === docId)?.pageCount ?? 0) || 0;
+  const totalPages = detail?.total_pages ?? 0;
 
   const handleTTS = () => {
     if (!page?.processedContent?.blocks) return;
@@ -338,12 +346,18 @@ export default function DocumentViewerPage() {
       <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <Card className={`relative shadow-lg ${bgMap[backgroundColor]}`}>
           <CardContent className="p-8">
-            {isLoadingPage || isLoadingTextbooks ? (
+            {isLoadingPage || isLoadingDetail ? (
               <div className="text-center text-gray-400 py-10">
                 불러오는 중...
               </div>
             ) : page ? (
               <>
+                {/* 문서 제목 */}
+                {detail?.textbook_name && (
+                  <h1 className="text-xl font-semibold mb-4">
+                    {detail.textbook_name}
+                  </h1>
+                )}
                 <div className="absolute top-4 right-4">
                   <Star className="w-8 h-8 text-yellow-400 fill-current animate-pulse" />
                 </div>
@@ -359,7 +373,7 @@ export default function DocumentViewerPage() {
                       fontSize={fontSize[0]}
                       fontFamily={fontFamily}
                       lineSpacing={lineSpacing[0]}
-                      documentId={docId}
+                      documentId={activeTextbookId}
                       pageNumber={currentPage}
                     />
                     {!isLoadingTips && tips?.length > 0 && (
