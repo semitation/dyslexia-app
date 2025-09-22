@@ -65,7 +65,7 @@ export function TopHeader() {
 
         <div className="flex items-center space-x-4">
           <Typography variant="p" size="sm" className="text-gray-700">
-            {my?.name ?? "로그인 필요"}
+            {my ? my.name : "로그인 필요"}
           </Typography>
           <Button size="sm" variant="outline">
             {my ? "로그아웃" : "로그인"}
