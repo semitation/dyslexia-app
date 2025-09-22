@@ -4,6 +4,7 @@ import { useRouter } from "@tanstack/react-router";
 import Footer from "./footer";
 import News from "./news";
 import Mission from "./mission";
+import KeyFeatures from "./key-features";
 
 type CardProps = {
   icon?: string;
@@ -70,36 +71,7 @@ export default function LandingPage() {
           />
         </div>
 
-        <section className="w-full max-w-5xl bg-[#f5faff] rounded-2xl p-8 md:p-12 mb-20">
-          <Typography
-            variant="h3"
-            className="text-center text-[#007AFF] font-semibold mb-4"
-          >
-            리딩브릿지의 핵심 기능
-          </Typography>
-          <Typography variant="p" className="text-center text-gray-600 mb-8">
-            난독증 학생들을 위한 혁신적인 학습 솔루션을 제공합니다
-          </Typography>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <CoreFeature
-              title="해외 자료의 한국형 재생성"
-              description="공개 자료를 한국 난독증 학생에게 맞춰 재생성"
-            />
-            <CoreFeature
-              title="언제 어디서나 원격 지도"
-              description="실시간 모니터링으로 원격 학습 지도 가능"
-            />
-            <CoreFeature
-              title="실시간 모니터링 대시보드"
-              description="읽기 속도, 이해도, 참여도 실시간 확인"
-            />
-            <CoreFeature
-              title="난독증 맞춤 솔루션"
-              description="읽기 속도, 어휘도, 이해도 맞춤 학습 제공"
-            />
-          </div>
-        </section>
-
+        <KeyFeatures />
         <Mission />
         <News />
 
@@ -136,19 +108,6 @@ function FeatureCard({ icon, title, description }: CardProps) {
         {title}
       </Typography>
       <Typography variant="p" className="text-gray-500 text-xs">
-        {description}
-      </Typography>
-    </div>
-  );
-}
-
-function CoreFeature({ title, description }: Omit<CardProps, "icon">) {
-  return (
-    <div className="p-4 bg-white rounded-lg border">
-      <Typography variant="p" className="font-medium mb-0.5">
-        {title}
-      </Typography>
-      <Typography variant="p" className="text-gray-600 text-sm">
         {description}
       </Typography>
     </div>
