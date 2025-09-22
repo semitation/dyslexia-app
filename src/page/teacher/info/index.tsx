@@ -1,15 +1,21 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/shared/ui/button";
 import { Card, CardContent } from "@/shared/ui/card";
 import { Typography } from "@/shared/ui/typography";
 import { Calendar, LogOut, Bell, User } from "lucide-react";
-// import NavigationHeader from "@/components/ui/navigation-header";
+
+type MeResponse = {
+  id: number;
+  clientId: string;
+  name: string;
+  organization: string;
+  profileImageUrl: string;
+};
 
 export default function InfoPage() {
   const [userInfo, setUserInfo] = useState({
-    name: "김영희",
-    email: "younghee.kim@email.com",
-    phone: "010-1234-5678",
+    name: "",
+    organization: "",
     joinDate: "2024-01-01",
     connectedStudents: 2,
   });
@@ -20,18 +26,58 @@ export default function InfoPage() {
     aiInsights: true,
   });
 
-  const handleSavePhone = () => {
-    alert("전화번호가 저장되었습니다");
-  };
+  const [loading, setLoading] = useState(true);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const handleSaveNotifications = () => {
     alert("알림 설정이 저장되었습니다");
   };
 
   const handleLogout = () => {
-    // navigate({ to: "/login" })
     alert("로그아웃합니다");
   };
+
+  useEffect(() => {
+    const controller = new AbortController();
+    const API_BASE = import.meta.env.VITE_API_BASE_URL;
+
+    async function fetchMe() {
+      try {
+        setLoading(true);
+        setErrorMsg(null);
+
+        const res = await fetch(`${API_BASE}/guardian/me`, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          signal: controller.signal,
+        });
+
+        if (!res.ok) {
+          throw new Error(`요청 실패 (${res.status})`);
+        }
+
+        const data: MeResponse = await res.json();
+
+        setUserInfo((prev) => ({
+          ...prev,
+          name: data.name ?? "",
+          organization: data.organization ?? "",
+        }));
+      } catch (err: unknown) {
+        const message =
+          err instanceof Error ? err.message : "알 수 없는 오류가 발생했습니다";
+        setErrorMsg(message);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchMe();
+
+    return () => controller.abort();
+  }, []);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-soft-50 via-white to-warm-50">
@@ -42,6 +88,12 @@ export default function InfoPage() {
             프로필 정보와 설정을 관리해보세요
           </p>
         </div>
+
+        {errorMsg && (
+          <div className="mb-6 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            프로필 정보를 불러오지 못했습니다. ({errorMsg})
+          </div>
+        )}
 
         <div className="grid gap-8 lg:grid-cols-[2fr_1fr]">
           <div className="space-y-6">
@@ -54,7 +106,7 @@ export default function InfoPage() {
                   </Typography>
                 </div>
                 <Typography variant="p" className="text-sm text-gray-600">
-                  카카오 로그인으로 연결된 정보입니다
+                  회원가입으로 연결된 정보입니다
                 </Typography>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -64,47 +116,30 @@ export default function InfoPage() {
                     </label>
                     <input
                       id="name"
-                      value={userInfo.name}
+                      value={loading ? "불러오는 중..." : userInfo.name || "-"}
                       readOnly
                       className="w-full border rounded px-3 py-2 text-sm bg-gray-50 cursor-not-allowed"
                     />
                   </div>
                   <div className="space-y-2">
-                    <label htmlFor="email" className="text-sm text-gray-700">
-                      이메일
+                    <label
+                      htmlFor="organization"
+                      className="text-sm text-gray-700"
+                    >
+                      소속
                     </label>
                     <input
-                      id="email"
-                      type="email"
-                      value={userInfo.email}
+                      id="organization"
+                      value={
+                        loading
+                          ? "불러오는 중..."
+                          : userInfo.organization || "-"
+                      }
                       readOnly
                       className="w-full border rounded px-3 py-2 text-sm bg-gray-50 cursor-not-allowed"
                     />
                   </div>
                 </div>
-
-                {/* <div className="space-y-2">
-                  <label htmlFor="phone" className="text-sm text-gray-700">
-                    전화번호
-                  </label>
-                  <input
-                    id="phone"
-                    value={userInfo.phone}
-                    onChange={(e) =>
-                      setUserInfo({ ...userInfo, phone: e.target.value })
-                    }
-                    className="w-full border rounded px-3 py-2 text-sm"
-                  />
-                </div>
-
-                <div className="flex justify-end">
-                  <Button
-                    onClick={handleSavePhone}
-                    className="bg-primary hover:bg-primary/90"
-                  >
-                    전화번호 저장
-                  </Button>
-                </div> */}
               </CardContent>
             </Card>
 
