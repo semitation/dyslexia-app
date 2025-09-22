@@ -131,3 +131,19 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Custom utilities for dyslexia-friendly typography */
+@layer utilities {
+  .font-dyslexic {
+    font-family: 'PeachMarket', 'Noto Sans KR', ui-sans-serif, system-ui, -apple-system,
+      'Segoe UI', Roboto, Arial, 'Apple SD Gothic Neo', 'Malgun Gothic', 'Apple Color Emoji',
+      'Segoe UI Emoji', 'Segoe UI Symbol', sans-serif;
+  }
+  /* Common reading comfort presets used across the app */
+  .leading-dyslexic {
+    line-height: 1.6;
+  }
+  .tracking-dyslexic {
+    letter-spacing: 0.05em;
+  }
+}

@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
+import { useDocumentPolling } from '@/features/document/context/document-polling-context';
 import {
 	Download,
 	Eye,
@@ -17,7 +18,7 @@ import {
 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { useDocumentStatus } from '@/features/document/hooks/use-document-upload';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient, useQueries } from '@tanstack/react-query';
 import { guardianTextbookApi } from '@/features/textbooks/api/guardian-textbook-api';
 import { useNavigate } from '@tanstack/react-router';
 
@@ -35,6 +36,7 @@ const ContentManagePage = () => {
     const queryClient = useQueryClient();
     const navigate = useNavigate();
     const [activeJobDoc, setActiveJobDoc] = useState<Document | null>(null);
+    const { getProcessingDocuments } = useDocumentPolling();
     const { data: textbooks = [], isLoading } = useQuery({
         queryKey: ['guardian', 'textbooks'],
         queryFn: () => guardianTextbookApi.listMyTextbooks(),
@@ -101,6 +103,70 @@ const ContentManagePage = () => {
             })),
         [textbooks],
     );
+
+    // Derive processing textbook IDs for progress polling
+    const processingIds = useMemo(
+        () =>
+            apiDocuments
+                .filter((d) => d.status === 'PROCESSING' || d.status === 'PENDING')
+                .map((d) => d.id),
+        [apiDocuments],
+    );
+
+    // Helper: map analysis/convert status to pseudo progress (until backend provides numeric progress)
+    const statusToProgress = (status?: string): number => {
+        switch (status) {
+            case 'PENDING':
+                return 5;
+            case 'PROCESSING':
+                return 25;
+            case 'ANALYZING':
+                return 60;
+            case 'THUMBNAIL':
+                return 80;
+            case 'COMPLETED':
+                return 100;
+            case 'FAILED':
+                return 0;
+            default:
+                return 15;
+        }
+    };
+
+    // Poll per-processing textbook detail to derive progress and auto-refresh when done
+    const detailQueries = useQueries({
+        queries: processingIds.map((id) => ({
+            queryKey: ['guardian', 'textbooks', id, 'detail', 'progress'],
+            queryFn: () => guardianTextbookApi.getTextbookDetail(id),
+            enabled: processingIds.length > 0,
+            refetchInterval: 10000,
+            staleTime: 2000,
+        })),
+    });
+
+    const detailProgressMap = useMemo(() => {
+        const map = new Map<number, number>();
+        detailQueries.forEach((q, idx) => {
+            const id = processingIds[idx];
+            const detail = q.data as any;
+            if (!id || !detail) return;
+            const s = detail.analysis_status ?? detail.convert_status;
+            map.set(id, statusToProgress(s));
+        });
+        return map;
+    }, [detailQueries, processingIds]);
+
+    // When any detail reports COMPLETED, refresh main list
+    useEffect(() => {
+        if (!detailQueries.length) return;
+        for (const q of detailQueries) {
+            const d: any = q.data;
+            if (d && (d.convert_status === 'COMPLETED' || d.analysis_status === 'COMPLETED')) {
+                queryClient.invalidateQueries({ queryKey: ['guardian', 'textbooks'] }).catch(() => {});
+                break;
+            }
+        }
+    }, [detailQueries, queryClient]);
 
     const combinedDocuments = useMemo(() => {
         return activeJobDoc ? [activeJobDoc, ...apiDocuments] : apiDocuments;
@@ -172,7 +238,17 @@ const ContentManagePage = () => {
 								<div className="text-sm text-blue-800">
 									<strong>{activeJob.fileName || '교안'}</strong> 변환 진행 중...
 								</div>
-								<div className="text-sm text-blue-700">{extStatus.progress}%</div>
+								<div className="flex items-center gap-3">
+									<div className="text-sm text-blue-700">{extStatus.progress}%</div>
+									<Button
+										size="sm"
+										variant="outline"
+										onClick={() => setIsUploadModalOpen(true)}
+										className="text-blue-700 border-blue-300 hover:bg-blue-100"
+									>
+										자세히 보기
+									</Button>
+								</div>
 							</div>
 							<div className="mt-2">
 								<Progress value={extStatus.progress} className="h-2" />
@@ -283,13 +359,14 @@ const ContentManagePage = () => {
                         </div>
 
 								{/* 진행률 (변환 중일 때만) */}
-                        {document.progress !== undefined && (document.status === 'PROCESSING' || document.status === 'PENDING') && (
+                        {(document.status === 'PROCESSING' || document.status === 'PENDING') &&
+                            ((document.progress ?? detailProgressMap.get(document.id)) !== undefined) && (
                             <div className="mb-4">
                                 <div className="flex justify-between text-sm text-gray-600 mb-2">
                                     <span>변환 진행률</span>
-                                    <span>{document.progress}%</span>
+                                    <span>{document.progress ?? detailProgressMap.get(document.id)}%</span>
                                 </div>
-                                <Progress value={document.progress} className="h-2" />
+                                <Progress value={document.progress ?? detailProgressMap.get(document.id) ?? 0} className="h-2" />
                             </div>
                         )}
 
@@ -374,6 +451,7 @@ const ContentManagePage = () => {
 					open={isUploadModalOpen}
 					onOpenChange={setIsUploadModalOpen}
 					onUploadComplete={handleUploadComplete}
+					resumeJobId={activeJob?.jobId}
                 onJobStarted={(jobId, fileName) => {
                     setActiveJob({ jobId, fileName });
                     const tempId = Date.now();

@@ -34,9 +34,17 @@ export function VocaAnalysis({
 	const [isDefinitionOpen, setIsDefinitionOpen] = React.useState(true);
 	const [hasTabInteracted, setHasTabInteracted] = React.useState(false);
 
-	const phonemeAnalysis = currentVocabulary.phonemeAnalysisJson
-		? (JSON.parse(currentVocabulary.phonemeAnalysisJson) as PhonemeAnalysis)
-		: null;
+	let phonemeAnalysis: PhonemeAnalysis | null = null;
+	if (currentVocabulary.phonemeAnalysisJson) {
+		try {
+			phonemeAnalysis = JSON.parse(
+				currentVocabulary.phonemeAnalysisJson,
+			) as PhonemeAnalysis;
+		} catch (e) {
+			console.warn('Failed to parse phonemeAnalysisJson', e);
+			phonemeAnalysis = null;
+		}
+	}
 
 	const handleTabClick = () => {
 		if (!hasTabInteracted) {

@@ -224,9 +224,15 @@ export function VocabularyModal({
 	if (!vocabularyList.length) return null;
 
 	const currentVocabulary = vocabularyList[currentIndex];
-	const phonemeAnalysis = currentVocabulary.phonemeAnalysisJson
-		? JSON.parse(currentVocabulary.phonemeAnalysisJson)
-		: null;
+	let phonemeAnalysis: unknown = null;
+	if (currentVocabulary.phonemeAnalysisJson) {
+		try {
+			phonemeAnalysis = JSON.parse(currentVocabulary.phonemeAnalysisJson);
+		} catch (e) {
+			console.warn('Failed to parse phonemeAnalysisJson', e);
+			phonemeAnalysis = null;
+		}
+	}
 
 	console.log({ phonemeAnalysis, currentVocabulary });
 
@@ -253,8 +259,8 @@ export function VocabularyModal({
 	const showDebouncedToast = () => {
 		if (toastTimeoutRef.current) return;
 		toastTimeoutRef.current = setTimeout(() => {
-			toast.error('해당 문장에 분석된 어휘가 없어요.', {
-				description: '다른 문장을 선택해주세요',
+			toast.info('분석 준비 중이에요.', {
+				description: '잠시 후 다시 시도해 주세요',
 				position: 'top-center',
 				duration: 1000,
 			});

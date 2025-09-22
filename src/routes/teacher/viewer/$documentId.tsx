@@ -1,4 +1,6 @@
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Popover,
@@ -74,7 +76,12 @@ export default function DocumentViewerPage() {
     queryKey: ["guardian", "textbooks", docId, "detail"],
     queryFn: () => guardianTextbookApi.getTextbookDetail(docId),
     enabled: !!docId,
-    staleTime: 60_000,
+    staleTime: 2_000,
+    refetchInterval: (data) => {
+      const status = (data as any)?.analysis_status ?? (data as any)?.convert_status;
+      if (!status) return false as const;
+      return status === 'COMPLETED' || status === 'FAILED' ? false : 10_000;
+    },
   });
   const activeTextbookId = detail?.textbook_id ?? docId;
   if (detail && detail.textbook_id !== docId) {
@@ -353,10 +360,55 @@ export default function DocumentViewerPage() {
             ) : page ? (
               <>
                 {/* 문서 제목 */}
-                {detail?.textbook_name && (
-                  <h1 className="text-xl font-semibold mb-4">
-                    {detail.textbook_name}
-                  </h1>
+                {(detail?.inferred_title || detail?.textbook_name) && (
+                  <div className="mb-4 flex items-start justify-between gap-4">
+                    <h1 className="text-xl font-semibold">
+                      {detail?.inferred_title || detail?.textbook_name}
+                    </h1>
+                    {detail?.analysis_status && (
+                      <Badge variant="outline">
+                        {detail.analysis_status === 'ANALYZING'
+                          ? '분석 중'
+                          : detail.analysis_status === 'THUMBNAIL'
+                            ? '썸네일 생성 중'
+                            : detail.analysis_status === 'PROCESSING'
+                              ? '처리 중'
+                              : detail.analysis_status === 'COMPLETED'
+                                ? '완료'
+                                : detail.analysis_status === 'FAILED'
+                                  ? '실패'
+                                  : '대기 중'}
+                      </Badge>
+                    )}
+                  </div>
+                )}
+
+                {detail?.thumbnail_url && (
+                  <div className="mb-6 rounded-md overflow-hidden border">
+                    <AspectRatio ratio={16 / 9}>
+                      <img
+                        src={detail.thumbnail_url}
+                        alt={detail?.inferred_title || detail?.textbook_name || 'thumbnail'}
+                        className="h-full w-full object-cover"
+                        loading="lazy"
+                      />
+                    </AspectRatio>
+                  </div>
+                )}
+
+                {(detail?.subject || (detail?.topics && detail.topics.length > 0)) && (
+                  <div className="mb-4 flex flex-wrap gap-2">
+                    {detail.subject && (
+                      <Badge className="bg-blue-100 text-blue-800">{detail.subject}</Badge>
+                    )}
+                    {detail.topics?.map((t) => (
+                      <Badge key={t} variant="secondary">{t}</Badge>
+                    ))}
+                  </div>
+                )}
+
+                {detail?.summary && (
+                  <p className="mb-6 text-sm text-gray-700">{detail.summary}</p>
                 )}
                 <div className="absolute top-4 right-4">
                   <Star className="w-8 h-8 text-yellow-400 fill-current animate-pulse" />

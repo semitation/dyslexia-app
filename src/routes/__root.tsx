@@ -4,23 +4,29 @@ import { Outlet, createRootRoute } from '@tanstack/react-router';
 import { TanStackRouterDevtools } from '@tanstack/router-devtools';
 import { ErrorBoundary } from 'react-error-boundary';
 import { Toaster } from 'sonner';
+import { DocumentPollingProvider } from '@/features/document/context/document-polling-context';
 
 const ErrorFallback = ({ error }: { error: Error }) => {
-	console.error('애플리케이션 오류:', error);
-	return (
-		<QueryClientProvider client={queryClient}>
-			<Outlet />
-			<TanStackRouterDevtools />
-		</QueryClientProvider>
-	);
+    console.error('애플리케이션 오류:', error);
+    return (
+        <QueryClientProvider client={queryClient}>
+            <DocumentPollingProvider>
+                <Outlet />
+                <TanStackRouterDevtools />
+            </DocumentPollingProvider>
+            <Toaster position="top-center" />
+        </QueryClientProvider>
+    );
 };
 
 export const Route = createRootRoute({
 	component: () => (
 		<ErrorBoundary fallbackRender={ErrorFallback}>
 			<QueryClientProvider client={queryClient}>
-				<Outlet />
-				<TanStackRouterDevtools />
+				<DocumentPollingProvider>
+					<Outlet />
+					<TanStackRouterDevtools />
+				</DocumentPollingProvider>
 			</QueryClientProvider>
 			<Toaster position="top-center" />
 		</ErrorBoundary>

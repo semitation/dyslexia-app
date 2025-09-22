@@ -31,6 +31,16 @@ export interface TextbookDetail {
   created_at: string;
   convert_status: ConvertStatus;
   original_file_name: string | null;
+  // Quick analysis enrichment (optional)
+  inferred_title?: string | null;
+  subject?: string | null;
+  topics?: string[];
+  summary?: string | null;
+  keywords?: string[];
+  grade_range?: { min: number; max: number } | null;
+  ai_confidence?: number | null;
+  thumbnail_url?: string | null;
+  analysis_status?: 'PENDING' | 'PROCESSING' | 'ANALYZING' | 'THUMBNAIL' | 'COMPLETED' | 'FAILED';
 }
 
 // Internal: normalize camelCase/snake_case result to snake_case TextbookDetail
@@ -64,6 +74,15 @@ function normalizeTextbookDetail(
       created_at: createdAt,
       convert_status: obj.convertStatus,
       original_file_name: obj.originalFileName ?? null,
+      inferred_title: obj.inferredTitle ?? null,
+      subject: obj.subject ?? null,
+      topics: Array.isArray(obj.topics) ? obj.topics : [],
+      summary: obj.summary ?? null,
+      keywords: Array.isArray(obj.keywords) ? obj.keywords : [],
+      grade_range: obj.gradeRange ?? null,
+      ai_confidence: obj.aiConfidence ?? null,
+      thumbnail_url: obj.thumbnailUrl ?? null,
+      analysis_status: obj.analysisStatus ?? undefined,
     } satisfies TextbookDetail;
   }
   throw new Error('예상치 못한 교재 상세 응답 형식입니다.');

@@ -1,7 +1,9 @@
 export interface VocabularyAnalysisSearchRequest {
-	documentId: number;
-	pageNumber?: number;
-	blockId?: string;
+  // Preferred: documentId, but textbookId also supported by backend
+  documentId?: number;
+  textbookId?: number;
+  pageNumber?: number;
+  blockId?: string;
 }
 
 export interface VocabularyAnalysis {
