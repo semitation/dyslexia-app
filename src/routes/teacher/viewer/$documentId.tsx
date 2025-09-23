@@ -1,6 +1,4 @@
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Popover,
@@ -28,12 +26,11 @@ import {
   ChevronRight,
   Eye,
   Settings,
-  Star,
   Type,
   Volume2,
   VolumeX,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 export const Route = createFileRoute("/teacher/viewer/$documentId")({
   component: DocumentViewerPage,
@@ -70,6 +67,9 @@ export default function DocumentViewerPage() {
   const [isReading, setIsReading] = useState(false);
   const [readingFocusMode, setReadingFocusMode] = useState(false);
   const [showPageList, setShowPageList] = useState(false);
+  const stageContainerRef = useRef<HTMLDivElement | null>(null);
+  const footerRef = useRef<HTMLElement | null>(null);
+  const [stageHeight, setStageHeight] = useState<number>(0);
 
   // textbook detail (title, total pages, etc.)
   const { data: detail, isLoading: isLoadingDetail } = useQuery({
@@ -148,6 +148,32 @@ export default function DocumentViewerPage() {
 
   const minFs = 14;
   const maxFs = 28;
+  const textColorClass = backgroundColor === 'dark' ? 'text-white' : 'text-gray-800';
+
+  // Fit stage height to maximum space between its top and footer
+  useEffect(() => {
+    const GAP = 16; // small safety gap above footer
+
+    const update = () => {
+      const container = stageContainerRef.current;
+      if (!container) return;
+      const footerH = footerRef.current?.offsetHeight ?? 0;
+      const rect = container.getBoundingClientRect();
+      const bottomLimit = window.innerHeight - footerH - GAP;
+      const available = Math.max(0, bottomLimit - rect.top);
+      setStageHeight(available);
+    };
+
+    const ro = new ResizeObserver(update);
+    if (stageContainerRef.current) ro.observe(stageContainerRef.current);
+    if (footerRef.current) ro.observe(footerRef.current);
+    window.addEventListener('resize', update);
+    setTimeout(update, 0);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener('resize', update);
+    };
+  }, []);
 
   return (
     <div
@@ -173,7 +199,8 @@ export default function DocumentViewerPage() {
       `}</style>
 
       <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-gray-200 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex justify-between items-center">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center gap-3">
+          {/* Left: Page jump */}
           <Popover open={showPageList} onOpenChange={setShowPageList}>
             <PopoverTrigger asChild>
               <Button variant="outline" size="sm">
@@ -186,23 +213,29 @@ export default function DocumentViewerPage() {
               </h4>
               <ScrollArea className="h-40" aria-labelledby="page-jump-label">
                 <div className="grid grid-cols-5 gap-2">
-                  {Array.from({ length: totalPages }, (_, i) => i + 1).map(
-                    (p) => (
-                      <Button
-                        key={p}
-                        variant={p === currentPage ? "default" : "outline"}
-                        size="sm"
-                        onClick={() => handleJumpToPage(p)}
-                      >
-                        {p}
-                      </Button>
-                    )
-                  )}
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+                    <Button
+                      key={p}
+                      variant={p === currentPage ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => handleJumpToPage(p)}
+                    >
+                      {p}
+                    </Button>
+                  ))}
                 </div>
               </ScrollArea>
             </PopoverContent>
           </Popover>
 
+          {/* Center: Document title in navbar */}
+          {(detail?.inferred_title || detail?.textbook_name) && (
+            <div className="flex-1 text-center font-semibold truncate px-2">
+              {detail?.inferred_title || detail?.textbook_name}
+            </div>
+          )}
+
+          {/* Right: Controls */}
           <div className="flex items-center gap-2">
             <Button
               variant="outline"
@@ -351,99 +384,64 @@ export default function DocumentViewerPage() {
       </header>
 
       <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <Card className={`relative shadow-lg ${bgMap[backgroundColor]}`}>
-          <CardContent className="p-8">
-            {isLoadingPage || isLoadingDetail ? (
-              <div className="text-center text-gray-400 py-10">
-                불러오는 중...
-              </div>
-            ) : page ? (
-              <>
-                {/* 문서 제목 */}
-                {(detail?.inferred_title || detail?.textbook_name) && (
-                  <div className="mb-4 flex items-start justify-between gap-4">
-                    <h1 className="text-xl font-semibold">
-                      {detail?.inferred_title || detail?.textbook_name}
-                    </h1>
-                    {detail?.analysis_status && (
-                      <Badge variant="outline">
-                        {detail.analysis_status === 'ANALYZING'
-                          ? '분석 중'
-                          : detail.analysis_status === 'THUMBNAIL'
-                            ? '썸네일 생성 중'
-                            : detail.analysis_status === 'PROCESSING'
-                              ? '처리 중'
-                              : detail.analysis_status === 'COMPLETED'
-                                ? '완료'
-                                : detail.analysis_status === 'FAILED'
-                                  ? '실패'
-                                  : '대기 중'}
-                      </Badge>
-                    )}
-                  </div>
-                )}
+        {isLoadingPage || isLoadingDetail ? (
+          <Card className="relative shadow-lg">
+            <CardContent className="p-8">
+              <div className="text-center text-gray-400 py-10">불러오는 중...</div>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="grid grid-cols-12 gap-6">
+            {/* Center: 문서 본문 패널만 유지 (가로 비율) */}
+            <div className={`col-span-12 ${!isLoadingTips && tips?.length > 0 ? 'lg:col-span-9' : 'lg:col-span-12'}`}>
+              <Card className={`relative shadow-lg ${bgMap[backgroundColor]}`}>
+                <CardContent className="p-6">
+                  {page ? (
+                    <div ref={stageContainerRef} className="w-full">
+                      <div
+                        className="w-full mx-auto overflow-hidden rounded-md"
+                        style={{ height: Math.max(0, stageHeight), minHeight: 200 }}
+                      >
+                        <ScrollArea className="h-full w-full">
+                          <div
+                            className={`p-4 rb-typo ${fontMap[fontFamily]} ${textColorClass} ${readingFocusMode ? 'reading-focus' : ''}`}
+                          >
+                            <DocumentRenderer
+                              blocks={page.processedContent?.blocks ?? []}
+                              fontSize={fontSize[0]}
+                              fontFamily={fontFamily}
+                              lineSpacing={lineSpacing[0]}
+                              documentId={activeTextbookId}
+                              pageNumber={currentPage}
+                            />
+                          </div>
+                        </ScrollArea>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="text-center text-gray-400 py-10">
+                      페이지를 불러올 수 없습니다.
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
 
-                {detail?.thumbnail_url && (
-                  <div className="mb-6 rounded-md overflow-hidden border">
-                    <AspectRatio ratio={16 / 9}>
-                      <img
-                        src={detail.thumbnail_url}
-                        alt={detail?.inferred_title || detail?.textbook_name || 'thumbnail'}
-                        className="h-full w-full object-cover"
-                        loading="lazy"
-                      />
-                    </AspectRatio>
-                  </div>
-                )}
-
-                {(detail?.subject || (detail?.topics && detail.topics.length > 0)) && (
-                  <div className="mb-4 flex flex-wrap gap-2">
-                    {detail.subject && (
-                      <Badge className="bg-blue-100 text-blue-800">{detail.subject}</Badge>
-                    )}
-                    {detail.topics?.map((t) => (
-                      <Badge key={t} variant="secondary">{t}</Badge>
-                    ))}
-                  </div>
-                )}
-
-                {detail?.summary && (
-                  <p className="mb-6 text-sm text-gray-700">{detail.summary}</p>
-                )}
-                <div className="absolute top-4 right-4">
-                  <Star className="w-8 h-8 text-yellow-400 fill-current animate-pulse" />
-                </div>
-
-                {/* 폰트/타이포그래피 강제 적용 래퍼 */}
-                <div
-                  className={`rb-typo ${fontMap[fontFamily]} text-gray-800 ${readingFocusMode ? "reading-focus" : ""}`}
-                >
-                  {/* 참고: DocumentRenderer가 className/style을 지원하면 아래처럼 직접 전달해도 됩니다. */}
-                  <div className="grid gap-8">
-                    <DocumentRenderer
-                      blocks={page.processedContent?.blocks ?? []}
-                      fontSize={fontSize[0]}
-                      fontFamily={fontFamily}
-                      lineSpacing={lineSpacing[0]}
-                      documentId={activeTextbookId}
-                      pageNumber={currentPage}
-                    />
-                    {!isLoadingTips && tips?.length > 0 && (
-                      <PageTips tips={tips} fontSize={fontSize[0]} />
-                    )}
-                  </div>
-                </div>
-              </>
-            ) : (
-              <div className="text-center text-gray-400 py-10">
-                페이지를 불러올 수 없습니다.
+            {/* Right: 학습 팁 패널 */}
+            {!isLoadingTips && tips?.length > 0 && (
+              <div className="col-span-12 lg:col-span-3">
+                <Card className="relative shadow-lg">
+                  <CardContent className="p-6">
+                    <PageTips tips={tips} fontSize={fontSize[0]} />
+                  </CardContent>
+                </Card>
               </div>
             )}
-          </CardContent>
-        </Card>
+          </div>
+        )}
       </main>
 
-      <footer className="sticky bottom-0 z-50 bg-white/95 backdrop-blur-sm border-t border-gray-200 shadow-sm">
+      <footer ref={footerRef} className="sticky bottom-0 z-50 bg-white/95 backdrop-blur-sm border-t border-gray-200 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
           <Button
             variant="outline"
