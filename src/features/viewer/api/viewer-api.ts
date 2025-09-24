@@ -22,23 +22,31 @@ export const viewerApi = {
 			? { textbookId: documentId, page: pageNumber }
 			: { textbookId: documentId };
 
-		const data = (await axiosClient.get('/textbooks/pages', { params })) as unknown as any;
+		const data = (await axiosClient.get('/textbooks/pages', {
+			params,
+		})) as unknown as any;
 		return (data?.result ?? []) as PageContentDto[];
 	},
 
 	// Page tips endpoint for textbook pages
 	getPageTips: async (pageId: number): Promise<PageTipResponse[]> => {
-		const data = (await axiosClient.get(`/textbooks/pages/${pageId}/tips`)) as unknown as any;
+		const data = (await axiosClient.get(
+			`/textbooks/pages/${pageId}/tips`,
+		)) as unknown as any;
 		if (Array.isArray(data)) return data as PageTipResponse[];
-		if (data && typeof data === 'object' && Array.isArray(data.result)) return data.result as PageTipResponse[];
+		if (data && typeof data === 'object' && Array.isArray(data.result))
+			return data.result as PageTipResponse[];
 		return [];
 	},
 
 	// Not defined in current spec for textbooks; keeping for compatibility if needed
 	getPageImages: async (pageId: number): Promise<PageImageResponse[]> => {
-		const data = (await axiosClient.get(`/document-contents/pages/${pageId}/images`)) as unknown as any;
+		const data = (await axiosClient.get(
+			`/document-contents/pages/${pageId}/images`,
+		)) as unknown as any;
 		if (Array.isArray(data)) return data as PageImageResponse[];
-		if (data && typeof data === 'object' && Array.isArray(data.result)) return data.result as PageImageResponse[];
+		if (data && typeof data === 'object' && Array.isArray(data.result))
+			return data.result as PageImageResponse[];
 		return [];
 	},
 };

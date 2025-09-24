@@ -4,8 +4,12 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
-import { useToast } from '@/hooks/use-toast';
 import { useDocumentPolling } from '@/features/document/context/document-polling-context';
+import { useDocumentStatus } from '@/features/document/hooks/use-document-upload';
+import { guardianTextbookApi } from '@/features/textbooks/api/guardian-textbook-api';
+import { useToast } from '@/hooks/use-toast';
+import { useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useNavigate } from '@tanstack/react-router';
 import {
 	Download,
 	Eye,
@@ -17,39 +21,36 @@ import {
 	Upload,
 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
-import { useDocumentStatus } from '@/features/document/hooks/use-document-upload';
-import { useQuery, useQueryClient, useQueries } from '@tanstack/react-query';
-import { guardianTextbookApi } from '@/features/textbooks/api/guardian-textbook-api';
-import { useNavigate } from '@tanstack/react-router';
 
 interface Document {
-    id: number;
-    title: string;
-    uploadDate: string;
-    status: 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'FAILED';
-    totalPages: number;
-    // Optional: only for locally-tracked uploading job
-    progress?: number;
+	id: number;
+	title: string;
+	uploadDate: string;
+	status: 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'FAILED';
+	totalPages: number;
+	// Optional: only for locally-tracked uploading job
+	progress?: number;
 }
 
 const ContentManagePage = () => {
-    const queryClient = useQueryClient();
-    const navigate = useNavigate();
-    const [activeJobDoc, setActiveJobDoc] = useState<Document | null>(null);
-    const { getProcessingDocuments } = useDocumentPolling();
-    const { data: textbooks = [], isLoading } = useQuery({
-        queryKey: ['guardian', 'textbooks'],
-        queryFn: () => guardianTextbookApi.listMyTextbooks(),
-        staleTime: 30_000,
-    });
+	const queryClient = useQueryClient();
+	const navigate = useNavigate();
+	const [activeJobDoc, setActiveJobDoc] = useState<Document | null>(null);
+	const { getProcessingDocuments } = useDocumentPolling();
+	const { data: textbooks = [], isLoading } = useQuery({
+		queryKey: ['guardian', 'textbooks'],
+		queryFn: () => guardianTextbookApi.listMyTextbooks(),
+		staleTime: 30_000,
+	});
 	const [searchTerm, setSearchTerm] = useState('');
 	const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
 	const { toast } = useToast();
 
 	// 모달 외부에서도 진행률을 추적하기 위한 상태
-	const [activeJob, setActiveJob] = useState<{ jobId: string; fileName?: string } | null>(
-		null,
-	);
+	const [activeJob, setActiveJob] = useState<{
+		jobId: string;
+		fileName?: string;
+	} | null>(null);
 
 	const { data: extStatus } = useDocumentStatus(
 		activeJob?.jobId || '',
@@ -59,131 +60,139 @@ const ContentManagePage = () => {
 	// 리스트 상에서 진행 중 항목을 위한 임시 문서 ID
 	const [activeJobDocId, setActiveJobDocId] = useState<number | null>(null);
 
-    useEffect(() => {
-        if (!extStatus) return;
-        if (activeJobDocId && activeJobDoc) {
-            setActiveJobDoc({
-                ...activeJobDoc,
-                title: extStatus.fileName || activeJobDoc.title,
-                status: extStatus.status as Document['status'],
-                progress: Math.max(0, Math.min(100, extStatus.progress ?? 0)),
-            });
-        }
+	useEffect(() => {
+		if (!extStatus) return;
+		if (activeJobDocId && activeJobDoc) {
+			setActiveJobDoc({
+				...activeJobDoc,
+				title: extStatus.fileName || activeJobDoc.title,
+				status: extStatus.status as Document['status'],
+				progress: Math.max(0, Math.min(100, extStatus.progress ?? 0)),
+			});
+		}
 
 		if (extStatus.status === 'COMPLETED') {
 			toast({
 				title: '교안 변환 완료',
 				description: `${extStatus.fileName || activeJob?.fileName || '교안'} 변환이 완료되었습니다.`,
 			});
-            setActiveJob(null);
-            setActiveJobDocId(null);
-            setActiveJobDoc(null);
-            queryClient.invalidateQueries({ queryKey: ['guardian', 'textbooks'] }).catch(() => {});
-        }
-        if (extStatus.status === 'FAILED') {
+			setActiveJob(null);
+			setActiveJobDocId(null);
+			setActiveJobDoc(null);
+			queryClient
+				.invalidateQueries({ queryKey: ['guardian', 'textbooks'] })
+				.catch(() => {});
+		}
+		if (extStatus.status === 'FAILED') {
 			toast({
 				title: '변환 실패',
-				description: extStatus.errorMessage || '교안 변환 중 오류가 발생했습니다.',
+				description:
+					extStatus.errorMessage || '교안 변환 중 오류가 발생했습니다.',
 				variant: 'destructive',
 			});
-            setActiveJob(null);
-            setActiveJobDocId(null);
-            setActiveJobDoc(null);
-        }
-    }, [extStatus, toast, activeJobDocId, activeJob, activeJobDoc, queryClient]);
+			setActiveJob(null);
+			setActiveJobDocId(null);
+			setActiveJobDoc(null);
+		}
+	}, [extStatus, toast, activeJobDocId, activeJob, activeJobDoc, queryClient]);
 
-    const apiDocuments: Document[] = useMemo(
-        () =>
-            (textbooks || []).map((t) => ({
-                id: t.id,
-                title: t.title,
-                uploadDate: t.createdAt,
-                status: t.convertProcessStatus,
-                totalPages: t.pageCount ?? 0,
-            })),
-        [textbooks],
-    );
+	const apiDocuments: Document[] = useMemo(
+		() =>
+			(textbooks || []).map((t) => ({
+				id: t.id,
+				title: t.title,
+				uploadDate: t.createdAt,
+				status: t.convertProcessStatus,
+				totalPages: t.pageCount ?? 0,
+			})),
+		[textbooks],
+	);
 
-    // Derive processing textbook IDs for progress polling
-    const processingIds = useMemo(
-        () =>
-            apiDocuments
-                .filter((d) => d.status === 'PROCESSING' || d.status === 'PENDING')
-                .map((d) => d.id),
-        [apiDocuments],
-    );
+	// Derive processing textbook IDs for progress polling
+	const processingIds = useMemo(
+		() =>
+			apiDocuments
+				.filter((d) => d.status === 'PROCESSING' || d.status === 'PENDING')
+				.map((d) => d.id),
+		[apiDocuments],
+	);
 
-    // Helper: map analysis/convert status to pseudo progress (until backend provides numeric progress)
-    const statusToProgress = (status?: string): number => {
-        switch (status) {
-            case 'PENDING':
-                return 5;
-            case 'PROCESSING':
-                return 25;
-            case 'ANALYZING':
-                return 60;
-            case 'THUMBNAIL':
-                return 80;
-            case 'COMPLETED':
-                return 100;
-            case 'FAILED':
-                return 0;
-            default:
-                return 15;
-        }
-    };
+	// Helper: map analysis/convert status to pseudo progress (until backend provides numeric progress)
+	const statusToProgress = (status?: string): number => {
+		switch (status) {
+			case 'PENDING':
+				return 5;
+			case 'PROCESSING':
+				return 25;
+			case 'ANALYZING':
+				return 60;
+			case 'THUMBNAIL':
+				return 80;
+			case 'COMPLETED':
+				return 100;
+			case 'FAILED':
+				return 0;
+			default:
+				return 15;
+		}
+	};
 
-    // Poll per-processing textbook detail to derive progress and auto-refresh when done
-    const detailQueries = useQueries({
-        queries: processingIds.map((id) => ({
-            queryKey: ['guardian', 'textbooks', id, 'detail', 'progress'],
-            queryFn: () => guardianTextbookApi.getTextbookDetail(id),
-            enabled: processingIds.length > 0,
-            refetchInterval: 10000,
-            staleTime: 2000,
-        })),
-    });
+	// Poll per-processing textbook detail to derive progress and auto-refresh when done
+	const detailQueries = useQueries({
+		queries: processingIds.map((id) => ({
+			queryKey: ['guardian', 'textbooks', id, 'detail', 'progress'],
+			queryFn: () => guardianTextbookApi.getTextbookDetail(id),
+			enabled: processingIds.length > 0,
+			refetchInterval: 10000,
+			staleTime: 2000,
+		})),
+	});
 
-    const detailProgressMap = useMemo(() => {
-        const map = new Map<number, number>();
-        detailQueries.forEach((q, idx) => {
-            const id = processingIds[idx];
-            const detail = q.data as any;
-            if (!id || !detail) return;
-            const s = detail.analysis_status ?? detail.convert_status;
-            map.set(id, statusToProgress(s));
-        });
-        return map;
-    }, [detailQueries, processingIds]);
+	const detailProgressMap = useMemo(() => {
+		const map = new Map<number, number>();
+		detailQueries.forEach((q, idx) => {
+			const id = processingIds[idx];
+			const detail = q.data as any;
+			if (!id || !detail) return;
+			const s = detail.analysis_status ?? detail.convert_status;
+			map.set(id, statusToProgress(s));
+		});
+		return map;
+	}, [detailQueries, processingIds]);
 
-    // When any detail reports COMPLETED, refresh main list
-    useEffect(() => {
-        if (!detailQueries.length) return;
-        for (const q of detailQueries) {
-            const d: any = q.data;
-            if (d && (d.convert_status === 'COMPLETED' || d.analysis_status === 'COMPLETED')) {
-                queryClient.invalidateQueries({ queryKey: ['guardian', 'textbooks'] }).catch(() => {});
-                break;
-            }
-        }
-    }, [detailQueries, queryClient]);
+	// When any detail reports COMPLETED, refresh main list
+	useEffect(() => {
+		if (!detailQueries.length) return;
+		for (const q of detailQueries) {
+			const d: any = q.data;
+			if (
+				d &&
+				(d.convert_status === 'COMPLETED' || d.analysis_status === 'COMPLETED')
+			) {
+				queryClient
+					.invalidateQueries({ queryKey: ['guardian', 'textbooks'] })
+					.catch(() => {});
+				break;
+			}
+		}
+	}, [detailQueries, queryClient]);
 
-    const combinedDocuments = useMemo(() => {
-        return activeJobDoc ? [activeJobDoc, ...apiDocuments] : apiDocuments;
-    }, [activeJobDoc, apiDocuments]);
+	const combinedDocuments = useMemo(() => {
+		return activeJobDoc ? [activeJobDoc, ...apiDocuments] : apiDocuments;
+	}, [activeJobDoc, apiDocuments]);
 
-    const filteredDocuments = combinedDocuments.filter((doc) =>
-        doc.title.toLowerCase().includes(searchTerm.toLowerCase()),
-    );
+	const filteredDocuments = combinedDocuments.filter((doc) =>
+		doc.title.toLowerCase().includes(searchTerm.toLowerCase()),
+	);
 
-    const handleUploadComplete = (_newDocument: Document) => {
-        // After completion, the polling will refetch the list
-        toast({
-            title: '교안 변환 완료',
-            description:
-                '교안이 성공적으로 변환되었습니다. 이제 학생에게 배정할 수 있습니다.',
-        });
-    };
+	const handleUploadComplete = (_newDocument: Document) => {
+		// After completion, the polling will refetch the list
+		toast({
+			title: '교안 변환 완료',
+			description:
+				'교안이 성공적으로 변환되었습니다. 이제 학생에게 배정할 수 있습니다.',
+		});
+	};
 
 	const getStatusBadge = (status: Document['status']) => {
 		switch (status) {
@@ -231,15 +240,20 @@ const ContentManagePage = () => {
 		<div className="min-h-screen bg-gray-50 p-6">
 			<div className="max-w-7xl mx-auto">
 				{/* 업로드 진행 배너 */}
-				{activeJob && extStatus &&
-					(extStatus.status === 'PENDING' || extStatus.status === 'PROCESSING') && (
+				{activeJob &&
+					extStatus &&
+					(extStatus.status === 'PENDING' ||
+						extStatus.status === 'PROCESSING') && (
 						<div className="mb-4 rounded-lg border border-blue-200 bg-blue-50 p-4">
 							<div className="flex items-center justify-between">
 								<div className="text-sm text-blue-800">
-									<strong>{activeJob.fileName || '교안'}</strong> 변환 진행 중...
+									<strong>{activeJob.fileName || '교안'}</strong> 변환 진행
+									중...
 								</div>
 								<div className="flex items-center gap-3">
-									<div className="text-sm text-blue-700">{extStatus.progress}%</div>
+									<div className="text-sm text-blue-700">
+										{extStatus.progress}%
+									</div>
 									<Button
 										size="sm"
 										variant="outline"
@@ -291,32 +305,39 @@ const ContentManagePage = () => {
 				</div>
 
 				{/* 통계 카드 */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-                    <Card>
-                        <CardContent className="p-4">
-                            <div className="flex items-center">
-                                <FileText className="h-8 w-8 text-blue-500" />
-                                <div className="ml-4">
-                                    <p className="text-sm font-medium text-gray-600">전체 교안</p>
-                                    <p className="text-2xl font-bold">{combinedDocuments.length}</p>
-                                </div>
-                            </div>
-                        </CardContent>
-                    </Card>
-                    <Card>
-                        <CardContent className="p-4">
+				<div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+					<Card>
+						<CardContent className="p-4">
+							<div className="flex items-center">
+								<FileText className="h-8 w-8 text-blue-500" />
+								<div className="ml-4">
+									<p className="text-sm font-medium text-gray-600">전체 교안</p>
+									<p className="text-2xl font-bold">
+										{combinedDocuments.length}
+									</p>
+								</div>
+							</div>
+						</CardContent>
+					</Card>
+					<Card>
+						<CardContent className="p-4">
 							<div className="flex items-center">
 								<div className="h-8 w-8 bg-green-100 rounded-full flex items-center justify-center">
 									<div className="h-4 w-4 bg-green-500 rounded-full"></div>
 								</div>
 								<div className="ml-4">
 									<p className="text-sm font-medium text-gray-600">변환 완료</p>
-                                    <p className="text-2xl font-bold">{combinedDocuments.filter((d) => d.status === 'COMPLETED').length}</p>
-                                </div>
-                            </div>
-                        </CardContent>
-                    </Card>
-                    <Card>
+									<p className="text-2xl font-bold">
+										{
+											combinedDocuments.filter((d) => d.status === 'COMPLETED')
+												.length
+										}
+									</p>
+								</div>
+							</div>
+						</CardContent>
+					</Card>
+					<Card>
 						<CardContent className="p-4">
 							<div className="flex items-center">
 								<div className="h-8 w-8 bg-blue-100 rounded-full flex items-center justify-center">
@@ -324,12 +345,19 @@ const ContentManagePage = () => {
 								</div>
 								<div className="ml-4">
 									<p className="text-sm font-medium text-gray-600">변환 중</p>
-                                    <p className="text-2xl font-bold">{combinedDocuments.filter((d) => d.status === 'PROCESSING' || d.status === 'PENDING').length}</p>
-                                </div>
-                            </div>
-                        </CardContent>
-                    </Card>
-                </div>
+									<p className="text-2xl font-bold">
+										{
+											combinedDocuments.filter(
+												(d) =>
+													d.status === 'PROCESSING' || d.status === 'PENDING',
+											).length
+										}
+									</p>
+								</div>
+							</div>
+						</CardContent>
+					</Card>
+				</div>
 
 				{/* 교안 목록 */}
 				<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -344,31 +372,48 @@ const ContentManagePage = () => {
 										<h3 className="font-semibold text-gray-900 mb-1">
 											{document.title}
 										</h3>
-                                <p className="text-sm text-gray-500 mb-2">{new Date(document.uploadDate).toLocaleDateString()}</p>
-                                {getStatusBadge(document.status)}
-                            </div>
-                            <Button variant="ghost" size="sm">
-                                <MoreVertical className="h-4 w-4" />
-                            </Button>
-                        </div>
-                    </CardHeader>
-                    <CardContent>
-                        {/* 썸네일 */}
-                        <div className={`w-full h-32 bg-slate-200 rounded-lg mb-4 flex items-center justify-center`}>
-                            <FileText className="h-12 w-12 text-white" />
-                        </div>
+										<p className="text-sm text-gray-500 mb-2">
+											{new Date(document.uploadDate).toLocaleDateString()}
+										</p>
+										{getStatusBadge(document.status)}
+									</div>
+									<Button variant="ghost" size="sm">
+										<MoreVertical className="h-4 w-4" />
+									</Button>
+								</div>
+							</CardHeader>
+							<CardContent>
+								{/* 썸네일 */}
+								<div
+									className={`w-full h-32 bg-slate-200 rounded-lg mb-4 flex items-center justify-center`}
+								>
+									<FileText className="h-12 w-12 text-white" />
+								</div>
 
 								{/* 진행률 (변환 중일 때만) */}
-                        {(document.status === 'PROCESSING' || document.status === 'PENDING') &&
-                            ((document.progress ?? detailProgressMap.get(document.id)) !== undefined) && (
-                            <div className="mb-4">
-                                <div className="flex justify-between text-sm text-gray-600 mb-2">
-                                    <span>변환 진행률</span>
-                                    <span>{document.progress ?? detailProgressMap.get(document.id)}%</span>
-                                </div>
-                                <Progress value={document.progress ?? detailProgressMap.get(document.id) ?? 0} className="h-2" />
-                            </div>
-                        )}
+								{(document.status === 'PROCESSING' ||
+									document.status === 'PENDING') &&
+									(document.progress ?? detailProgressMap.get(document.id)) !==
+										undefined && (
+										<div className="mb-4">
+											<div className="flex justify-between text-sm text-gray-600 mb-2">
+												<span>변환 진행률</span>
+												<span>
+													{document.progress ??
+														detailProgressMap.get(document.id)}
+													%
+												</span>
+											</div>
+											<Progress
+												value={
+													document.progress ??
+													detailProgressMap.get(document.id) ??
+													0
+												}
+												className="h-2"
+											/>
+										</div>
+									)}
 
 								{/* 상태 메시지 */}
 								<p className="text-sm text-gray-600 mb-4">
@@ -376,33 +421,37 @@ const ContentManagePage = () => {
 								</p>
 
 								{/* 메타 정보 */}
-                        <div className="flex justify-end text-sm text-gray-500 mb-4">
-                            <span>{document.totalPages > 0 ? `${document.totalPages}페이지` : '-'}</span>
-                        </div>
+								<div className="flex justify-end text-sm text-gray-500 mb-4">
+									<span>
+										{document.totalPages > 0
+											? `${document.totalPages}페이지`
+											: '-'}
+									</span>
+								</div>
 
 								{/* 액션 버튼 */}
-                                <div className="flex gap-2">
-                                    {document.status === 'COMPLETED' && (
-                                        <>
-                                            <Button
-                                                variant="outline"
-                                                size="sm"
-                                                className="flex-1"
-                                                onClick={() =>
-                                                    navigate({
-                                                        to: '/teacher/viewer/$documentId',
-                                                        params: { documentId: String(document.id) },
-                                                    })
-                                                }
-                                            >
-                                                <Eye className="h-4 w-4 mr-1" />
-                                                미리보기
-                                            </Button>
-                                            <Button variant="outline" size="sm">
-                                                <Download className="h-4 w-4" />
-                                            </Button>
-                                        </>
-                                    )}
+								<div className="flex gap-2">
+									{document.status === 'COMPLETED' && (
+										<>
+											<Button
+												variant="outline"
+												size="sm"
+												className="flex-1"
+												onClick={() =>
+													navigate({
+														to: '/teacher/viewer/$documentId',
+														params: { documentId: String(document.id) },
+													})
+												}
+											>
+												<Eye className="h-4 w-4 mr-1" />
+												미리보기
+											</Button>
+											<Button variant="outline" size="sm">
+												<Download className="h-4 w-4" />
+											</Button>
+										</>
+									)}
 									{document.status === 'FAILED' && (
 										<Button variant="outline" size="sm" className="flex-1">
 											다시 시도
@@ -414,11 +463,11 @@ const ContentManagePage = () => {
 								</div>
 
 								{/* 배정 정보 */}
-                        {/* 배정 정보: 현재 스키마에 없어 비표시 */}
-                    </CardContent>
-                </Card>
-            ))}
-        </div>
+								{/* 배정 정보: 현재 스키마에 없어 비표시 */}
+							</CardContent>
+						</Card>
+					))}
+				</div>
 
 				{/* 빈 상태 */}
 				{filteredDocuments.length === 0 && (
@@ -447,25 +496,30 @@ const ContentManagePage = () => {
 			</div>
 
 			{/* 업로드 모달 */}
-				<DocumentUploadModal
-					open={isUploadModalOpen}
-					onOpenChange={setIsUploadModalOpen}
-					onUploadComplete={handleUploadComplete}
-					resumeJobId={activeJob?.jobId}
-                onJobStarted={(jobId, fileName) => {
-                    setActiveJob({ jobId, fileName });
-                    const tempId = Date.now();
-                    setActiveJobDocId(tempId);
-                    setActiveJobDoc({
-                        id: tempId,
-                        title: fileName || '새 교안',
-                        uploadDate: new Date().toISOString(),
-                        status: 'PROCESSING',
-                        totalPages: 0,
-                        progress: 0,
-                    });
-                }}
-            />
+			<DocumentUploadModal
+				open={isUploadModalOpen}
+				onOpenChange={(open) => {
+					console.log('🏠 부모에서 모달 상태 변경:', open);
+					setIsUploadModalOpen(open);
+				}}
+				onUploadComplete={handleUploadComplete}
+				resumeJobId={activeJob?.jobId}
+				allowCloseWhileProcessing={false}
+				onJobStarted={(jobId, fileName) => {
+					console.log('🚀 onJobStarted 호출됨:', { jobId, fileName });
+					setActiveJob({ jobId, fileName });
+					const tempId = Date.now();
+					setActiveJobDocId(tempId);
+					setActiveJobDoc({
+						id: tempId,
+						title: fileName || '새 교안',
+						uploadDate: new Date().toISOString(),
+						status: 'PROCESSING',
+						totalPages: 0,
+						progress: 0,
+					});
+				}}
+			/>
 		</div>
 	);
 };

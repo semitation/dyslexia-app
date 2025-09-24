@@ -8,13 +8,14 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
+import { useDocumentPolling } from '@/features/document/context/document-polling-context';
 import {
 	useDocumentStatus,
 	useDocumentUpload,
 } from '@/features/document/hooks/use-document-upload';
-import { useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import { useQueryClient } from '@tanstack/react-query';
 import {
 	AlertCircle,
 	CheckCircle,
@@ -24,7 +25,6 @@ import {
 	X,
 } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useDocumentPolling } from '@/features/document/context/document-polling-context';
 
 interface DocumentUploadModalProps {
 	open: boolean;
@@ -46,47 +46,50 @@ interface UploadState {
 }
 
 const DocumentUploadModal = ({
-    open,
-    onOpenChange: onParentOpenChange,
-    onUploadComplete,
-    onJobStarted,
-    allowCloseWhileProcessing = false,
-    resumeJobId,
+	open,
+	onOpenChange: onParentOpenChange,
+	onUploadComplete,
+	onJobStarted,
+	allowCloseWhileProcessing = false,
+	resumeJobId,
 }: DocumentUploadModalProps) => {
-    const [file, setFile] = useState<File | null>(null);
-    useEffect(() => {
-        // resumeJobId가 있으면 처리 중 상태로 복원
-        if (open && resumeJobId) {
-            setUploadState((prev) => ({
-                ...prev,
-                phase: 'processing',
-                jobId: resumeJobId,
-                progress: 0,
-                fileName: prev.fileName || '처리 중인 파일',
-            }));
-        }
-        if (!open) {
-            // 닫힐 때 상태 초기화
-            setFile(null);
-            setUploadState({ phase: 'idle', progress: 0 });
-        }
-    }, [open, resumeJobId]);
+	const [file, setFile] = useState<File | null>(null);
 	const [isDragActive, setIsDragActive] = useState(false);
 	const [uploadState, setUploadState] = useState<UploadState>({
 		phase: 'idle',
 		progress: 0,
 	});
+
+	useEffect(() => {
+		console.log('📝 useEffect 실행:', { open, resumeJobId, phase: uploadState.phase });
+		// resumeJobId가 있으면 처리 중 상태로 복원
+		if (open && resumeJobId) {
+			setUploadState((prev) => ({
+				...prev,
+				phase: 'processing',
+				jobId: resumeJobId,
+				progress: 0,
+				fileName: prev.fileName || '처리 중인 파일',
+			}));
+		}
+		// 모달이 닫힐 때만 상태 초기화 (처리 중이 아닐 때만)
+		if (!open && uploadState.phase !== 'processing' && uploadState.phase !== 'uploading') {
+			console.log('🧹 상태 초기화');
+			setFile(null);
+			setUploadState({ phase: 'idle', progress: 0 });
+		}
+	}, [open, resumeJobId, uploadState.phase]);
 	const fileInputRef = useRef<HTMLInputElement>(null);
 	const { toast } = useToast();
 	const queryClient = useQueryClient();
-    const { addProcessingDocument } = useDocumentPolling();
+	const { addProcessingDocument } = useDocumentPolling();
 
 	// API Hooks
 	const uploadMutation = useDocumentUpload();
-    const { data: statusData } = useDocumentStatus(
-        uploadState.jobId || '',
-        !!(uploadState.jobId && uploadState.phase === 'processing'),
-    );
+	const { data: statusData } = useDocumentStatus(
+		uploadState.jobId || '',
+		!!(uploadState.jobId && uploadState.phase === 'processing'),
+	);
 
 	// 파일 검증 함수
 	const validateFile = useCallback(
@@ -161,8 +164,8 @@ const DocumentUploadModal = ({
 	);
 
 	// 업로드 핸들러
-    const handleUpload = useCallback(async () => {
-        if (!file) {
+	const handleUpload = useCallback(async () => {
+		if (!file) {
 			toast({
 				title: '파일을 선택해주세요',
 				description: 'PDF 파일을 선택한 후 업로드해주세요.',
@@ -171,44 +174,43 @@ const DocumentUploadModal = ({
 			return;
 		}
 
-        // 업로드 단계로 변경
-        setUploadState({
-            phase: 'uploading',
-            progress: 0,
-            fileName: file.name,
-        });
+		// 업로드 단계로 변경
+		setUploadState({
+			phase: 'uploading',
+			progress: 0,
+			fileName: file.name,
+		});
 
-        try {
-            const formData = new FormData();
-            formData.append('file', file);
+		try {
+			const formData = new FormData();
+			formData.append('file', file);
 
-            const response = await uploadMutation.mutateAsync(formData);
+			const response = await uploadMutation.mutateAsync(formData);
 
-            // 폴링 단계로 변경
-            setUploadState({
-                phase: 'processing',
-                jobId: response.jobId,
-                progress: 0,
-                fileName: file.name,
-            });
-
+			// 폴링 단계로 변경
+			setUploadState({
+				phase: 'processing',
+				jobId: response.jobId,
+				progress: 0,
+				fileName: file.name,
+			});
 
 			// 상위에 작업 시작 이벤트 전달
 			if (response.jobId && onJobStarted) {
 				onJobStarted(response.jobId, file.name);
 			}
 
+			toast({
+				title: '업로드 시작',
+				description: response.message || '교안 변환이 시작되었습니다.',
+			});
 
-
-            toast({
-                title: '업로드 시작',
-                description: response.message || '교안 변환이 시작되었습니다.',
-            });
-
-            // 교안 리스트를 즉시 갱신 시도
-            queryClient.invalidateQueries({ queryKey: ['guardian', 'textbooks'] }).catch(() => {});
-            queryClient.invalidateQueries({ queryKey: ['teacher'] }).catch(() => {});
-			} catch (error: unknown) {
+			// 교안 리스트를 즉시 갱신 시도
+			queryClient
+				.invalidateQueries({ queryKey: ['guardian', 'textbooks'] })
+				.catch(() => {});
+			queryClient.invalidateQueries({ queryKey: ['teacher'] }).catch(() => {});
+		} catch (error: unknown) {
 			setUploadState({
 				phase: 'failed',
 				progress: 0,
@@ -226,51 +228,64 @@ const DocumentUploadModal = ({
 				variant: 'destructive',
 			});
 		}
-    }, [file, uploadMutation, toast, addProcessingDocument, onJobStarted, queryClient]);
+	}, [
+		file,
+		uploadMutation,
+		toast,
+		addProcessingDocument,
+		onJobStarted,
+		queryClient,
+	]);
 
 	// 상태 폴링 결과 처리
-    useEffect(() => {
-        if (!statusData || uploadState.phase !== 'processing') return;
+	useEffect(() => {
+		if (!statusData || uploadState.phase !== 'processing') return;
 
-        // 진행률만 변경 시 불필요한 렌더 방지
-        setUploadState((prev) => {
-            if (prev.progress === statusData.progress) return prev;
-            return { ...prev, progress: statusData.progress };
-        });
+		// 진행률만 변경 시 불필요한 렌더 방지
+		setUploadState((prev) => {
+			if (prev.progress === statusData.progress) return prev;
+			return { ...prev, progress: statusData.progress };
+		});
 
-        if (statusData.status === 'COMPLETED') {
-            setUploadState((prev) =>
-                prev.phase === 'completed' && prev.progress === 100
-                    ? prev
-                    : { ...prev, phase: 'completed', progress: 100 },
-            );
-            onUploadComplete?.({
-                id: statusData.jobId,
-                title: statusData.fileName,
-                uploadDate: statusData.createdAt,
-                status: 'COMPLETED',
-                assignedStudents: 0,
-                totalPages: 0,
-                grade: '미정',
-                thumbnailColor: 'bg-green-400',
-                progress: 100,
-            });
-            toast({ title: '변환 완료', description: '교안이 성공적으로 변환되었습니다.' });
-            queryClient.invalidateQueries({ queryKey: ['guardian', 'textbooks'] }).catch(() => {});
-            queryClient.invalidateQueries({ queryKey: ['teacher'] }).catch(() => {});
-        } else if (statusData.status === 'FAILED') {
-            setUploadState((prev) => ({
-                ...prev,
-                phase: 'failed',
-                error: statusData.errorMessage || '변환에 실패했습니다.',
-            }));
-            toast({
-                title: '변환 실패',
-                description: statusData.errorMessage || '교안 변환 중 오류가 발생했습니다.',
-                variant: 'destructive',
-            });
-        }
-    }, [statusData, uploadState.phase, onUploadComplete, toast, queryClient]);
+		if (statusData.status === 'COMPLETED') {
+			setUploadState((prev) =>
+				prev.phase === 'completed' && prev.progress === 100
+					? prev
+					: { ...prev, phase: 'completed', progress: 100 },
+			);
+			onUploadComplete?.({
+				id: statusData.jobId,
+				title: statusData.fileName,
+				uploadDate: statusData.createdAt,
+				status: 'COMPLETED',
+				assignedStudents: 0,
+				totalPages: 0,
+				grade: '미정',
+				thumbnailColor: 'bg-green-400',
+				progress: 100,
+			});
+			toast({
+				title: '변환 완료',
+				description: '교안이 성공적으로 변환되었습니다.',
+			});
+			queryClient
+				.invalidateQueries({ queryKey: ['guardian', 'textbooks'] })
+				.catch(() => {});
+			queryClient.invalidateQueries({ queryKey: ['teacher'] }).catch(() => {});
+		} else if (statusData.status === 'FAILED') {
+			setUploadState((prev) => ({
+				...prev,
+				phase: 'failed',
+				error: statusData.errorMessage || '변환에 실패했습니다.',
+			}));
+			toast({
+				title: '변환 실패',
+				description:
+					statusData.errorMessage || '교안 변환 중 오류가 발생했습니다.',
+				variant: 'destructive',
+			});
+		}
+	}, [statusData, uploadState.phase, onUploadComplete, toast, queryClient]);
 
 	// 재시도 핸들러
 	const handleRetry = useCallback(() => {
@@ -281,12 +296,18 @@ const DocumentUploadModal = ({
 		});
 	}, [file]);
 
-    // 모달 닫기 핸들러
-    const handleClose = useCallback(() => {
-        setFile(null);
-        setUploadState({ phase: 'idle', progress: 0 });
-        onParentOpenChange(false);
-    }, [onParentOpenChange]);
+	// 모달 닫기 핸들러
+	const handleClose = useCallback(() => {
+		console.log('🔴 handleClose 호출됨:', { phase: uploadState.phase, allowClose: allowCloseWhileProcessing });
+		// 처리 중일 때 닫기 방지
+		if ((uploadState.phase === 'processing' || uploadState.phase === 'uploading') && !allowCloseWhileProcessing) {
+			console.log('🚫 handleClose 차단됨:', uploadState.phase);
+			return;
+		}
+		setFile(null);
+		setUploadState({ phase: 'idle', progress: 0 });
+		onParentOpenChange(false);
+	}, [uploadState.phase, allowCloseWhileProcessing, onParentOpenChange]);
 
 	// 파일 입력 클릭 핸들러
 	const handleFileInputClick = useCallback(() => {
@@ -302,23 +323,32 @@ const DocumentUploadModal = ({
 		}));
 	}, []);
 
-    return (
-    <Dialog open={open} onOpenChange={onParentOpenChange}>
-        <DialogContent className="max-w-md sm:max-w-lg max-h-[85vh] overflow-y-auto">
-            <DialogHeader>
-                <DialogTitle className="flex items-center space-x-2">
-                    <FileText className="w-5 h-5" />
-                    <span>새 교안 업로드</span>
-                </DialogTitle>
-                <button
-                  type="button"
-                  onClick={handleClose}
-                  className="absolute right-5 top-5 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-                  aria-label="닫기"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-            </DialogHeader>
+	return (
+		<Dialog
+			open={open}
+			onOpenChange={(newOpen) => {
+				console.log('🔍 Dialog onOpenChange:', { newOpen, phase: uploadState.phase, allowCloseWhileProcessing });
+				// 처리 중이거나 업로딩 중일 때 닫기 시도를 차단
+				if (
+					!newOpen &&
+					(uploadState.phase === 'processing' ||
+						uploadState.phase === 'uploading') &&
+					!allowCloseWhileProcessing
+				) {
+					console.log('🚫 모달 닫기 차단됨:', uploadState.phase);
+					return;
+				}
+				console.log('✅ 모달 상태 변경:', newOpen);
+				onParentOpenChange(newOpen);
+			}}
+		>
+			<DialogContent className="max-w-md sm:max-w-lg max-h-[85vh] overflow-y-auto">
+				<DialogHeader>
+					<DialogTitle className="flex items-center space-x-2">
+						<FileText className="w-5 h-5" />
+						<span>새 교안 업로드</span>
+					</DialogTitle>
+				</DialogHeader>
 
 				{uploadState.phase === 'idle' ? (
 					<div className="space-y-6">

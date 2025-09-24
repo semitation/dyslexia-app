@@ -1,5 +1,5 @@
-import axios from 'axios';
 import { TokenManager } from '@/shared/utils/token';
+import axios from 'axios';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -42,7 +42,10 @@ axiosClient.interceptors.response.use(
 
 				const { accessToken, refreshToken: newRefreshToken } = response.data;
 				if (accessToken) {
-					TokenManager.setTokens(accessToken, newRefreshToken ?? refreshToken ?? '');
+					TokenManager.setTokens(
+						accessToken,
+						newRefreshToken ?? refreshToken ?? '',
+					);
 					originalRequest.headers.Authorization = `Bearer ${accessToken}`;
 				}
 				return axiosClient(originalRequest);

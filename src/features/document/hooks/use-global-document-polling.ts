@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useRef } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
+import { useCallback, useEffect, useRef } from 'react';
 import { documentApi } from '../api/upload';
 
 interface ProcessingDocument {
@@ -18,18 +18,21 @@ export const useGlobalDocumentPolling = () => {
 	const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
 	// 처리 중인 문서 추가
-	const addProcessingDocument = useCallback((jobId: string, fileName?: string) => {
-		processingDocsRef.current.set(jobId, {
-			jobId,
-			fileName,
-			startedAt: Date.now(),
-		});
+	const addProcessingDocument = useCallback(
+		(jobId: string, fileName?: string) => {
+			processingDocsRef.current.set(jobId, {
+				jobId,
+				fileName,
+				startedAt: Date.now(),
+			});
 
-		// 폴링 시작 (아직 시작하지 않았다면)
-		if (!intervalRef.current) {
-			startPolling();
-		}
-	}, []);
+			// 폴링 시작 (아직 시작하지 않았다면)
+			if (!intervalRef.current) {
+				startPolling();
+			}
+		},
+		[],
+	);
 
 	// 처리 중인 문서 제거
 	const removeProcessingDocument = useCallback((jobId: string) => {
@@ -78,7 +81,9 @@ export const useGlobalDocumentPolling = () => {
 						removeProcessingDocument(jobId);
 
 						// 교안 목록 갱신
-						queryClient.invalidateQueries({ queryKey: ['guardian', 'textbooks'] });
+						queryClient.invalidateQueries({
+							queryKey: ['guardian', 'textbooks'],
+						});
 						queryClient.invalidateQueries({ queryKey: ['teacher'] });
 					}
 				}
@@ -115,7 +120,8 @@ export const useGlobalDocumentPolling = () => {
 		removeProcessingDocument,
 		startPolling,
 		stopPolling,
-		getProcessingDocuments: () => Array.from(processingDocsRef.current.values()),
+		getProcessingDocuments: () =>
+			Array.from(processingDocsRef.current.values()),
 		isPolling: () => intervalRef.current !== null,
 	};
 };
